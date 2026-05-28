@@ -14,6 +14,14 @@ export const appJotaiStore = createStore();
 
 export { atom, Provider, useAtom, useAtomValue, useSetAtom };
 
+export const activeBoardAtom = atom<{ id: string | null; name: string | null }>({
+  id: null,
+  name: null,
+});
+
+/** True while the user is in the editor having come from the dashboard. */
+export const hasDashboardBackAtom = atom(false);
+
 export const useAtomWithInitialValue = <
   T extends unknown,
   A extends PrimitiveAtom<T>,

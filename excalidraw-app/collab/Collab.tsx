@@ -51,7 +51,7 @@ import type {
 } from "@excalidraw/excalidraw/types";
 import type { Mutable, ValueOf } from "@excalidraw/common/utility-types";
 
-import { appJotaiStore, atom } from "../app-jotai";
+import { appJotaiStore, atom, activeBoardAtom } from "../app-jotai";
 import {
   CURSOR_SYNC_TIMEOUT,
   FILE_UPLOAD_MAX_BYTES,
@@ -86,6 +86,7 @@ import {
   saveUsernameToLocalStorage,
 } from "../data/localStorage";
 import { resetBrowserStateVersions } from "../data/tabSync";
+import { SharedBoardsStore } from "../data/SharedBoardsStore";
 
 import { collabErrorIndicatorAtom } from "./CollabError";
 import Portal from "./Portal";
@@ -117,6 +118,7 @@ export interface CollabAPI {
   onPointerUpdate: CollabInstance["onPointerUpdate"];
   startCollaboration: CollabInstance["startCollaboration"];
   stopCollaboration: CollabInstance["stopCollaboration"];
+  flushCollaboration: CollabInstance["flushCollaboration"];
   syncElements: CollabInstance["syncElements"];
   fetchImageFilesFromFirebase: CollabInstance["fetchImageFilesFromFirebase"];
   setUsername: CollabInstance["setUsername"];
@@ -234,6 +236,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       syncElements: this.syncElements,
       fetchImageFilesFromFirebase: this.fetchImageFilesFromFirebase,
       stopCollaboration: this.stopCollaboration,
+      flushCollaboration: this.flushCollaboration,
       setUsername: this.setUsername,
       getUsername: this.getUsername,
       getActiveRoomLink: this.getActiveRoomLink,
@@ -258,6 +261,9 @@ class Collab extends PureComponent<CollabProps, CollabState> {
   };
 
   componentWillUnmount() {
+    // Clear the atom so a stale reference doesn't trigger initializeScene
+    // on the next ExcalidrawApp mount before the new Collab instance is ready.
+    appJotaiStore.set(collabAPIAtom, null);
     window.removeEventListener("online", this.onOfflineStatusToggle);
     window.removeEventListener("offline", this.onOfflineStatusToggle);
     window.removeEventListener(EVENT.BEFORE_UNLOAD, this.beforeUnload);
@@ -400,6 +406,16 @@ class Collab extends PureComponent<CollabProps, CollabState> {
         captureUpdate: CaptureUpdateAction.NEVER,
       });
     }
+  };
+
+  flushCollaboration = async () => {
+    await this.queueBroadcastAllElements.flush();
+    this.queueSaveToFirebase.cancel();
+    await this.saveCollabRoomToFirebase(
+      getSyncableElements(
+        this.excalidrawAPI.getSceneElementsIncludingDeleted(),
+      ),
+    );
   };
 
   private destroySocketClient = (opts?: { isUnload: boolean }) => {
@@ -701,6 +717,19 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     this.initializeIdleDetector();
 
     this.setActiveRoomLink(window.location.href);
+
+    // Register this session in Supabase so all participants can find it
+    // from the Dashboard "Compartidos" tab. Fire-and-forget.
+    const activeBoard = appJotaiStore.get(activeBoardAtom);
+    const boardName =
+      activeBoard?.name ||
+      (existingRoomLinkData ? "Tablero compartido" : "Nueva sesión");
+    SharedBoardsStore.joinOrCreate({
+      roomId,
+      roomKey,
+      name: boardName,
+      username: this.state.username || "Usuario",
+    });
 
     return scenePromise;
   };

@@ -114,13 +114,9 @@ const DefaultMainMenu: React.FC<{
       {UIOptions.canvasActions.saveAsImage && (
         <MainMenu.DefaultItems.SaveAsImage />
       )}
-      <MainMenu.DefaultItems.SearchMenu />
       <MainMenu.DefaultItems.Help />
       <MainMenu.DefaultItems.ClearCanvas />
       <MainMenu.Separator />
-      <MainMenu.Group title="Excalidraw links">
-        <MainMenu.DefaultItems.Socials />
-      </MainMenu.Group>
       <MainMenu.Separator />
       <MainMenu.DefaultItems.ToggleTheme />
       <MainMenu.DefaultItems.ChangeCanvasBackground />
@@ -226,10 +222,11 @@ const LayerUI = ({
   };
 
   const renderCanvasActions = () => (
-    <div style={{ position: "relative" }}>
+    <div style={{ position: "relative", display: "flex", alignItems: "center", flexDirection: "row", gap: "8px" }}>
       {/* wrapping to Fragment stops React from occasionally complaining
                 about identical Keys */}
       <tunnels.MainMenuTunnel.Out />
+      {renderTopLeftUI?.(editorInterface.formFactor === "phone", appState)}
       {renderWelcomeScreen && <tunnels.WelcomeScreenMenuHintTunnel.Out />}
     </div>
   );

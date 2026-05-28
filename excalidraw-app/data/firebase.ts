@@ -15,7 +15,7 @@ import {
   runTransaction,
   Bytes,
 } from "firebase/firestore";
-import { getStorage, ref, uploadBytes } from "firebase/storage";
+import { getStorage, ref, uploadBytes, getBlob } from "firebase/storage";
 
 import type { RemoteExcalidrawElement } from "@excalidraw/excalidraw/data/reconcile";
 import type {
@@ -316,4 +316,66 @@ export const loadFilesFromFirebase = async (
   );
 
   return { loadedFiles, erroredFiles };
+};
+
+// -----------------------------------------------------------------------------
+// Shareable read-only links (replacement for json.excalidraw.com backend)
+// -----------------------------------------------------------------------------
+
+const generateShareLinkId = () => {
+  // 20-char random id, similar shape to Firestore auto-ids
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const bytes = new Uint8Array(20);
+  crypto.getRandomValues(bytes);
+  let out = "";
+  for (let i = 0; i < bytes.length; i++) {
+    out += chars[bytes[i] % chars.length];
+  }
+  return out;
+};
+
+export const saveShareLinkToFirebase = async (
+  payload: Uint8Array,
+): Promise<
+  | { id: string }
+  | { error: "TOO_BIG" }
+  | { error: "FAILED"; message?: string }
+> => {
+  // Soft cap to avoid pathological uploads; Storage itself supports up to 5 TiB
+  if (payload.byteLength > 25_000_000) {
+    return { error: "TOO_BIG" };
+  }
+  try {
+    const storage = await loadFirebaseStorage();
+    const id = generateShareLinkId();
+    // Path matches storage.rules: /files/shareLinks/{shareLink}/{file}
+    const storageRef = ref(storage, `/files/shareLinks/${id}/scene`);
+    await uploadBytes(
+      storageRef,
+      new Uint8Array(payload.buffer, payload.byteOffset, payload.byteLength),
+      {
+        cacheControl: `public, max-age=${FILE_CACHE_MAX_AGE_SEC}`,
+        contentType: "application/octet-stream",
+      },
+    );
+    return { id };
+  } catch (error: any) {
+    console.error("saveShareLinkToFirebase failed", error);
+    return { error: "FAILED", message: error?.message ?? String(error) };
+  }
+};
+
+export const loadShareLinkFromFirebase = async (
+  id: string,
+): Promise<ArrayBuffer | null> => {
+  try {
+    const storage = await loadFirebaseStorage();
+    const storageRef = ref(storage, `/files/shareLinks/${id}/scene`);
+    const blob = await getBlob(storageRef);
+    return await blob.arrayBuffer();
+  } catch (error: any) {
+    console.error("loadShareLinkFromFirebase failed", error);
+    return null;
+  }
 };

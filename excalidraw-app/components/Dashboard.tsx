@@ -1,0 +1,639 @@
+import React, { useCallback, useEffect, useRef, useState } from "react";
+
+import { activeBoardAtom, appJotaiStore } from "../app-jotai";
+import type { AuthUser } from "../auth/authStore";
+import { DrawingsStore } from "../data/DrawingsStore";
+import type { DrawingRecord } from "../data/DrawingsStore";
+import { SharedBoardsStore } from "../data/SharedBoardsStore";
+import type { SharedBoard } from "../data/SharedBoardsStore";
+import { getCollaborationLinkData } from "../data";
+
+import "./Dashboard.scss";
+
+const formatDate = (ts: number): string => {
+  const d = new Date(ts);
+  const now = Date.now();
+  const diff = now - ts;
+  if (diff < 60_000) {
+    return "Ahora mismo";
+  }
+  if (diff < 3_600_000) {
+    return `Hace ${Math.floor(diff / 60_000)} min`;
+  }
+  if (diff < 86_400_000) {
+    return `Hace ${Math.floor(diff / 3_600_000)} h`;
+  }
+  return d.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: d.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined,
+  });
+};
+
+const PencilIcon = () => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.5}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ width: "3rem", height: "3rem" }}
+  >
+    <path d="M12 20h9" />
+    <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
+  </svg>
+);
+
+interface BoardCardProps {
+  board: DrawingRecord;
+  onOpen: (board: DrawingRecord) => void;
+  onDelete: (id: string, e: React.MouseEvent) => void;
+  onRename: (id: string, newName: string) => Promise<void>;
+  onClearCollabLink: (id: string) => Promise<void>;
+}
+
+const BoardCard: React.FC<BoardCardProps> = ({
+  board,
+  onOpen,
+  onDelete,
+  onRename,
+  onClearCollabLink,
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [draftName, setDraftName] = useState(board.name);
+  const [copied, setCopied] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditing) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+  }, [isEditing]);
+
+  const startRename = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDraftName(board.name);
+    setIsEditing(true);
+  };
+
+  const commitRename = async () => {
+    const trimmed = draftName.trim();
+    setIsEditing(false);
+    if (trimmed && trimmed !== board.name) {
+      await onRename(board.id, trimmed);
+    }
+  };
+
+  const cancelRename = () => {
+    setDraftName(board.name);
+    setIsEditing(false);
+  };
+
+  const copyCollabLink = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!board.collabLink) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(board.collabLink);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = board.collabLink;
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand("copy");
+      } catch {
+        /* noop */
+      }
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 2000);
+  };
+
+  const clearCollabLink = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm("¿Eliminar el enlace de colaboración de este board?")) {
+      return;
+    }
+    await onClearCollabLink(board.id);
+  };
+
+  return (
+    <div
+      className="dashboard__card"
+      onClick={() => !isEditing && onOpen(board)}
+    >
+      <div className="dashboard__card-thumb">
+        {board.thumbnail ? (
+          <img src={board.thumbnail} alt={board.name} />
+        ) : (
+          <div className="dashboard__card-thumb-placeholder">
+            <PencilIcon />
+          </div>
+        )}
+      </div>
+      <div className="dashboard__card-info">
+        {isEditing ? (
+          <input
+            ref={inputRef}
+            className="dashboard__card-name-input"
+            value={draftName}
+            onChange={(e) => setDraftName(e.target.value)}
+            onClick={(e) => e.stopPropagation()}
+            onBlur={commitRename}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                void commitRename();
+              } else if (e.key === "Escape") {
+                e.preventDefault();
+                cancelRename();
+              }
+            }}
+            maxLength={120}
+          />
+        ) : (
+          <span
+            className="dashboard__card-name"
+            title={board.name}
+            onDoubleClick={startRename}
+          >
+            {board.name}
+          </span>
+        )}
+        <span className="dashboard__card-date">
+          {formatDate(board.updatedAt)}
+        </span>
+        {board.collabLink && (
+          <div className="dashboard__card-collab-row">
+            <button
+              className="dashboard__card-collab"
+              title="Copiar enlace de colaboración"
+              onClick={copyCollabLink}
+            >
+              {copied ? "✓ Copiado" : "● Copiar enlace"}
+            </button>
+            <button
+              className="dashboard__card-collab-clear"
+              title="Eliminar enlace de colaboración"
+              onClick={clearCollabLink}
+            >
+              ×
+            </button>
+          </div>
+        )}
+      </div>
+      <button
+        className="dashboard__card-rename"
+        title="Renombrar board"
+        onClick={startRename}
+      >
+        ✎
+      </button>
+      <button
+        className="dashboard__card-delete"
+        title="Eliminar board"
+        onClick={(e) => onDelete(board.id, e)}
+      >
+        ×
+      </button>
+    </div>
+  );
+};
+
+interface SharedBoardCardProps {
+  board: SharedBoard;
+  currentUserId: string;
+  onJoin: (board: SharedBoard) => void;
+  onLeave: (board: SharedBoard) => void;
+}
+
+const SharedBoardCard: React.FC<SharedBoardCardProps> = ({
+  board,
+  currentUserId,
+  onJoin,
+  onLeave,
+}) => {
+  const isOwner = board.createdBy === currentUserId;
+  const MAX_AVATARS = 4;
+  const visibleMembers = board.members.slice(0, MAX_AVATARS);
+  const overflow = board.members.length - MAX_AVATARS;
+
+  return (
+    <div className="dashboard__shared-card" onClick={() => onJoin(board)}>
+      <div className="dashboard__shared-card-header">
+        <span className="dashboard__shared-card-name" title={board.name}>
+          {board.name}
+        </span>
+        {isOwner && (
+          <span className="dashboard__shared-card-owner-badge">Tuyo</span>
+        )}
+      </div>
+
+      <div className="dashboard__shared-card-members">
+        {visibleMembers.map((m) => (
+          <span
+            key={m.userId}
+            className={`dashboard__shared-card-avatar${
+              m.userId === currentUserId ? " current" : ""
+            }`}
+            title={m.username}
+          >
+            {m.username.charAt(0).toUpperCase()}
+          </span>
+        ))}
+        {overflow > 0 && (
+          <span className="dashboard__shared-card-avatar overflow">
+            +{overflow}
+          </span>
+        )}
+        <span className="dashboard__shared-card-member-names">
+          {board.members.map((m) => m.username).join(", ")}
+        </span>
+      </div>
+
+      <div className="dashboard__shared-card-footer">
+        <button
+          className="dashboard__shared-card-join"
+          onClick={(e) => {
+            e.stopPropagation();
+            onJoin(board);
+          }}
+        >
+          Unirse
+        </button>
+        <button
+          className="dashboard__shared-card-leave"
+          title="Salir del tablero compartido"
+          onClick={(e) => {
+            e.stopPropagation();
+            onLeave(board);
+          }}
+        >
+          Salir
+        </button>
+      </div>
+    </div>
+  );
+};
+
+interface DashboardProps {
+  user: AuthUser;
+  onOpenBoard: (record: DrawingRecord) => void;
+  onOpenSharedBoard: (board: SharedBoard) => void;
+  onNewBoard: () => void;
+  onLogout: () => void;
+}
+
+type Tab = "recent" | "all" | "shared";
+type RecentItem =
+  | { type: "own"; board: DrawingRecord; updatedAt: number }
+  | { type: "shared"; board: SharedBoard; updatedAt: number };
+
+const getRoomIdFromCollabLink = (link: string | null): string | null => {
+  if (!link) {
+    return null;
+  }
+  return getCollaborationLinkData(link)?.roomId ?? null;
+};
+
+export const Dashboard: React.FC<DashboardProps> = ({
+  user,
+  onOpenBoard,
+  onOpenSharedBoard,
+  onNewBoard,
+  onLogout,
+}) => {
+  const [boards, setBoards] = useState<DrawingRecord[]>([]);
+  const [sharedBoards, setSharedBoards] = useState<SharedBoard[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sharedError, setSharedError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<Tab>("recent");
+
+  const fetchBoards = useCallback(async () => {
+    setLoading(true);
+    setSharedError(null);
+    const [all, shared] = await Promise.all([
+      DrawingsStore.getAllForUser(user.id),
+      SharedBoardsStore.getAll().catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        setSharedError(msg);
+        return [] as SharedBoard[];
+      }),
+    ]);
+    setBoards(all);
+    setSharedBoards(shared);
+    setLoading(false);
+  }, [user.id]);
+
+  useEffect(() => {
+    fetchBoards();
+  }, [fetchBoards]);
+
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm("¿Eliminar este board?")) {
+      return;
+    }
+    await DrawingsStore.delete(id);
+    setBoards((prev) => prev.filter((b) => b.id !== id));
+  };
+
+  const handleRename = async (id: string, newName: string) => {
+    await DrawingsStore.rename(id, newName);
+    const now = Date.now();
+    setBoards((prev) =>
+      prev.map((b) =>
+        b.id === id ? { ...b, name: newName, updatedAt: now } : b,
+      ),
+    );
+    // Keep the editor's active board name in sync if it's the one open
+    const active = appJotaiStore.get(activeBoardAtom);
+    if (active?.id === id) {
+      appJotaiStore.set(activeBoardAtom, { ...active, name: newName });
+    }
+  };
+
+  const handleClearCollabLink = async (id: string) => {
+    await DrawingsStore.setCollabLink(id, null);
+    setBoards((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, collabLink: null } : b)),
+    );
+  };
+
+  const handleLeaveSharedBoard = async (board: SharedBoard) => {
+    if (!window.confirm(`¿Salir del tablero "${board.name}"?`)) {
+      return;
+    }
+    await SharedBoardsStore.leave(board.id);
+    setSharedBoards((prev) => prev.filter((b) => b.id !== board.id));
+  };
+
+  const handleOpenBoard = (board: DrawingRecord) => {
+    const roomData = getCollaborationLinkData(board.collabLink ?? "");
+    if (roomData) {
+      onOpenSharedBoard({
+        id: board.id,
+        roomId: roomData.roomId,
+        roomKey: roomData.roomKey,
+        name: board.name,
+        createdBy: board.userId ?? user.id,
+        createdAt: board.createdAt,
+        updatedAt: board.updatedAt,
+        members: [],
+      });
+      return;
+    }
+    onOpenBoard(board);
+  };
+
+  const sharedRoomIds = new Set(sharedBoards.map((board) => board.roomId));
+  const privateBoards = boards.filter(
+    (board) => !getRoomIdFromCollabLink(board.collabLink),
+  );
+  const recentItems: RecentItem[] = [
+    ...privateBoards.map((board) => ({
+      type: "own" as const,
+      board,
+      updatedAt: board.updatedAt,
+    })),
+    ...sharedBoards.map((board) => ({
+      type: "shared" as const,
+      board,
+      updatedAt: board.updatedAt,
+    })),
+    ...boards
+      .filter((board) => {
+        const roomId = getRoomIdFromCollabLink(board.collabLink);
+        return roomId && !sharedRoomIds.has(roomId);
+      })
+      .map((board) => ({
+        type: "own" as const,
+        board,
+        updatedAt: board.updatedAt,
+      })),
+  ]
+    .sort((a, b) => b.updatedAt - a.updatedAt)
+    .slice(0, 6);
+
+  const displayedBoards = activeTab === "recent" ? [] : privateBoards;
+
+  return (
+    <div className="dashboard">
+      <header className="dashboard__header">
+        <div className="dashboard__logo">
+          <svg
+            viewBox="0 0 100 100"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ width: "1.75rem", height: "1.75rem" }}
+          >
+            <rect width="100" height="100" rx="20" fill="#6965db" />
+            <path
+              d="M20 75 L50 25 L80 75"
+              stroke="white"
+              strokeWidth="8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+            <line
+              x1="32"
+              y1="58"
+              x2="68"
+              y2="58"
+              stroke="white"
+              strokeWidth="8"
+              strokeLinecap="round"
+            />
+          </svg>
+          <span>Excalidraw</span>
+        </div>
+
+        <nav className="dashboard__tabs">
+          <button
+            className={`dashboard__tab${activeTab === "recent" ? " active" : ""}`}
+            onClick={() => setActiveTab("recent")}
+          >
+            Recientes
+          </button>
+          <button
+            className={`dashboard__tab${activeTab === "all" ? " active" : ""}`}
+            onClick={() => setActiveTab("all")}
+          >
+            Mis tableros
+          </button>
+          <button
+            className={`dashboard__tab${activeTab === "shared" ? " active" : ""}`}
+            onClick={() => setActiveTab("shared")}
+          >
+            Compartidos
+            {sharedBoards.length > 0 && (
+              <span className="dashboard__tab-badge">{sharedBoards.length}</span>
+            )}
+          </button>
+        </nav>
+
+        <div className="dashboard__user">
+          <span className="dashboard__username">{user.username}</span>
+          <button className="dashboard__logout-btn" onClick={onLogout}>
+            Cerrar sesión
+          </button>
+        </div>
+      </header>
+
+      <main className="dashboard__main">
+        {activeTab === "shared" ? (
+          <>
+            <div className="dashboard__section-header">
+              <h2>
+                Tableros compartidos
+                {!loading && sharedBoards.length > 0 && (
+                  <span
+                    style={{
+                      fontSize: "0.875rem",
+                      fontWeight: 400,
+                      color: "#9ca3af",
+                      marginLeft: "0.5rem",
+                    }}
+                  >
+                    ({sharedBoards.length})
+                  </span>
+                )}
+              </h2>
+              <button
+                className="dashboard__shared-refresh"
+                onClick={fetchBoards}
+                disabled={loading}
+                title="Actualizar tableros compartidos"
+              >
+                ↻
+              </button>
+            </div>
+            {sharedError && (
+              <div className="dashboard__shared-error">
+                <strong>Error al cargar tableros compartidos:</strong>{" "}
+                {sharedError}
+              </div>
+            )}
+            {loading ? (
+              <div className="dashboard__loading">
+                <p>Cargando tableros compartidos...</p>
+              </div>
+            ) : sharedBoards.length === 0 ? (
+              <div className="dashboard__empty">
+                <p>Aún no participas en ningún tablero compartido.</p>
+                <p style={{ fontSize: "0.875rem", color: "#9ca3af" }}>
+                  Inicia o únete a una sesión de colaboración en vivo para
+                  que aparezca aquí.
+                </p>
+              </div>
+            ) : (
+              <div className="dashboard__shared-grid">
+                {sharedBoards.map((board) => (
+                  <SharedBoardCard
+                    key={board.id}
+                    board={board}
+                    currentUserId={user.id}
+                    onJoin={onOpenSharedBoard}
+                    onLeave={handleLeaveSharedBoard}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+          <div className="dashboard__section-header">
+          <h2>
+            {activeTab === "recent" ? "Recientes" : "Mis tableros"}
+            {!loading &&
+              (activeTab === "recent"
+                ? recentItems.length > 0
+                : privateBoards.length > 0) && (
+              <span
+                style={{
+                  fontSize: "0.875rem",
+                  fontWeight: 400,
+                  color: "#9ca3af",
+                  marginLeft: "0.5rem",
+                }}
+              >
+                {activeTab === "recent"
+                  ? `(${recentItems.length})`
+                  : `(${privateBoards.length})`}
+              </span>
+            )}
+          </h2>
+          <button className="dashboard__new-btn" onClick={onNewBoard}>
+            + Nuevo board
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="dashboard__loading">
+            <p>Cargando boards...</p>
+          </div>
+        ) : activeTab === "recent" && recentItems.length === 0 ? (
+          <div className="dashboard__empty">
+            <PencilIcon />
+            <p>No tienes boards aún.</p>
+            <button className="dashboard__new-btn" onClick={onNewBoard}>
+              Crear tu primer board
+            </button>
+          </div>
+        ) : activeTab === "all" && displayedBoards.length === 0 ? (
+          <div className="dashboard__empty">
+            <PencilIcon />
+            <p>No tienes boards guardados.</p>
+            <button className="dashboard__new-btn" onClick={onNewBoard}>
+              Crear tu primer board
+            </button>
+          </div>
+        ) : activeTab === "recent" ? (
+          <div className="dashboard__grid">
+            {recentItems.map((item) =>
+              item.type === "own" ? (
+                <BoardCard
+                  key={`own:${item.board.id}`}
+                  board={item.board}
+                  onOpen={handleOpenBoard}
+                  onDelete={handleDelete}
+                  onRename={handleRename}
+                  onClearCollabLink={handleClearCollabLink}
+                />
+              ) : (
+                <SharedBoardCard
+                  key={`shared:${item.board.id}`}
+                  board={item.board}
+                  currentUserId={user.id}
+                  onJoin={onOpenSharedBoard}
+                  onLeave={handleLeaveSharedBoard}
+                />
+              ),
+            )}
+          </div>
+        ) : (
+          <div className="dashboard__grid">
+            {displayedBoards.map((board) => (
+              <BoardCard
+                key={board.id}
+                board={board}
+                onOpen={handleOpenBoard}
+                onDelete={handleDelete}
+                onRename={handleRename}
+                onClearCollabLink={handleClearCollabLink}
+              />
+            ))}
+          </div>
+        )}
+          </>
+        )}
+      </main>
+    </div>
+  );
+};

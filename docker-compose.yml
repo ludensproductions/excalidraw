@@ -1,5 +1,21 @@
 services:
+  excalidraw-room:
+    image: excalidraw/excalidraw-room:latest
+    container_name: excalidraw-room
+    ports:
+      - "3002:80"
+    restart: unless-stopped
+    environment:
+      - PORT=80
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   excalidraw:
+    profiles:
+      - app
     build:
       context: .
       args:

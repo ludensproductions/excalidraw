@@ -31,7 +31,6 @@ import {
   preventUnload,
   resolvablePromise,
   isRunningInIframe,
-  isDevEnv,
 } from "@excalidraw/common";
 import polyfill from "@excalidraw/excalidraw/polyfill";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -87,6 +86,7 @@ import {
   useAtomValue,
   useAtomWithInitialValue,
   appJotaiStore,
+  hasDashboardBackAtom,
 } from "./app-jotai";
 import {
   FIREBASE_STORAGE_PREFIXES,
@@ -99,6 +99,7 @@ import Collab, {
   isCollaboratingAtom,
   isOfflineAtom,
 } from "./collab/Collab";
+import { useAutoSaveBoard } from "./hooks/useAutoSaveBoard";
 import { AppFooter } from "./components/AppFooter";
 import { AppMainMenu } from "./components/AppMainMenu";
 import { AppWelcomeScreen } from "./components/AppWelcomeScreen";
@@ -135,18 +136,16 @@ import CollabError, { collabErrorIndicatorAtom } from "./collab/CollabError";
 import { useHandleAppTheme } from "./useHandleAppTheme";
 import { getPreferredLanguage } from "./app-language/language-detector";
 import { useAppLangCode } from "./app-language/language-state";
-import DebugCanvas, {
-  debugRenderer,
-  isVisualDebuggerEnabled,
-  loadSavedDebugState,
-} from "./components/DebugCanvas";
+
 import { AIComponents } from "./components/AI";
 import { ExcalidrawPlusIframeExport } from "./ExcalidrawPlusIframeExport";
+import { dashboardState } from "./dashboardState";
 
 import "./index.scss";
 
 import { ExcalidrawPlusPromoBanner } from "./components/ExcalidrawPlusPromoBanner";
 import { AppSidebar } from "./components/AppSidebar";
+import { BoardSaveButton } from "./components/BoardSaveButton";
 
 import type { CollabAPI } from "./collab/Collab";
 
@@ -248,6 +247,30 @@ const initializeScene = async (opts: {
 
   let roomLinkData = getCollaborationLinkData(window.location.href);
   const isExternalScene = !!(id || jsonBackendMatch || roomLinkData);
+
+  // Override local scene with a board selected from the dashboard
+  if (!isExternalScene) {
+    const { board: pending, isNew } = dashboardState.consumePendingBoard();
+    if (pending) {
+      scene = {
+        elements: restoreElements(pending.elements as any, null, {
+          repairBindings: true,
+          deleteInvisibleElements: true,
+        }),
+        appState: restoreAppState(
+          { viewBackgroundColor: pending.appState.viewBackgroundColor },
+          null,
+        ),
+        scrollToContent: true,
+      };
+    } else if (isNew) {
+      // New blank board — ignore localStorage content
+      scene = {
+        elements: [],
+        appState: restoreAppState({}, null),
+      };
+    }
+  }
   if (isExternalScene) {
     if (
       // don't prompt if scene is empty
@@ -394,8 +417,6 @@ const ExcalidrawWrapper = () => {
       resolvablePromise<ExcalidrawInitialDataState | null>();
   }
 
-  const debugCanvasRef = useRef<HTMLCanvasElement>(null);
-
   useEffect(() => {
     trackEvent("load", "frame", getFrame());
     // Delayed so that the app has a time to load the latest SW
@@ -410,6 +431,7 @@ const ExcalidrawWrapper = () => {
     return isCollaborationLink(window.location.href);
   });
   const collabError = useAtomValue(collabErrorIndicatorAtom);
+  const hasDashboardBack = useAtomValue(hasDashboardBackAtom);
 
   useHandleLibrary({
     excalidrawAPI,
@@ -419,21 +441,6 @@ const ExcalidrawWrapper = () => {
   });
 
   const [, forceRefresh] = useState(false);
-
-  useEffect(() => {
-    if (isDevEnv()) {
-      const debugState = loadSavedDebugState();
-
-      if (debugState.enabled && !window.visualDebug) {
-        window.visualDebug = {
-          data: [],
-        };
-      } else {
-        delete window.visualDebug;
-      }
-      forceRefresh((prev) => !prev);
-    }
-  }, [excalidrawAPI]);
 
   // ---------------------------------------------------------------------------
   // Hoisted loadImages
@@ -684,6 +691,8 @@ const ExcalidrawWrapper = () => {
       collabAPI.syncElements(elements);
     }
 
+    scheduleAutoSave();
+
     // this check is redundant, but since this is a hot path, it's best
     // not to evaludate the nested expression every time
     if (!LocalData.isSavePaused()) {
@@ -714,16 +723,6 @@ const ExcalidrawWrapper = () => {
           }
         }
       });
-    }
-
-    // Render the debug scene if the debug canvas is available
-    if (debugCanvasRef.current && excalidrawAPI) {
-      debugRenderer(
-        debugCanvasRef.current,
-        appState,
-        elements,
-        window.devicePixelRatio,
-      );
     }
   };
 
@@ -785,6 +784,20 @@ const ExcalidrawWrapper = () => {
   };
 
   const isOffline = useAtomValue(isOfflineAtom);
+
+  const { scheduleAutoSave, flushAutoSave } = useAutoSaveBoard();
+
+  useEffect(() => {
+    dashboardState.setFlushAutoSave(async () => {
+      if (collabAPI?.isCollaborating()) {
+        await collabAPI.flushCollaboration();
+      }
+      await flushAutoSave();
+    });
+    return () => {
+      dashboardState.setFlushAutoSave(null);
+    };
+  }, [collabAPI, flushAutoSave]);
 
   const localStorageQuotaExceeded = useAtomValue(localStorageQuotaExceededAtom);
 
@@ -952,27 +965,45 @@ const ExcalidrawWrapper = () => {
         handleKeyboardGlobally={true}
         autoFocus={true}
         theme={editorTheme}
+        renderTopLeftUI={(isMobile) => {
+          if (!hasDashboardBack) {
+            return null;
+          }
+          return (
+            <button
+              className="dashboard-back-btn"
+              onClick={async () => {
+                await dashboardState.flushAutoSave();
+                dashboardState.getOnBack()?.();
+              }}
+              title="Volver al dashboard"
+            >
+              ← Volver
+            </button>
+          );
+        }}
         renderTopRightUI={(isMobile) => {
-          if (isMobile || !collabAPI || isCollabDisabled) {
+          if (isMobile) {
             return null;
           }
 
           return (
             <div className="excalidraw-ui-top-right">
-              {excalidrawAPI?.getEditorInterface().formFactor === "desktop" && (
-                <ExcalidrawPlusPromoBanner
-                  isSignedIn={isExcalidrawPlusSignedUser}
-                />
+              <BoardSaveButton />
+              {!isCollabDisabled && collabAPI && (
+                <>
+                  {collabError.message && (
+                    <CollabError collabError={collabError} />
+                  )}
+                  <LiveCollaborationTrigger
+                    isCollaborating={isCollaborating}
+                    onSelect={() =>
+                      setShareDialogState({ isOpen: true, type: "share" })
+                    }
+                    editorInterface={editorInterface}
+                  />
+                </>
               )}
-
-              {collabError.message && <CollabError collabError={collabError} />}
-              <LiveCollaborationTrigger
-                isCollaborating={isCollaborating}
-                onSelect={() =>
-                  setShareDialogState({ isOpen: true, type: "share" })
-                }
-                editorInterface={editorInterface}
-              />
             </div>
           );
         }}
@@ -1254,13 +1285,6 @@ const ExcalidrawWrapper = () => {
             },
           ]}
         />
-        {isVisualDebuggerEnabled() && excalidrawAPI && (
-          <DebugCanvas
-            appState={excalidrawAPI.getAppState()}
-            scale={window.devicePixelRatio}
-            ref={debugCanvasRef}
-          />
-        )}
       </Excalidraw>
     </div>
   );

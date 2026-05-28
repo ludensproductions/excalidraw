@@ -36,7 +36,11 @@ import {
 } from "../app_constants";
 
 import { encodeFilesForUpload } from "./FileManager";
-import { saveFilesToFirebase } from "./firebase";
+import {
+  loadShareLinkFromFirebase,
+  saveFilesToFirebase,
+  saveShareLinkToFirebase,
+} from "./firebase";
 
 import type { WS_SUBTYPES } from "../app_constants";
 
@@ -62,8 +66,8 @@ export const getSyncableElements = (
     isSyncableElement(element),
   ) as SyncableExcalidrawElement[];
 
-const BACKEND_V2_GET = import.meta.env.VITE_APP_BACKEND_V2_GET_URL;
-const BACKEND_V2_POST = import.meta.env.VITE_APP_BACKEND_V2_POST_URL;
+// Share-link snapshots are now stored in Firebase (see ./firebase.ts).
+// The legacy VITE_APP_BACKEND_V2_* env vars are no longer required.
 
 const generateRoomId = async () => {
   const buffer = new Uint8Array(ROOM_ID_BYTES);
@@ -130,13 +134,19 @@ export type SocketUpdateData =
 
 const RE_COLLAB_LINK = /^#room=([a-zA-Z0-9_-]+),([a-zA-Z0-9_-]+)$/;
 
-export const isCollaborationLink = (link: string) => {
-  const hash = new URL(link).hash;
+export const isCollaborationLink = (link: string | null | undefined) => {
+  if (!link) {
+    return false;
+  }
+  const hash = new URL(link, window.location.href).hash;
   return RE_COLLAB_LINK.test(hash);
 };
 
-export const getCollaborationLinkData = (link: string) => {
-  const hash = new URL(link).hash;
+export const getCollaborationLinkData = (link: string | null | undefined) => {
+  if (!link) {
+    return null;
+  }
+  const hash = new URL(link, window.location.href).hash;
   const match = hash.match(RE_COLLAB_LINK);
   if (match && match[2].length !== 22) {
     window.alert(t("alerts.invalidEncryptionKey"));
@@ -204,13 +214,12 @@ export const importFromBackend = async (
   decryptionKey: string,
 ): Promise<ImportedDataState> => {
   try {
-    const response = await fetch(`${BACKEND_V2_GET}${id}`);
+    const buffer = await loadShareLinkFromFirebase(id);
 
-    if (!response.ok) {
+    if (!buffer) {
       window.alert(t("alerts.importBackendFailed"));
       return {};
     }
-    const buffer = await response.arrayBuffer();
 
     try {
       const { data: decodedBuffer } = await decompressData(
@@ -273,32 +282,34 @@ export const exportToBackend = async (
       maxBytes: FILE_UPLOAD_MAX_BYTES,
     });
 
-    const response = await fetch(BACKEND_V2_POST, {
-      method: "POST",
-      body: payload.buffer,
-    });
-    const json = await response.json();
-    if (json.id) {
-      const url = new URL(window.location.href);
-      // We need to store the key (and less importantly the id) as hash instead
-      // of queryParam in order to never send it to the server
-      url.hash = `json=${json.id},${encryptionKey}`;
-      const urlString = url.toString();
-
-      await saveFilesToFirebase({
-        prefix: `/files/shareLinks/${json.id}`,
-        files: filesToUpload,
-      });
-
-      return { url: urlString, errorMessage: null };
-    } else if (json.error_class === "RequestTooLargeError") {
+    const result = await saveShareLinkToFirebase(payload);
+    if ("error" in result) {
+      if (result.error === "TOO_BIG") {
+        return {
+          url: null,
+          errorMessage: t("alerts.couldNotCreateShareableLinkTooBig"),
+        };
+      }
       return {
         url: null,
-        errorMessage: t("alerts.couldNotCreateShareableLinkTooBig"),
+        errorMessage: result.message
+          ? `${t("alerts.couldNotCreateShareableLink")} (${result.message})`
+          : t("alerts.couldNotCreateShareableLink"),
       };
     }
 
-    return { url: null, errorMessage: t("alerts.couldNotCreateShareableLink") };
+    const url = new URL(window.location.href);
+    // We need to store the key (and less importantly the id) as hash instead
+    // of queryParam in order to never send it to the server
+    url.hash = `json=${result.id},${encryptionKey}`;
+    const urlString = url.toString();
+
+    await saveFilesToFirebase({
+      prefix: `/files/shareLinks/${result.id}`,
+      files: filesToUpload,
+    });
+
+    return { url: urlString, errorMessage: null };
   } catch (error: any) {
     console.error(error);
 

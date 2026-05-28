@@ -40,6 +40,23 @@ Now you can open [http://localhost:3000](http://localhost:3000) and start coding
 
 For collaboration, you will need to set up [collab server](https://github.com/excalidraw/excalidraw-room) in local.
 
+This repo includes an `excalidraw-room` Docker Compose service for local development. Start it before running the app:
+
+```bash
+docker compose up -d
+yarn start
+```
+
+The service maps the room server to `http://localhost:3002`, matching `VITE_APP_WS_SERVER_URL` in `.env.development`.
+
+You can stop it with `yarn collab:down`, or inspect it with `yarn collab:logs`.
+
+The full Excalidraw app container is behind the `app` profile because local development normally runs the app with `yarn start`. To run the app in Docker too:
+
+```bash
+docker compose --profile app up -d
+```
+
 ## Commands
 
 ### Install the dependencies
