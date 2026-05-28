@@ -27,7 +27,7 @@ import { QRCode } from "./QRCode";
 import type { CollabAPI } from "../collab/Collab";
 
 type OnExportToBackend = () => void;
-type ShareDialogType = "share" | "collaborationOnly";
+type ShareDialogType = "collaborationOnly" | "copyOnly";
 
 export const shareDialogStateAtom = atom<
   { isOpen: false } | { isOpen: true; type: ShareDialogType }
@@ -183,7 +183,7 @@ const ShareDialogPicker = (props: ShareDialogProps) => {
 
   const { collabAPI } = props;
 
-  const startCollabJSX = collabAPI ? (
+  const startCollabJSX = collabAPI && props.type !== "copyOnly" ? (
     <>
       <div className="ShareDialog__picker__header">
         {t("labels.liveCollaboration").replace(/\./g, "")}
@@ -206,7 +206,7 @@ const ShareDialogPicker = (props: ShareDialogProps) => {
         />
       </div>
 
-      {props.type === "share" && (
+      {props.type !== "collaborationOnly" && (
         <div className="ShareDialog__separator">
           <span>{t("shareDialog.or")}</span>
         </div>
@@ -218,7 +218,7 @@ const ShareDialogPicker = (props: ShareDialogProps) => {
     <>
       {startCollabJSX}
 
-      {props.type === "share" && (
+      {props.type !== "collaborationOnly" && (
         <>
           <div className="ShareDialog__picker__header">
             {t("exportDialog.link_title")}

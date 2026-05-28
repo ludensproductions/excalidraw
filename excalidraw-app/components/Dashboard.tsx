@@ -395,20 +395,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const handleOpenBoard = (board: DrawingRecord) => {
-    const roomData = getCollaborationLinkData(board.collabLink ?? "");
-    if (roomData) {
-      onOpenSharedBoard({
-        id: board.id,
-        roomId: roomData.roomId,
-        roomKey: roomData.roomKey,
-        name: board.name,
-        createdBy: board.userId ?? user.id,
-        createdAt: board.createdAt,
-        updatedAt: board.updatedAt,
-        members: [],
-      });
-      return;
-    }
+    // Own boards always open as local editor sessions. Live collaboration
+    // should be started explicitly from the Share dialog.
     onOpenBoard(board);
   };
 

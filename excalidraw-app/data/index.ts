@@ -257,10 +257,16 @@ type ExportToBackendResult =
   | { url: null; errorMessage: string }
   | { url: string; errorMessage: null };
 
+export type ExportCopyLinkMetadata = {
+  creatorName?: string | null;
+  boardName?: string | null;
+};
+
 export const exportToBackend = async (
   elements: readonly ExcalidrawElement[],
   appState: Partial<AppState>,
   files: BinaryFiles,
+  metadata?: ExportCopyLinkMetadata,
 ): Promise<ExportToBackendResult> => {
   const encryptionKey = await generateEncryptionKey("string");
 
@@ -305,6 +311,14 @@ export const exportToBackend = async (
     // We need to store the key (and less importantly the id) as hash instead
     // of queryParam in order to never send it to the server
     url.hash = `json=${result.id},${encryptionKey}`;
+    const creatorName = metadata?.creatorName?.trim();
+    const boardName = metadata?.boardName?.trim();
+    if (creatorName) {
+      url.searchParams.set("copyFrom", creatorName);
+    }
+    if (boardName) {
+      url.searchParams.set("copyBoard", boardName);
+    }
     const urlString = url.toString();
 
     await saveFilesToFirebase({

@@ -50,11 +50,11 @@ export const ShareableLinkDialog = ({
   return (
     <Dialog onCloseRequest={onCloseRequest} title={false} size="small">
       <div className="ShareableLinkDialog">
-        <h3>Shareable link</h3>
+        <h3>{t("exportDialog.link_title")}</h3>
         <div className="ShareableLinkDialog__linkRow">
           <TextField
             ref={ref}
-            label="Link"
+            label={t("exportDialog.link_title")}
             readonly
             fullWidth
             value={link}

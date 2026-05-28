@@ -86,6 +86,7 @@ import {
   useAtomValue,
   useAtomWithInitialValue,
   appJotaiStore,
+  activeBoardAtom,
   hasDashboardBackAtom,
 } from "./app-jotai";
 import {
@@ -115,6 +116,8 @@ import {
   importFromBackend,
   isCollaborationLink,
 } from "./data";
+import { getCurrentUser } from "./auth/authStore";
+import { DrawingsStore } from "./data/DrawingsStore";
 
 import { updateStaleImageStatuses } from "./data/FileManager";
 import { FileStatusStore } from "./data/fileStatusStore";
@@ -145,7 +148,7 @@ import "./index.scss";
 
 import { ExcalidrawPlusPromoBanner } from "./components/ExcalidrawPlusPromoBanner";
 import { AppSidebar } from "./components/AppSidebar";
-import { BoardSaveButton } from "./components/BoardSaveButton";
+import "./components/BoardSaveButton.scss";
 
 import type { CollabAPI } from "./collab/Collab";
 
@@ -212,6 +215,18 @@ const shareableLinkConfirmDialog = {
   color: "danger",
 } as const;
 
+const COPY_IMPORT_DEDUP_WINDOW_MS = 5000;
+const importedCopyTokenTimes = new Map<string, number>();
+
+const buildCopiedBoardName = (
+  sourceName: string | null,
+  creatorName: string | null,
+) => {
+  const normalizedSource = (sourceName || "").trim() || "Board";
+  const normalizedCreator = (creatorName || "").trim() || "usuario";
+  return `${normalizedSource} (de ${normalizedCreator})`;
+};
+
 const initializeScene = async (opts: {
   collabAPI: CollabAPI | null;
   excalidrawAPI: ExcalidrawImperativeAPI;
@@ -223,6 +238,8 @@ const initializeScene = async (opts: {
 > => {
   const searchParams = new URLSearchParams(window.location.search);
   const id = searchParams.get("id");
+  const copyFrom = searchParams.get("copyFrom");
+  const copyBoard = searchParams.get("copyBoard");
   const jsonBackendMatch = window.location.hash.match(
     /^#json=([a-zA-Z0-9_-]+),([a-zA-Z0-9_-]+)$/,
   );
@@ -285,15 +302,16 @@ const initializeScene = async (opts: {
           jsonBackendMatch[1],
           jsonBackendMatch[2],
         );
+        const importedElements = bumpElementVersions(
+          restoreElements(imported.elements, null, {
+            repairBindings: true,
+            deleteInvisibleElements: true,
+          }),
+          localDataState?.elements,
+        );
 
         scene = {
-          elements: bumpElementVersions(
-            restoreElements(imported.elements, null, {
-              repairBindings: true,
-              deleteInvisibleElements: true,
-            }),
-            localDataState?.elements,
-          ),
+          elements: importedElements,
           appState: restoreAppState(
             imported.appState,
             // local appState when importing from backend to ensure we restore
@@ -301,6 +319,36 @@ const initializeScene = async (opts: {
             localDataState?.appState,
           ),
         };
+
+        const currentUser = getCurrentUser();
+        if (currentUser) {
+          const token = `${currentUser.id}:${jsonBackendMatch[1]}:${jsonBackendMatch[2]}`;
+          const lastImportTs = importedCopyTokenTimes.get(token) ?? 0;
+          if (Date.now() - lastImportTs > COPY_IMPORT_DEDUP_WINDOW_MS) {
+            importedCopyTokenTimes.set(token, Date.now());
+            try {
+              const copiedName = buildCopiedBoardName(copyBoard, copyFrom);
+              const copiedBoard = await DrawingsStore.save({
+                name: copiedName,
+                elements: importedElements,
+                appState: {
+                  viewBackgroundColor: scene.appState.viewBackgroundColor,
+                },
+                thumbnail: null,
+                collabLink: null,
+                userId: currentUser.id,
+              });
+              appJotaiStore.set(activeBoardAtom, {
+                id: copiedBoard.id,
+                name: copiedBoard.name,
+              });
+            } catch (error) {
+              // allow retrying if persisting the copy fails
+              importedCopyTokenTimes.delete(token);
+              console.error("Failed to persist copied board from link:", error);
+            }
+          }
+        }
       }
       scene.scrollToContent = true;
       if (!roomLinkData) {
@@ -427,6 +475,7 @@ const ExcalidrawWrapper = () => {
 
   const [, setShareDialogState] = useAtom(shareDialogStateAtom);
   const [collabAPI] = useAtom(collabAPIAtom);
+  const activeBoard = useAtomValue(activeBoardAtom);
   const [isCollaborating] = useAtomWithInitialValue(isCollaboratingAtom, () => {
     return isCollaborationLink(window.location.href);
   });
@@ -748,6 +797,10 @@ const ExcalidrawWrapper = () => {
             : getDefaultAppState().viewBackgroundColor,
         },
         files,
+        {
+          creatorName: getCurrentUser()?.username || null,
+          boardName: activeBoard.name || "Board",
+        },
       );
 
       if (errorMessage) {
@@ -989,7 +1042,13 @@ const ExcalidrawWrapper = () => {
 
           return (
             <div className="excalidraw-ui-top-right">
-              <BoardSaveButton />
+              <button
+                className="board-copy-btn"
+                onClick={() => setShareDialogState({ isOpen: true, type: "copyOnly" })}
+                title="Mandar copia a otro usuario"
+              >
+                Enviar copia
+              </button>
               {!isCollabDisabled && collabAPI && (
                 <>
                   {collabError.message && (
@@ -998,7 +1057,10 @@ const ExcalidrawWrapper = () => {
                   <LiveCollaborationTrigger
                     isCollaborating={isCollaborating}
                     onSelect={() =>
-                      setShareDialogState({ isOpen: true, type: "share" })
+                      setShareDialogState({
+                        isOpen: true,
+                        type: "collaborationOnly",
+                      })
                     }
                     editorInterface={editorInterface}
                   />
@@ -1140,23 +1202,21 @@ const ExcalidrawWrapper = () => {
               },
             },
             {
-              label: t("labels.share"),
+              label: "Copia",
               category: DEFAULT_CATEGORIES.app,
               predicate: true,
               icon: share,
               keywords: [
+                "copy",
+                "copia",
+                "duplicate",
+                "duplicar",
                 "link",
-                "shareable",
-                "readonly",
                 "export",
-                "publish",
-                "snapshot",
                 "url",
-                "collaborate",
-                "invite",
               ],
               perform: async () => {
-                setShareDialogState({ isOpen: true, type: "share" });
+                setShareDialogState({ isOpen: true, type: "copyOnly" });
               },
             },
             {

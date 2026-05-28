@@ -353,6 +353,11 @@ class Collab extends PureComponent<CollabProps, CollabState> {
   };
 
   stopCollaboration = (keepRemoteState = true) => {
+    const roomId = this.portal.roomId;
+    const roomKey = this.portal.roomKey;
+    const activeBoard = appJotaiStore.get(activeBoardAtom);
+    let didStop = false;
+
     this.queueBroadcastAllElements.cancel();
     this.queueSaveToFirebase.cancel();
     this.loadImageFiles.cancel();
@@ -374,6 +379,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     if (!keepRemoteState) {
       LocalData.fileStorage.reset();
       this.destroySocketClient();
+      didStop = true;
     } else if (window.confirm(t("alerts.collabStopOverridePrompt"))) {
       // hack to ensure that we prefer we disregard any new browser state
       // that could have been saved in other tabs while we were collaborating
@@ -396,6 +402,41 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       this.excalidrawAPI.updateScene({
         elements,
         captureUpdate: CaptureUpdateAction.NEVER,
+      });
+      didStop = true;
+    }
+
+    // Convert the current board back to local-only:
+    // - remove membership/publication from shared boards
+    // - clear persisted collaboration link from the private board record
+    if (didStop && roomId && roomKey) {
+      SharedBoardsStore.leaveByRoom(roomId, roomKey).catch((error) => {
+        console.error("Failed to leave shared board on stop:", error);
+      });
+    }
+    if (didStop && roomId) {
+      DrawingsStore.normalizeAfterStoppingRoom(roomId, activeBoard?.id).catch(
+        (error) => {
+          console.error(
+            "Failed to normalize local board after stopping collaboration:",
+            error,
+          );
+        },
+      ).then((keptBoardId) => {
+        if (!keptBoardId) {
+          return;
+        }
+        const current = appJotaiStore.get(activeBoardAtom);
+        if (current?.id !== keptBoardId) {
+          appJotaiStore.set(activeBoardAtom, {
+            id: keptBoardId,
+            name: current?.name ?? activeBoard?.name ?? null,
+          });
+        }
+      });
+    } else if (didStop && activeBoard?.id) {
+      DrawingsStore.setCollabLink(activeBoard.id, null).catch((error) => {
+        console.error("Failed to clear board collaboration link on stop:", error);
       });
     }
   };
@@ -725,26 +766,32 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     if (existingRoomLinkData) {
       // Joining an arbitrary live room should not publish a new shared board.
       // Only attach this user if the owner already published the board.
-      SharedBoardsStore.joinExisting({
+      // If the room came from a dashboard card, we have a stable board name and
+      // can safely fallback to publishing to avoid "vanishing" entries.
+      await SharedBoardsStore.joinExisting({
         roomId,
         roomKey,
         username,
+        fallbackName: activeBoard?.name ?? undefined,
       });
-    } else if (activeBoard?.id) {
-      // Publish saved boards only. Blank/live-only rooms stay out of the
-      // Dashboard "Compartidos" list.
-      SharedBoardsStore.joinOrCreate({
+    } else {
+      // Publish every newly-created live room so invitees can see it in their
+      // shared dashboard after joining, even if the owner started from a
+      // not-yet-saved board.
+      await SharedBoardsStore.joinOrCreate({
         roomId,
         roomKey,
-        name: activeBoard.name || "Tablero compartido",
+        name: activeBoard?.name || "Tablero compartido",
         username,
       });
-      DrawingsStore.setCollabLink(
-        activeBoard.id,
-        getCollaborationLink({ roomId, roomKey }),
-      ).catch((error) => {
-        console.error("Failed to persist collaboration link:", error);
-      });
+      if (activeBoard?.id) {
+        DrawingsStore.setCollabLink(
+          activeBoard.id,
+          getCollaborationLink({ roomId, roomKey }),
+        ).catch((error) => {
+          console.error("Failed to persist collaboration link:", error);
+        });
+      }
     }
 
     return scenePromise;

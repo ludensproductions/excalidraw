@@ -10,6 +10,7 @@ import {
 import { DrawingsStore } from "../data/DrawingsStore";
 
 const AUTO_SAVE_DELAY = 3000; // ms after last change
+let sharedDraftBoardId: string | null = null;
 
 export const useAutoSaveBoard = () => {
   const excalidrawAPI = useExcalidrawAPI();
@@ -31,6 +32,10 @@ export const useAutoSaveBoard = () => {
     activeBoardRef.current = activeBoard;
     if (activeBoard.id) {
       ensuredBoardIdRef.current = activeBoard.id;
+      sharedDraftBoardId = activeBoard.id;
+    } else if (!activeBoard.name) {
+      // Explicit "new board" session from dashboard.
+      sharedDraftBoardId = null;
     }
   }, [activeBoard]);
   useEffect(() => {
@@ -45,6 +50,7 @@ export const useAutoSaveBoard = () => {
 
   const runSave = useCallback(async () => {
     const board = activeBoardRef.current;
+    const storeBoard = appJotaiStore.get(activeBoardAtom);
     const api = excalidrawAPIRef.current;
     if (!api) {
       return;
@@ -86,6 +92,19 @@ export const useAutoSaveBoard = () => {
     }
 
     try {
+      const targetBoardId =
+        board.id ??
+        storeBoard.id ??
+        ensuredBoardIdRef.current ??
+        sharedDraftBoardId ??
+        (() => {
+          const id = crypto.randomUUID();
+          sharedDraftBoardId = id;
+          activeBoardRef.current = { id, name: board.name };
+          appJotaiStore.set(activeBoardAtom, { id, name: board.name });
+          return id;
+        })();
+
       const record = await DrawingsStore.save(
         {
           name: board.name ?? "Sin titulo",
@@ -98,9 +117,10 @@ export const useAutoSaveBoard = () => {
               : null,
           userId: getCurrentUser()?.id,
         },
-        board.id ?? ensuredBoardIdRef.current ?? undefined,
+        targetBoardId,
       );
       ensuredBoardIdRef.current = record.id;
+      sharedDraftBoardId = record.id;
       if (!board.id) {
         // First autosave for a brand-new board: remember the id so subsequent
         // saves update the same record instead of creating new ones.

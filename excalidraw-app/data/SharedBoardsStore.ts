@@ -37,6 +37,21 @@ function rowToBoard(row: any): SharedBoard {
 }
 
 export const SharedBoardsStore = {
+  async isVisibleByRoom(roomId: string, roomKey: string): Promise<boolean> {
+    const { data, error } = await supabase
+      .from("shared_boards")
+      .select("id")
+      .eq("room_id", roomId)
+      .eq("room_key", roomKey)
+      .maybeSingle();
+
+    if (error) {
+      console.error("SharedBoardsStore.isVisibleByRoom:", error);
+      return false;
+    }
+    return !!data?.id;
+  },
+
   async getAll(): Promise<SharedBoard[]> {
     const { data, error } = await supabase
       .from("shared_boards")
@@ -59,7 +74,7 @@ export const SharedBoardsStore = {
     roomKey: string;
     name: string;
     username: string;
-  }): Promise<void> {
+  }): Promise<boolean> {
     const { error } = await supabase.rpc("join_shared_board", {
       p_room_id: params.roomId,
       p_room_key: params.roomKey,
@@ -73,7 +88,9 @@ export const SharedBoardsStore = {
         "\nHint: verify that the join_shared_board RPC exists in your Supabase project.",
         error,
       );
+      return false;
     }
+    return this.isVisibleByRoom(params.roomId, params.roomKey);
   },
 
   /** Registers the caller only if the shared board was already published. */
@@ -81,7 +98,8 @@ export const SharedBoardsStore = {
     roomId: string;
     roomKey: string;
     username: string;
-  }): Promise<void> {
+    fallbackName?: string | null;
+  }): Promise<boolean> {
     const { error } = await supabase.rpc("join_existing_shared_board", {
       p_room_id: params.roomId,
       p_room_key: params.roomKey,
@@ -94,7 +112,34 @@ export const SharedBoardsStore = {
         "\nHint: verify that the join_existing_shared_board RPC exists in your Supabase project.",
         error,
       );
+      // Backward compatibility: if the "join_existing_shared_board" RPC is
+      // not deployed yet, fallback to the idempotent joinOrCreate RPC.
+      if (error.code === "42883" || error.code === "PGRST202") {
+        return this.joinOrCreate({
+          roomId: params.roomId,
+          roomKey: params.roomKey,
+          name: params.fallbackName || "Tablero compartido",
+          username: params.username,
+        });
+      }
+      return false;
     }
+
+    const joined = await this.isVisibleByRoom(params.roomId, params.roomKey);
+    if (joined) {
+      return true;
+    }
+
+    if (params.fallbackName) {
+      return this.joinOrCreate({
+        roomId: params.roomId,
+        roomKey: params.roomKey,
+        name: params.fallbackName,
+        username: params.username,
+      });
+    }
+
+    return false;
   },
 
   async rename(id: string, name: string): Promise<void> {
@@ -128,6 +173,51 @@ export const SharedBoardsStore = {
       .from("shared_board_members")
       .delete()
       .eq("board_id", boardId)
+      .eq("user_id", user.id);
+    if (error) {
+      throw new Error(error.message);
+    }
+  },
+
+  async leaveByRoom(roomId: string, roomKey: string): Promise<void> {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return;
+    }
+
+    const { data: board, error: boardError } = await supabase
+      .from("shared_boards")
+      .select("id, created_by")
+      .eq("room_id", roomId)
+      .eq("room_key", roomKey)
+      .maybeSingle();
+
+    if (boardError) {
+      console.error("SharedBoardsStore.leaveByRoom:", boardError);
+      return;
+    }
+
+    if (!board?.id) {
+      return;
+    }
+
+    if (board.created_by === user.id) {
+      const { error } = await supabase
+        .from("shared_boards")
+        .delete()
+        .eq("id", board.id);
+      if (error) {
+        throw new Error(error.message);
+      }
+      return;
+    }
+
+    const { error } = await supabase
+      .from("shared_board_members")
+      .delete()
+      .eq("board_id", board.id)
       .eq("user_id", user.id);
     if (error) {
       throw new Error(error.message);
