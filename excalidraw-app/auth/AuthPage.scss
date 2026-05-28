@@ -11,8 +11,7 @@
   &__card {
     background: #ffffff;
     border-radius: 12px;
-    box-shadow:
-      0 4px 6px -1px rgba(0, 0, 0, 0.07),
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07),
       0 10px 40px -4px rgba(0, 0, 0, 0.12);
     padding: 2.5rem;
     width: 100%;
@@ -82,9 +81,7 @@
       color: #1a1a2e;
       background: #fafafa;
       outline: none;
-      transition:
-        border-color 0.15s,
-        box-shadow 0.15s;
+      transition: border-color 0.15s, box-shadow 0.15s;
 
       &::placeholder {
         color: #9ca3af;
@@ -108,6 +105,16 @@
     line-height: 1.45;
   }
 
+  &__message {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-radius: 8px;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8125rem;
+    color: #047857;
+    line-height: 1.45;
+  }
+
   &__submit {
     margin-top: 0.25rem;
     height: 2.75rem;
@@ -118,9 +125,7 @@
     font-size: 0.9375rem;
     font-weight: 600;
     cursor: pointer;
-    transition:
-      background 0.15s,
-      transform 0.1s;
+    transition: background 0.15s, transform 0.1s;
     letter-spacing: 0.01em;
 
     &:hover:not(:disabled) {
@@ -156,5 +161,10 @@
         text-decoration: underline;
       }
     }
+  }
+
+  &__toggle-separator {
+    margin: 0 0.5rem;
+    color: #d1d5db;
   }
 }

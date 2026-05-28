@@ -1,61 +1,182 @@
-import { useState } from "react";
-import { loginUser, registerUser } from "./authStore";
-import type { AuthUser } from "./authStore";
+import { useEffect, useState } from "react";
+
+import {
+  beginPasswordRecoveryFromUrl,
+  loginUser,
+  registerUser,
+  requestPasswordReset,
+  updatePassword,
+} from "./authStore";
+
 import "./AuthPage.scss";
+
+import type { AuthUser } from "./authStore";
 
 interface Props {
   onAuthenticated: (user: AuthUser) => void;
 }
 
-type Mode = "login" | "register";
+type Mode = "login" | "register" | "forgot" | "reset";
 
 export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
   const [mode, setMode] = useState<Mode>("login");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    beginPasswordRecoveryFromUrl()
+      .then((isRecovery) => {
+        if (!cancelled && isRecovery) {
+          setMode("reset");
+          setMessage("Ingresa tu nueva contraseña.");
+        }
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setMode("forgot");
+          setError(
+            err instanceof Error
+              ? err.message
+              : "No se pudo abrir el enlace de recuperación.",
+          );
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const resetFeedback = () => {
+    setError(null);
+    setMessage(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    resetFeedback();
     setLoading(true);
 
     try {
-      let user: AuthUser;
       if (mode === "register") {
         if (username.trim().length < 2) {
-          throw new Error("El nombre de usuario debe tener al menos 2 caracteres.");
+          throw new Error(
+            "El nombre de usuario debe tener al menos 2 caracteres.",
+          );
         }
         if (password.length < 6) {
           throw new Error("La contraseña debe tener al menos 6 caracteres.");
         }
-        user = await registerUser(username.trim(), email.trim(), password);
-      } else {
-        user = await loginUser(email.trim(), password);
+
+        const user = await registerUser(
+          username.trim(),
+          email.trim(),
+          password,
+        );
+        onAuthenticated(user);
+        return;
       }
+
+      if (mode === "forgot") {
+        await requestPasswordReset(email);
+        setMessage(
+          "Te enviamos un correo con el enlace para recuperar tu contraseña.",
+        );
+        return;
+      }
+
+      if (mode === "reset") {
+        if (password !== confirmPassword) {
+          throw new Error("Las contraseñas no coinciden.");
+        }
+
+        const user = await updatePassword(password);
+        onAuthenticated(user);
+        return;
+      }
+
+      const user = await loginUser(email.trim(), password);
       onAuthenticated(user);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Ocurrió un error inesperado.");
+      setError(
+        err instanceof Error ? err.message : "Ocurrió un error inesperado.",
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const switchMode = () => {
-    setMode((m) => (m === "login" ? "register" : "login"));
-    setError(null);
+  const clearInputs = () => {
     setUsername("");
     setEmail("");
     setPassword("");
+    setConfirmPassword("");
   };
+
+  const switchMode = () => {
+    setMode((m) => (m === "login" ? "register" : "login"));
+    resetFeedback();
+    clearInputs();
+  };
+
+  const goToForgotPassword = () => {
+    setMode("forgot");
+    resetFeedback();
+    setPassword("");
+    setConfirmPassword("");
+  };
+
+  const goToLogin = () => {
+    setMode("login");
+    resetFeedback();
+    setPassword("");
+    setConfirmPassword("");
+  };
+
+  const title =
+    mode === "login"
+      ? "Bienvenido de vuelta"
+      : mode === "register"
+      ? "Crear cuenta"
+      : mode === "forgot"
+      ? "Recuperar contraseña"
+      : "Nueva contraseña";
+
+  const subtitle =
+    mode === "login"
+      ? "Inicia sesión para continuar"
+      : mode === "register"
+      ? "Regístrate para empezar a dibujar"
+      : mode === "forgot"
+      ? "Te enviaremos un enlace a tu correo"
+      : "Escribe los datos nuevos de acceso";
+
+  const submitLabel = loading
+    ? "Cargando..."
+    : mode === "login"
+    ? "Iniciar sesión"
+    : mode === "register"
+    ? "Crear cuenta"
+    : mode === "forgot"
+    ? "Enviar correo"
+    : "Guardar contraseña";
 
   return (
     <div className="auth-page">
       <div className="auth-page__card">
         <div className="auth-page__logo">
-          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg
+            viewBox="0 0 100 100"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
             <rect width="100" height="100" rx="20" fill="#6965db" />
             <path
               d="M20 75 L50 25 L80 75"
@@ -78,14 +199,8 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
           <span>Excalidraw</span>
         </div>
 
-        <h1 className="auth-page__title">
-          {mode === "login" ? "Bienvenido de vuelta" : "Crear cuenta"}
-        </h1>
-        <p className="auth-page__subtitle">
-          {mode === "login"
-            ? "Inicia sesión para continuar"
-            : "Regístrate para empezar a dibujar"}
-        </p>
+        <h1 className="auth-page__title">{title}</h1>
+        <p className="auth-page__subtitle">{subtitle}</p>
 
         <form className="auth-page__form" onSubmit={handleSubmit} noValidate>
           {mode === "register" && (
@@ -104,63 +219,100 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
             </div>
           )}
 
-          <div className="auth-page__field">
-            <label htmlFor="auth-email">Correo electrónico</label>
-            <input
-              id="auth-email"
-              type="email"
-              placeholder="correo@ejemplo.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              autoFocus={mode === "login"}
-            />
-          </div>
+          {mode !== "reset" && (
+            <div className="auth-page__field">
+              <label htmlFor="auth-email">Correo electrónico</label>
+              <input
+                id="auth-email"
+                type="email"
+                placeholder="correo@ejemplo.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                autoFocus={mode === "login" || mode === "forgot"}
+              />
+            </div>
+          )}
 
-          <div className="auth-page__field">
-            <label htmlFor="auth-password">Contraseña</label>
-            <input
-              id="auth-password"
-              type="password"
-              placeholder={mode === "register" ? "Mínimo 6 caracteres" : "Tu contraseña"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete={mode === "login" ? "current-password" : "new-password"}
-            />
-          </div>
+          {mode !== "forgot" && (
+            <div className="auth-page__field">
+              <label htmlFor="auth-password">
+                {mode === "reset" ? "Nueva contraseña" : "Contraseña"}
+              </label>
+              <input
+                id="auth-password"
+                type="password"
+                placeholder={
+                  mode === "login" ? "Tu contraseña" : "Mínimo 6 caracteres"
+                }
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete={
+                  mode === "login" ? "current-password" : "new-password"
+                }
+                autoFocus={mode === "reset"}
+              />
+            </div>
+          )}
 
-          {error && <div className="auth-page__error" role="alert">{error}</div>}
+          {mode === "reset" && (
+            <div className="auth-page__field">
+              <label htmlFor="auth-confirm-password">
+                Confirmar contraseña
+              </label>
+              <input
+                id="auth-confirm-password"
+                type="password"
+                placeholder="Repite la contraseña"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                autoComplete="new-password"
+              />
+            </div>
+          )}
+
+          {error && (
+            <div className="auth-page__error" role="alert">
+              {error}
+            </div>
+          )}
+          {message && <div className="auth-page__message">{message}</div>}
 
           <button
             type="submit"
             className="auth-page__submit"
             disabled={loading}
           >
-            {loading
-              ? "Cargando..."
-              : mode === "login"
-              ? "Iniciar sesión"
-              : "Crear cuenta"}
+            {submitLabel}
           </button>
         </form>
 
         <div className="auth-page__toggle">
           {mode === "login" ? (
             <>
-              ¿No tienes cuenta?{" "}
+              <button type="button" onClick={goToForgotPassword}>
+                Olvidé mi contraseña
+              </button>
+              <span className="auth-page__toggle-separator">|</span>
+              No tienes cuenta?{" "}
               <button type="button" onClick={switchMode}>
                 Regístrate
               </button>
             </>
-          ) : (
+          ) : mode === "register" ? (
             <>
-              ¿Ya tienes cuenta?{" "}
+              Ya tienes cuenta?{" "}
               <button type="button" onClick={switchMode}>
                 Inicia sesión
               </button>
             </>
+          ) : (
+            <button type="button" onClick={goToLogin}>
+              Volver al inicio de sesión
+            </button>
           )}
         </div>
       </div>

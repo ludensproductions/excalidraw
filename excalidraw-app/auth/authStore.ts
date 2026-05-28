@@ -1,6 +1,6 @@
-import type { Session } from "@supabase/supabase-js";
-
 import { supabase } from "../data/supabase";
+
+import type { Session } from "@supabase/supabase-js";
 
 export interface AuthUser {
   id: string;
@@ -168,6 +168,74 @@ export async function loginUser(
   await applySession(data.session);
   if (!currentUser) {
     throw new Error("No se pudo iniciar sesión.");
+  }
+  return currentUser;
+}
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  const trimmedEmail = email.trim();
+  if (!trimmedEmail) {
+    throw new Error("Ingresa tu correo electrónico.");
+  }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
+    redirectTo: `${window.location.origin}${window.location.pathname}`,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function beginPasswordRecoveryFromUrl(): Promise<boolean> {
+  const hashParams = new URLSearchParams(
+    window.location.hash.replace(/^#/, ""),
+  );
+  const queryParams = new URLSearchParams(window.location.search);
+  const type = hashParams.get("type") ?? queryParams.get("type");
+  const code = queryParams.get("code") ?? hashParams.get("code");
+  const accessToken = hashParams.get("access_token");
+  const refreshToken = hashParams.get("refresh_token");
+
+  if (type !== "recovery" && !code) {
+    return false;
+  }
+
+  if (accessToken && refreshToken) {
+    const { error } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+    if (error) {
+      throw new Error(error.message);
+    }
+  } else if (code) {
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) {
+      throw new Error(error.message);
+    }
+  } else {
+    throw new Error("El enlace de recuperación no es válido o expiró.");
+  }
+
+  window.history.replaceState({}, "", window.location.pathname);
+  return true;
+}
+
+export async function updatePassword(password: string): Promise<AuthUser> {
+  if (password.length < 6) {
+    throw new Error("La contraseña debe tener al menos 6 caracteres.");
+  }
+
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const { data } = await supabase.auth.getSession();
+  await applySession(data.session);
+  if (!currentUser) {
+    throw new Error("Contraseña actualizada, pero no se pudo iniciar sesión.");
   }
   return currentUser;
 }
