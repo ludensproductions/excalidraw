@@ -1,4 +1,4 @@
-import { exportToBlob, useExcalidrawAPI } from "@excalidraw/excalidraw";
+﻿import { exportToBlob, useExcalidrawAPI } from "@excalidraw/excalidraw";
 import { useCallback, useEffect, useRef } from "react";
 
 import { activeBoardAtom, appJotaiStore, useAtomValue } from "../app-jotai";
@@ -19,13 +19,19 @@ export const useAutoSaveBoard = () => {
 
   // Refs so the debounced async callback always sees latest values
   const activeBoardRef = useRef(activeBoard);
+  const ensuredBoardIdRef = useRef<string | null>(activeBoard.id);
   const isCollaboratingRef = useRef(isCollaborating);
   const activeRoomLinkRef = useRef(activeRoomLink);
   const excalidrawAPIRef = useRef(excalidrawAPI);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inFlightSaveRef = useRef<Promise<void> | null>(null);
+  const queuedSaveRef = useRef(false);
 
   useEffect(() => {
     activeBoardRef.current = activeBoard;
+    if (activeBoard.id) {
+      ensuredBoardIdRef.current = activeBoard.id;
+    }
   }, [activeBoard]);
   useEffect(() => {
     isCollaboratingRef.current = isCollaborating;
@@ -37,7 +43,7 @@ export const useAutoSaveBoard = () => {
     excalidrawAPIRef.current = excalidrawAPI;
   }, [excalidrawAPI]);
 
-  const doSave = useCallback(async () => {
+  const runSave = useCallback(async () => {
     const board = activeBoardRef.current;
     const api = excalidrawAPIRef.current;
     if (!api) {
@@ -82,7 +88,7 @@ export const useAutoSaveBoard = () => {
     try {
       const record = await DrawingsStore.save(
         {
-          name: board.name ?? "Sin título",
+          name: board.name ?? "Sin titulo",
           elements,
           appState: { viewBackgroundColor: appState.viewBackgroundColor },
           thumbnail,
@@ -92,8 +98,9 @@ export const useAutoSaveBoard = () => {
               : null,
           userId: getCurrentUser()?.id,
         },
-        board.id ?? undefined,
+        board.id ?? ensuredBoardIdRef.current ?? undefined,
       );
+      ensuredBoardIdRef.current = record.id;
       if (!board.id) {
         // First autosave for a brand-new board: remember the id so subsequent
         // saves update the same record instead of creating new ones.
@@ -105,6 +112,23 @@ export const useAutoSaveBoard = () => {
       // auto-save failures are silent
     }
   }, []);
+
+  const doSave = useCallback(async () => {
+    if (inFlightSaveRef.current) {
+      queuedSaveRef.current = true;
+      await inFlightSaveRef.current;
+      return;
+    }
+
+    do {
+      queuedSaveRef.current = false;
+      const savePromise = runSave().finally(() => {
+        inFlightSaveRef.current = null;
+      });
+      inFlightSaveRef.current = savePromise;
+      await savePromise;
+    } while (queuedSaveRef.current);
+  }, [runSave]);
 
   const scheduleAutoSave = useCallback(() => {
     if (timerRef.current) {
