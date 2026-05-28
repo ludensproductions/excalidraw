@@ -99,6 +99,7 @@ export type SocketUpdateDataSource = {
   MOUSE_LOCATION: {
     type: WS_SUBTYPES.MOUSE_LOCATION;
     payload: {
+      id?: string;
       socketId: SocketId;
       pointer: { x: number; y: number; tool: "pointer" | "laser" };
       button: "down" | "up";
@@ -109,6 +110,7 @@ export type SocketUpdateDataSource = {
   USER_VISIBLE_SCENE_BOUNDS: {
     type: WS_SUBTYPES.USER_VISIBLE_SCENE_BOUNDS;
     payload: {
+      id?: string;
       socketId: SocketId;
       username: string;
       sceneBounds: SceneBounds;
@@ -117,6 +119,7 @@ export type SocketUpdateDataSource = {
   IDLE_STATUS: {
     type: WS_SUBTYPES.IDLE_STATUS;
     payload: {
+      id?: string;
       socketId: SocketId;
       userState: UserIdleState;
       username: string;

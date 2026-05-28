@@ -187,9 +187,10 @@ class Portal {
       const data: SocketUpdateDataSource["IDLE_STATUS"] = {
         type: WS_SUBTYPES.IDLE_STATUS,
         payload: {
+          id: this.collab.getUserId(),
           socketId: this.socket.id as SocketId,
           userState,
-          username: this.collab.state.username,
+          username: this.collab.getUsername(),
         },
       };
       return this._broadcastSocketData(
@@ -207,12 +208,13 @@ class Portal {
       const data: SocketUpdateDataSource["MOUSE_LOCATION"] = {
         type: WS_SUBTYPES.MOUSE_LOCATION,
         payload: {
+          id: this.collab.getUserId(),
           socketId: this.socket.id as SocketId,
           pointer: payload.pointer,
           button: payload.button || "up",
           selectedElementIds:
             this.collab.excalidrawAPI.getAppState().selectedElementIds,
-          username: this.collab.state.username,
+          username: this.collab.getUsername(),
         },
       };
 
@@ -233,8 +235,9 @@ class Portal {
       const data: SocketUpdateDataSource["USER_VISIBLE_SCENE_BOUNDS"] = {
         type: WS_SUBTYPES.USER_VISIBLE_SCENE_BOUNDS,
         payload: {
+          id: this.collab.getUserId(),
           socketId: this.socket.id as SocketId,
-          username: this.collab.state.username,
+          username: this.collab.getUsername(),
           sceneBounds: payload.sceneBounds,
         },
       };

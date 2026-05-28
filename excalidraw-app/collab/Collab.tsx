@@ -87,6 +87,8 @@ import {
 } from "../data/localStorage";
 import { resetBrowserStateVersions } from "../data/tabSync";
 import { SharedBoardsStore } from "../data/SharedBoardsStore";
+import { getCurrentUser } from "../auth/authStore";
+import { DrawingsStore } from "../data/DrawingsStore";
 
 import { collabErrorIndicatorAtom } from "./CollabError";
 import Portal from "./Portal";
@@ -147,7 +149,8 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     this.state = {
       errorMessage: null,
       dialogNotifiedErrors: {},
-      username: importUsernameFromLocalStorage() || "",
+      username:
+        getCurrentUser()?.username || importUsernameFromLocalStorage() || "",
       activeRoomLink: null,
     };
     this.portal = new Portal(this);
@@ -264,23 +267,12 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     // Clear the atom so a stale reference doesn't trigger initializeScene
     // on the next ExcalidrawApp mount before the new Collab instance is ready.
     appJotaiStore.set(collabAPIAtom, null);
+    this.destroySocketClient({ skipStateUpdate: true });
     window.removeEventListener("online", this.onOfflineStatusToggle);
     window.removeEventListener("offline", this.onOfflineStatusToggle);
     window.removeEventListener(EVENT.BEFORE_UNLOAD, this.beforeUnload);
     window.removeEventListener(EVENT.UNLOAD, this.onUnload);
-    window.removeEventListener(EVENT.POINTER_MOVE, this.onPointerMove);
-    window.removeEventListener(
-      EVENT.VISIBILITY_CHANGE,
-      this.onVisibilityChange,
-    );
-    if (this.activeIntervalId) {
-      window.clearInterval(this.activeIntervalId);
-      this.activeIntervalId = null;
-    }
-    if (this.idleTimeoutId) {
-      window.clearTimeout(this.idleTimeoutId);
-      this.idleTimeoutId = null;
-    }
+    this.disposeIdleDetector();
     this.onUmmount?.();
   }
 
@@ -418,13 +410,21 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     );
   };
 
-  private destroySocketClient = (opts?: { isUnload: boolean }) => {
+  private destroySocketClient = (opts?: {
+    isUnload?: boolean;
+    skipStateUpdate?: boolean;
+  }) => {
     this.lastBroadcastedOrReceivedSceneVersion = -1;
     this.portal.close();
     this.fileManager.reset();
+    this.disposeIdleDetector();
     if (!opts?.isUnload) {
       this.setIsCollaborating(false);
-      this.setActiveRoomLink(null);
+      if (opts?.skipStateUpdate) {
+        appJotaiStore.set(activeRoomLinkAtom, null);
+      } else {
+        this.setActiveRoomLink(null);
+      }
       this.collaborators = new Map();
       this.excalidrawAPI.updateScene({
         collaborators: this.collaborators,
@@ -487,7 +487,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
   startCollaboration = async (
     existingRoomLinkData: null | { roomId: string; roomKey: string },
   ) => {
-    if (!this.state.username) {
+    if (!this.getUsername()) {
       import("@excalidraw/random-username").then(({ getRandomUsername }) => {
         const username = getRandomUsername();
         this.setUsername(username);
@@ -624,7 +624,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
             );
             break;
           case WS_SUBTYPES.MOUSE_LOCATION: {
-            const { pointer, button, username, selectedElementIds } =
+            const { id, pointer, button, username, selectedElementIds } =
               decryptedData.payload;
 
             const socketId: SocketUpdateDataSource["MOUSE_LOCATION"]["payload"]["socketId"] =
@@ -633,6 +633,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
               decryptedData.payload.socketID;
 
             this.updateCollaborator(socketId, {
+              id,
               pointer,
               button,
               selectedElementIds,
@@ -677,8 +678,9 @@ class Collab extends PureComponent<CollabProps, CollabState> {
           }
 
           case WS_SUBTYPES.IDLE_STATUS: {
-            const { userState, socketId, username } = decryptedData.payload;
+            const { id, userState, socketId, username } = decryptedData.payload;
             this.updateCollaborator(socketId, {
+              id,
               userState,
               username,
             });
@@ -718,18 +720,32 @@ class Collab extends PureComponent<CollabProps, CollabState> {
 
     this.setActiveRoomLink(window.location.href);
 
-    // Register this session in Supabase so all participants can find it
-    // from the Dashboard "Compartidos" tab. Fire-and-forget.
     const activeBoard = appJotaiStore.get(activeBoardAtom);
-    const boardName =
-      activeBoard?.name ||
-      (existingRoomLinkData ? "Tablero compartido" : "Nueva sesión");
-    SharedBoardsStore.joinOrCreate({
-      roomId,
-      roomKey,
-      name: boardName,
-      username: this.state.username || "Usuario",
-    });
+    const username = this.getUsername() || "Usuario";
+    if (existingRoomLinkData) {
+      // Joining an arbitrary live room should not publish a new shared board.
+      // Only attach this user if the owner already published the board.
+      SharedBoardsStore.joinExisting({
+        roomId,
+        roomKey,
+        username,
+      });
+    } else if (activeBoard?.id) {
+      // Publish saved boards only. Blank/live-only rooms stay out of the
+      // Dashboard "Compartidos" list.
+      SharedBoardsStore.joinOrCreate({
+        roomId,
+        roomKey,
+        name: activeBoard.name || "Tablero compartido",
+        username,
+      });
+      DrawingsStore.setCollabLink(
+        activeBoard.id,
+        getCollaborationLink({ roomId, roomKey }),
+      ).catch((error) => {
+        console.error("Failed to persist collaboration link:", error);
+      });
+    }
 
     return scenePromise;
   };
@@ -895,14 +911,40 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     document.addEventListener(EVENT.VISIBILITY_CHANGE, this.onVisibilityChange);
   };
 
+  private disposeIdleDetector = () => {
+    document.removeEventListener(EVENT.POINTER_MOVE, this.onPointerMove);
+    document.removeEventListener(
+      EVENT.VISIBILITY_CHANGE,
+      this.onVisibilityChange,
+    );
+    if (this.activeIntervalId) {
+      window.clearInterval(this.activeIntervalId);
+      this.activeIntervalId = null;
+    }
+    if (this.idleTimeoutId) {
+      window.clearTimeout(this.idleTimeoutId);
+      this.idleTimeoutId = null;
+    }
+  };
+
+  getUserId = () => getCurrentUser()?.id;
+
   setCollaborators(sockets: SocketId[]) {
     const collaborators: InstanceType<typeof Collab>["collaborators"] =
       new Map();
     for (const socketId of sockets) {
+      const isCurrentUser = socketId === this.portal.socket?.id;
+      const currentUser = isCurrentUser ? getCurrentUser() : null;
       collaborators.set(
         socketId,
         Object.assign({}, this.collaborators.get(socketId), {
-          isCurrentUser: socketId === this.portal.socket?.id,
+          id: currentUser?.id || this.collaborators.get(socketId)?.id,
+          username:
+            this.collaborators.get(socketId)?.username ||
+            (isCurrentUser
+              ? this.getUsername() || currentUser?.username
+              : undefined),
+          isCurrentUser,
         }),
       );
     }
@@ -917,6 +959,10 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       collaborators.get(socketId),
       updates,
       {
+        id:
+          updates.id ||
+          collaborators.get(socketId)?.id ||
+          (socketId === this.portal.socket?.id ? this.getUserId() : undefined),
         isCurrentUser: socketId === this.portal.socket?.id,
       },
     );
@@ -1019,7 +1065,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     saveUsernameToLocalStorage(username);
   };
 
-  getUsername = () => this.state.username;
+  getUsername = () => getCurrentUser()?.username || this.state.username;
 
   setActiveRoomLink = (activeRoomLink: string | null) => {
     this.setState({ activeRoomLink });

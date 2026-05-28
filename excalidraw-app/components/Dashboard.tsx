@@ -1,14 +1,15 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { activeBoardAtom, appJotaiStore } from "../app-jotai";
-import type { AuthUser } from "../auth/authStore";
-import { DrawingsStore } from "../data/DrawingsStore";
-import type { DrawingRecord } from "../data/DrawingsStore";
-import { SharedBoardsStore } from "../data/SharedBoardsStore";
-import type { SharedBoard } from "../data/SharedBoardsStore";
 import { getCollaborationLinkData } from "../data";
+import { DrawingsStore } from "../data/DrawingsStore";
+import { SharedBoardsStore } from "../data/SharedBoardsStore";
 
 import "./Dashboard.scss";
+
+import type { AuthUser } from "../auth/authStore";
+import type { DrawingRecord } from "../data/DrawingsStore";
+import type { SharedBoard } from "../data/SharedBoardsStore";
 
 const formatDate = (ts: number): string => {
   const d = new Date(ts);
@@ -366,10 +367,30 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const handleLeaveSharedBoard = async (board: SharedBoard) => {
-    if (!window.confirm(`¿Salir del tablero "${board.name}"?`)) {
+    const isOwner = board.createdBy === user.id;
+    const action = isOwner ? "Eliminar" : "Salir del";
+    if (!window.confirm(`${action} tablero "${board.name}"?`)) {
       return;
     }
-    await SharedBoardsStore.leave(board.id);
+    await SharedBoardsStore.leave(board.id, isOwner);
+    if (isOwner) {
+      const linkedBoards = boards.filter(
+        (ownBoard) =>
+          getRoomIdFromCollabLink(ownBoard.collabLink) === board.roomId,
+      );
+      await Promise.all(
+        linkedBoards.map((ownBoard) =>
+          DrawingsStore.setCollabLink(ownBoard.id, null),
+        ),
+      );
+      setBoards((prev) =>
+        prev.map((ownBoard) =>
+          getRoomIdFromCollabLink(ownBoard.collabLink) === board.roomId
+            ? { ...ownBoard, collabLink: null }
+            : ownBoard,
+        ),
+      );
+    }
     setSharedBoards((prev) => prev.filter((b) => b.id !== board.id));
   };
 
@@ -456,7 +477,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         <nav className="dashboard__tabs">
           <button
-            className={`dashboard__tab${activeTab === "recent" ? " active" : ""}`}
+            className={`dashboard__tab${
+              activeTab === "recent" ? " active" : ""
+            }`}
             onClick={() => setActiveTab("recent")}
           >
             Recientes
@@ -468,12 +491,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
             Mis tableros
           </button>
           <button
-            className={`dashboard__tab${activeTab === "shared" ? " active" : ""}`}
+            className={`dashboard__tab${
+              activeTab === "shared" ? " active" : ""
+            }`}
             onClick={() => setActiveTab("shared")}
           >
             Compartidos
             {sharedBoards.length > 0 && (
-              <span className="dashboard__tab-badge">{sharedBoards.length}</span>
+              <span className="dashboard__tab-badge">
+                {sharedBoards.length}
+              </span>
             )}
           </button>
         </nav>
@@ -528,8 +555,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <div className="dashboard__empty">
                 <p>Aún no participas en ningún tablero compartido.</p>
                 <p style={{ fontSize: "0.875rem", color: "#9ca3af" }}>
-                  Inicia o únete a una sesión de colaboración en vivo para
-                  que aparezca aquí.
+                  Inicia o únete a una sesión de colaboración en vivo para que
+                  aparezca aquí.
                 </p>
               </div>
             ) : (
@@ -548,89 +575,89 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </>
         ) : (
           <>
-          <div className="dashboard__section-header">
-          <h2>
-            {activeTab === "recent" ? "Recientes" : "Mis tableros"}
-            {!loading &&
-              (activeTab === "recent"
-                ? recentItems.length > 0
-                : privateBoards.length > 0) && (
-              <span
-                style={{
-                  fontSize: "0.875rem",
-                  fontWeight: 400,
-                  color: "#9ca3af",
-                  marginLeft: "0.5rem",
-                }}
-              >
-                {activeTab === "recent"
-                  ? `(${recentItems.length})`
-                  : `(${privateBoards.length})`}
-              </span>
-            )}
-          </h2>
-          <button className="dashboard__new-btn" onClick={onNewBoard}>
-            + Nuevo board
-          </button>
-        </div>
+            <div className="dashboard__section-header">
+              <h2>
+                {activeTab === "recent" ? "Recientes" : "Mis tableros"}
+                {!loading &&
+                  (activeTab === "recent"
+                    ? recentItems.length > 0
+                    : privateBoards.length > 0) && (
+                    <span
+                      style={{
+                        fontSize: "0.875rem",
+                        fontWeight: 400,
+                        color: "#9ca3af",
+                        marginLeft: "0.5rem",
+                      }}
+                    >
+                      {activeTab === "recent"
+                        ? `(${recentItems.length})`
+                        : `(${privateBoards.length})`}
+                    </span>
+                  )}
+              </h2>
+              <button className="dashboard__new-btn" onClick={onNewBoard}>
+                + Nuevo board
+              </button>
+            </div>
 
-        {loading ? (
-          <div className="dashboard__loading">
-            <p>Cargando boards...</p>
-          </div>
-        ) : activeTab === "recent" && recentItems.length === 0 ? (
-          <div className="dashboard__empty">
-            <PencilIcon />
-            <p>No tienes boards aún.</p>
-            <button className="dashboard__new-btn" onClick={onNewBoard}>
-              Crear tu primer board
-            </button>
-          </div>
-        ) : activeTab === "all" && displayedBoards.length === 0 ? (
-          <div className="dashboard__empty">
-            <PencilIcon />
-            <p>No tienes boards guardados.</p>
-            <button className="dashboard__new-btn" onClick={onNewBoard}>
-              Crear tu primer board
-            </button>
-          </div>
-        ) : activeTab === "recent" ? (
-          <div className="dashboard__grid">
-            {recentItems.map((item) =>
-              item.type === "own" ? (
-                <BoardCard
-                  key={`own:${item.board.id}`}
-                  board={item.board}
-                  onOpen={handleOpenBoard}
-                  onDelete={handleDelete}
-                  onRename={handleRename}
-                  onClearCollabLink={handleClearCollabLink}
-                />
-              ) : (
-                <SharedBoardCard
-                  key={`shared:${item.board.id}`}
-                  board={item.board}
-                  currentUserId={user.id}
-                  onJoin={onOpenSharedBoard}
-                  onLeave={handleLeaveSharedBoard}
-                />
-              ),
+            {loading ? (
+              <div className="dashboard__loading">
+                <p>Cargando boards...</p>
+              </div>
+            ) : activeTab === "recent" && recentItems.length === 0 ? (
+              <div className="dashboard__empty">
+                <PencilIcon />
+                <p>No tienes boards aún.</p>
+                <button className="dashboard__new-btn" onClick={onNewBoard}>
+                  Crear tu primer board
+                </button>
+              </div>
+            ) : activeTab === "all" && displayedBoards.length === 0 ? (
+              <div className="dashboard__empty">
+                <PencilIcon />
+                <p>No tienes boards guardados.</p>
+                <button className="dashboard__new-btn" onClick={onNewBoard}>
+                  Crear tu primer board
+                </button>
+              </div>
+            ) : activeTab === "recent" ? (
+              <div className="dashboard__grid">
+                {recentItems.map((item) =>
+                  item.type === "own" ? (
+                    <BoardCard
+                      key={`own:${item.board.id}`}
+                      board={item.board}
+                      onOpen={handleOpenBoard}
+                      onDelete={handleDelete}
+                      onRename={handleRename}
+                      onClearCollabLink={handleClearCollabLink}
+                    />
+                  ) : (
+                    <SharedBoardCard
+                      key={`shared:${item.board.id}`}
+                      board={item.board}
+                      currentUserId={user.id}
+                      onJoin={onOpenSharedBoard}
+                      onLeave={handleLeaveSharedBoard}
+                    />
+                  ),
+                )}
+              </div>
+            ) : (
+              <div className="dashboard__grid">
+                {displayedBoards.map((board) => (
+                  <BoardCard
+                    key={board.id}
+                    board={board}
+                    onOpen={handleOpenBoard}
+                    onDelete={handleDelete}
+                    onRename={handleRename}
+                    onClearCollabLink={handleClearCollabLink}
+                  />
+                ))}
+              </div>
             )}
-          </div>
-        ) : (
-          <div className="dashboard__grid">
-            {displayedBoards.map((board) => (
-              <BoardCard
-                key={board.id}
-                board={board}
-                onOpen={handleOpenBoard}
-                onDelete={handleDelete}
-                onRename={handleRename}
-                onClearCollabLink={handleClearCollabLink}
-              />
-            ))}
-          </div>
-        )}
           </>
         )}
       </main>

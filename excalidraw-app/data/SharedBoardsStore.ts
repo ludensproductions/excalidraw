@@ -76,19 +76,52 @@ export const SharedBoardsStore = {
     }
   },
 
+  /** Registers the caller only if the shared board was already published. */
+  async joinExisting(params: {
+    roomId: string;
+    roomKey: string;
+    username: string;
+  }): Promise<void> {
+    const { error } = await supabase.rpc("join_existing_shared_board", {
+      p_room_id: params.roomId,
+      p_room_key: params.roomKey,
+      p_username: params.username || "Usuario",
+    });
+
+    if (error) {
+      console.error(
+        `SharedBoardsStore.joinExisting failed (code: ${error.code}): ${error.message}`,
+        "\nHint: verify that the join_existing_shared_board RPC exists in your Supabase project.",
+        error,
+      );
+    }
+  },
+
   async rename(id: string, name: string): Promise<void> {
     const { error } = await supabase
       .from("shared_boards")
       .update({ name })
       .eq("id", id);
-    if (error) throw new Error(error.message);
+    if (error) {
+      throw new Error(error.message);
+    }
   },
 
-  async leave(boardId: string): Promise<void> {
+  async leave(boardId: string, isOwner = false): Promise<void> {
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
+      return;
+    }
+    if (isOwner) {
+      const { error } = await supabase
+        .from("shared_boards")
+        .delete()
+        .eq("id", boardId);
+      if (error) {
+        throw new Error(error.message);
+      }
       return;
     }
     const { error } = await supabase
@@ -96,6 +129,8 @@ export const SharedBoardsStore = {
       .delete()
       .eq("board_id", boardId)
       .eq("user_id", user.id);
-    if (error) throw new Error(error.message);
+    if (error) {
+      throw new Error(error.message);
+    }
   },
 };
