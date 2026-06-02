@@ -19,7 +19,7 @@ Pizarrón virtual de estilo dibujado a mano, colaborativo y cifrado de extremo a
 | Herramienta | Versión mínima |
 |---|---|
 | Node.js | 18+ |
-| Yarn | 1.22+ |
+| Yarn    | 1.22+ |
 | Docker + Docker Compose | cualquier versión reciente |
 | Cuenta Supabase | gratuita |
 | Proyecto Firebase | gratuito (Spark) |
@@ -71,13 +71,17 @@ Pizarrón virtual de estilo dibujado a mano, colaborativo y cifrado de extremo a
 # 1. Instalar dependencias
 yarn
 
-# 2. Levantar el servidor de colaboración (WebSocket) con Docker
-docker compose up -d excalidraw-room
-
-# 3. Arrancar el dev server (hot-reload)
-yarn start
-#  → http://localhost:3000
+# 2. Levantar todos los servicios (collab room + app)
+docker compose up -d
+#  → App en http://localhost:3000
+#  → Servidor de collab en http://localhost:3002
 ```
+
+> Para desarrollo con hot-reload en lugar de Docker:
+> ```bash
+> docker compose up -d excalidraw-room   # solo el servidor WebSocket
+> yarn start                              # dev server con HMR
+> ```
 
 ### Scripts útiles
 
@@ -96,9 +100,8 @@ yarn build            # Build de producción de la app
 Asegúrate de que `.env` tiene todos los valores correctos (especialmente las de Supabase y Firebase).
 
 ```bash
-# Construir imagen y levantar todos los servicios
-docker compose up --build
-
+# Primera vez o tras cambiar variables del .env
+docker compose up -d --build
 #  → App en http://localhost:3000
 #  → Servidor de collab en http://localhost:3002
 ```
@@ -106,15 +109,7 @@ docker compose up --build
 Para reconstruir solo la app tras cambiar variables del `.env`:
 
 ```bash
-docker compose up --build excalidraw
-```
-
-Para gestionar solo el servidor de colaboración:
-
-```bash
-yarn collab:up     # iniciar
-yarn collab:down   # parar
-yarn collab:logs   # ver logs
+docker compose up -d --build excalidraw
 ```
 
 ---
