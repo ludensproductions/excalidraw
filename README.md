@@ -1,124 +1,175 @@
-<a href="https://excalidraw.com/" target="_blank" rel="noopener">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" alt="Excalidraw" srcset="https://excalidraw.nyc3.cdn.digitaloceanspaces.com/github/excalidraw_github_cover_2_dark.png" />
-    <img alt="Excalidraw" src="https://excalidraw.nyc3.cdn.digitaloceanspaces.com/github/excalidraw_github_cover_2.png" />
-  </picture>
-</a>
+# Excalidraw – Fork ISSIRMAX
 
-<h4 align="center">
-  <a href="https://excalidraw.com">Excalidraw Editor</a> |
-  <a href="https://plus.excalidraw.com/blog">Blog</a> |
-  <a href="https://docs.excalidraw.com">Documentation</a> |
-  <a href="https://plus.excalidraw.com">Excalidraw+</a>
-</h4>
+Fork de [Excalidraw](https://excalidraw.com) con autenticación de usuarios via **Supabase** y dashboard personal de dibujos guardados.
 
-<div align="center">
-  <h2>
-    An open source virtual hand-drawn style whiteboard. </br>
-    Collaborative and end-to-end encrypted. </br>
-  <br />
-  </h2>
-</div>
+## ¿Qué es este proyecto?
 
-<br />
-<p align="center">
-  <a href="https://github.com/excalidraw/excalidraw/blob/master/LICENSE">
-    <img alt="Excalidraw is released under the MIT license." src="https://img.shields.io/badge/license-MIT-blue.svg"  /></a>
-  <a href="https://www.npmjs.com/package/@excalidraw/excalidraw">
-    <img alt="npm downloads/month" src="https://img.shields.io/npm/dm/@excalidraw/excalidraw"  /></a>
-  <a href="https://docs.excalidraw.com/docs/introduction/contributing">
-    <img alt="PRs welcome!" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat"  /></a>
-  <a href="https://discord.gg/UexuTaE">
-    <img alt="Chat on Discord" src="https://img.shields.io/discord/723672430744174682?color=738ad6&label=Chat%20on%20Discord&logo=discord&logoColor=ffffff&widget=false"/></a>
-  <a href="https://deepwiki.com/excalidraw/excalidraw">
-    <img alt="Ask DeepWiki" src="https://deepwiki.com/badge.svg" /></a>
-  <a href="https://twitter.com/excalidraw">
-    <img alt="Follow Excalidraw on Twitter" src="https://img.shields.io/twitter/follow/excalidraw.svg?label=follow+@excalidraw&style=social&logo=twitter"/></a>
-</p>
+Pizarrón virtual de estilo dibujado a mano, colaborativo y cifrado de extremo a extremo. Esta versión añade:
 
-<div align="center">
-  <figure>
-    <a href="https://excalidraw.com" target="_blank" rel="noopener">
-      <img src="https://excalidraw.nyc3.cdn.digitaloceanspaces.com/github%2Fproduct_showcase.png" alt="Product showcase" />
-    </a>
-    <figcaption>
-      <p align="center">
-        Create beautiful hand-drawn like diagrams, wireframes, or whatever you like.
-      </p>
-    </figcaption>
-  </figure>
-</div>
+- **Autenticación** (registro / login) con Supabase Auth
+- **Dashboard** personal: guarda, carga y gestiona tus dibujos desde cualquier dispositivo
+- **Colaboración en tiempo real** a través de WebSockets (`excalidraw-room`)
+- **IA integrada** para convertir wireframes en código
+- **PWA**: instalable como app de escritorio/móvil
 
-## Features
+---
 
-The Excalidraw editor (npm package) supports:
+## Requisitos previos
 
-- 💯&nbsp;Free & open-source.
-- 🎨&nbsp;Infinite, canvas-based whiteboard.
-- ✍️&nbsp;Hand-drawn like style.
-- 🌓&nbsp;Dark mode.
-- 🏗️&nbsp;Customizable.
-- 📷&nbsp;Image support.
-- 😀&nbsp;Shape libraries support.
-- 🌐&nbsp;Localization (i18n) support.
-- 🖼️&nbsp;Export to PNG, SVG & clipboard.
-- 💾&nbsp;Open format - export drawings as an `.excalidraw` json file.
-- ⚒️&nbsp;Wide range of tools - rectangle, circle, diamond, arrow, line, free-draw, eraser...
-- ➡️&nbsp;Arrow-binding & labeled arrows.
-- 🔙&nbsp;Undo / Redo.
-- 🔍&nbsp;Zoom and panning support.
+| Herramienta | Versión mínima |
+|---|---|
+| Node.js | 18+ |
+| Yarn | 1.22+ |
+| Docker + Docker Compose | cualquier versión reciente |
+| Cuenta Supabase | gratuita |
+| Proyecto Firebase | gratuito (Spark) |
 
-## Excalidraw.com
+---
 
-The app hosted at [excalidraw.com](https://excalidraw.com) is a minimal showcase of what you can build with Excalidraw. Its [source code](https://github.com/excalidraw/excalidraw/tree/master/excalidraw-app) is part of this repository as well, and the app features:
+## Configuración del entorno
 
-- 📡&nbsp;PWA support (works offline).
-- 🤼&nbsp;Real-time collaboration.
-- 🔒&nbsp;End-to-end encryption.
-- 💾&nbsp;Local-first support (autosaves to the browser).
-- 🔗&nbsp;Shareable links (export to a readonly link you can share with others).
+1. Copia el archivo de ejemplo:
+   ```bash
+   cp .env.example .env
+   ```
 
-We'll be adding these features as drop-in plugins for the npm package in the future.
+2. Rellena las variables obligatorias (ver tabla abajo).
 
-## Quick start
+3. **Nunca** subas `.env` al repositorio — está en `.gitignore`.
 
-**Note:** following instructions are for installing the Excalidraw [npm package](https://www.npmjs.com/package/@excalidraw/excalidraw) when integrating Excalidraw into your own app. To run the repository locally for development, please refer to our [Development Guide](https://docs.excalidraw.com/docs/introduction/development).
+### Variables obligatorias
 
-Use `npm` or `yarn` to install the package.
+| Variable | Descripción | Cómo obtenerla |
+|---|---|---|
+| `VITE_APP_SUPABASE_URL` | URL de tu proyecto Supabase | Supabase Dashboard → Settings → API |
+| `VITE_APP_SUPABASE_ANON_KEY` | Clave anon pública de Supabase | Supabase Dashboard → Settings → API |
+| `VITE_APP_FIREBASE_CONFIG` | JSON de configuración Firebase | Firebase Console → Project Settings → Your apps |
+| `VITE_APP_WS_SERVER_URL` | URL del servidor de colaboración WebSocket | `http://localhost:3002` en local |
+
+### Variables opcionales relevantes
+
+| Variable | Default | Descripción |
+|---|---|---|
+| `NODE_ENV` | `production` | Modo de build de Node |
+| `VITE_APP_PORT` | `3000` | Puerto del dev server de Vite |
+| `FAST_REFRESH` | `false` | Fast Refresh de React en dev |
+| `VITE_APP_BACKEND_V2_GET_URL` | URL pública excalidraw.com | Endpoint GET para escenas compartidas |
+| `VITE_APP_BACKEND_V2_POST_URL` | URL pública excalidraw.com | Endpoint POST para escenas compartidas |
+| `VITE_APP_AI_BACKEND` | URL pública excalidraw.com | Backend de IA (wireframes → código) |
+| `VITE_APP_DISABLE_SENTRY` | `true` | Desactiva reporte de errores a Sentry |
+| `VITE_APP_ENABLE_TRACKING` | `false` | Desactiva telemetría de uso |
+| `VITE_APP_ENABLE_PWA` | `true` | Habilita service worker e instalación PWA |
+| `VITE_APP_PLUS_LP` / `VITE_APP_PLUS_APP` | vacío | Solo si integras con Excalidraw+; dejar vacío en self-hosted |
+
+> **Importante:** las variables `VITE_APP_*` se **hornean en el bundle** en tiempo de build. Cambiarlas después de construir no tiene efecto; hay que reconstruir.
+
+---
+
+## Desarrollo local
 
 ```bash
-npm install react react-dom @excalidraw/excalidraw
-# or
-yarn add react react-dom @excalidraw/excalidraw
+# 1. Instalar dependencias
+yarn
+
+# 2. Levantar el servidor de colaboración (WebSocket) con Docker
+docker compose up -d excalidraw-room
+
+# 3. Arrancar el dev server (hot-reload)
+yarn start
+#  → http://localhost:3000
 ```
 
-Check out our [documentation](https://docs.excalidraw.com/docs/@excalidraw/excalidraw/installation) for more details!
+### Scripts útiles
 
-## Contributing
+```bash
+yarn test:typecheck   # Verificación de tipos TypeScript
+yarn test:app         # Ejecutar tests con Vitest
+yarn test:update      # Ejecutar tests y actualizar snapshots
+yarn fix              # Auto-fix de formato y linting
+yarn build            # Build de producción de la app
+```
 
-- Missing something or found a bug? [Report here](https://github.com/excalidraw/excalidraw/issues).
-- Want to contribute? Check out our [contribution guide](https://docs.excalidraw.com/docs/introduction/contributing) or let us know on [Discord](https://discord.gg/UexuTaE).
-- Want to help with translations? See the [translation guide](https://docs.excalidraw.com/docs/introduction/contributing#translating).
+---
 
-## Integrations
+## Ejecución con Docker (producción)
 
-- [VScode extension](https://marketplace.visualstudio.com/items?itemName=pomdtr.excalidraw-editor)
-- [npm package](https://www.npmjs.com/package/@excalidraw/excalidraw)
+Asegúrate de que `.env` tiene todos los valores correctos (especialmente las de Supabase y Firebase).
 
-## Who's integrating Excalidraw
+```bash
+# Construir imagen y levantar todos los servicios
+docker compose up --build
 
-[Google Cloud](https://googlecloudcheatsheet.withgoogle.com/architecture) • [Meta](https://meta.com/) • [CodeSandbox](https://codesandbox.io/) • [Obsidian Excalidraw](https://github.com/zsviczian/obsidian-excalidraw-plugin) • [Replit](https://replit.com/) • [Slite](https://slite.com/) • [Notion](https://notion.so/) • [HackerRank](https://www.hackerrank.com/) • and many others
+#  → App en http://localhost:3000
+#  → Servidor de collab en http://localhost:3002
+```
 
-## Sponsors & support
+Para reconstruir solo la app tras cambiar variables del `.env`:
 
-If you like the project, you can become a sponsor at [Open Collective](https://opencollective.com/excalidraw) or use [Excalidraw+](https://plus.excalidraw.com/).
+```bash
+docker compose up --build excalidraw
+```
 
-## Thank you for supporting Excalidraw
+Para gestionar solo el servidor de colaboración:
 
-[<img src="https://opencollective.com/excalidraw/tiers/sponsors/0/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/0/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/1/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/1/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/2/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/2/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/3/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/3/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/4/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/4/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/5/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/5/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/6/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/6/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/7/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/7/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/8/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/8/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/9/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/9/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/10/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/10/website)
+```bash
+yarn collab:up     # iniciar
+yarn collab:down   # parar
+yarn collab:logs   # ver logs
+```
 
-<a href="https://opencollective.com/excalidraw#category-CONTRIBUTE" target="_blank"><img src="https://opencollective.com/excalidraw/tiers/backers.svg?avatarHeight=32"/></a>
+---
 
-Last but not least, we're thankful to these companies for offering their services for free:
+## Configurar Supabase
 
-[![Vercel](./.github/assets/vercel.svg)](https://vercel.com) [![Sentry](./.github/assets/sentry.svg)](https://sentry.io) [![Crowdin](./.github/assets/crowdin.svg)](https://crowdin.com)
+1. Crea un proyecto en [supabase.com](https://supabase.com).
+2. Copia `VITE_APP_SUPABASE_URL` y `VITE_APP_SUPABASE_ANON_KEY` desde **Settings → API**.
+3. Aplica las migraciones de la base de datos:
+   ```bash
+   # Con Supabase CLI instalado
+   supabase db push
+   ```
+   O ejecuta manualmente los archivos en `supabase/migrations/`.
+4. Habilita los providers de autenticación que necesites en **Authentication → Providers**.
+
+---
+
+## Configurar Firebase
+
+1. Crea un proyecto en [Firebase Console](https://console.firebase.google.com).
+2. Agrega una **Web App** y copia el objeto de configuración.
+3. Pega el JSON (en una sola línea) en `VITE_APP_FIREBASE_CONFIG`:
+   ```
+   VITE_APP_FIREBASE_CONFIG={"apiKey":"...","authDomain":"...","projectId":"...",...}
+   ```
+4. Habilita **Firestore Database** y **Storage** en tu proyecto Firebase.
+
+---
+
+## Estructura del monorepo
+
+```
+excalidraw/
+├── excalidraw-app/     # Aplicación web completa (excalidraw.com / este fork)
+│   ├── auth/           # Páginas y store de autenticación (Supabase)
+│   ├── collab/         # Colaboración en tiempo real (WebSocket)
+│   └── components/     # Componentes de la app (AI, menús, sidebar…)
+├── packages/
+│   ├── excalidraw/     # Librería React publicada en npm (@excalidraw/excalidraw)
+│   ├── common/         # Utilidades compartidas
+│   ├── element/        # Lógica de elementos del canvas
+│   ├── math/           # Utilidades matemáticas (Point, vectores…)
+│   └── utils/          # Helpers genéricos
+├── supabase/           # Migraciones y configuración de Supabase
+├── docker-compose.yml  # Orquestación Docker (app + excalidraw-room)
+├── Dockerfile          # Build multi-stage de la app
+└── .env                # Variables de entorno (no subir al repo)
+```
+
+---
+
+## Notas de seguridad
+
+- El archivo `.env` **nunca** debe commitearse. Está en `.gitignore`.
+- `VITE_APP_SUPABASE_ANON_KEY` es una clave pública segura (solo acceso anon RLS).
+- `VITE_APP_FIREBASE_CONFIG` contiene claves públicas protegidas por reglas de Firestore/Storage.
+- En producción, asegúrate de configurar las **Row Level Security (RLS)** policies en Supabase.
