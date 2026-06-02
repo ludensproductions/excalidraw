@@ -4,6 +4,7 @@ export interface SharedBoardMember {
   userId: string;
   username: string;
   joinedAt: number;
+  readOnly: boolean;
 }
 
 export interface SharedBoard {
@@ -32,6 +33,7 @@ function rowToBoard(row: any): SharedBoard {
       userId: m.user_id as string,
       username: m.username as string,
       joinedAt: new Date(m.joined_at as string).getTime(),
+      readOnly: (m.read_only as boolean) ?? false,
     })),
   };
 }
@@ -56,7 +58,7 @@ export const SharedBoardsStore = {
     const { data, error } = await supabase
       .from("shared_boards")
       .select(
-        "id, room_id, room_key, name, created_by, created_at, updated_at, shared_board_members (user_id, username, joined_at)",
+        "id, room_id, room_key, name, created_by, created_at, updated_at, shared_board_members (user_id, username, joined_at, read_only)",
       )
       .order("updated_at", { ascending: false });
 
@@ -98,12 +100,14 @@ export const SharedBoardsStore = {
     roomId: string;
     roomKey: string;
     username: string;
+    readOnly?: boolean;
     fallbackName?: string | null;
   }): Promise<boolean> {
     const { error } = await supabase.rpc("join_existing_shared_board", {
       p_room_id: params.roomId,
       p_room_key: params.roomKey,
       p_username: params.username || "Usuario",
+      p_read_only: params.readOnly ?? false,
     });
 
     if (error) {

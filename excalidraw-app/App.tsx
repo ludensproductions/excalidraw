@@ -86,6 +86,7 @@ import {
   appJotaiStore,
   activeBoardAtom,
   hasDashboardBackAtom,
+  isReadOnlySessionAtom,
 } from "./app-jotai";
 import {
   FIREBASE_STORAGE_PREFIXES,
@@ -475,6 +476,7 @@ const ExcalidrawWrapper = () => {
   });
   const collabError = useAtomValue(collabErrorIndicatorAtom);
   const hasDashboardBack = useAtomValue(hasDashboardBackAtom);
+  const isReadOnlySession = useAtomValue(isReadOnlySessionAtom);
 
   useHandleLibrary({
     excalidrawAPI,
@@ -930,6 +932,7 @@ const ExcalidrawWrapper = () => {
         initialData={initialStatePromiseRef.current.promise}
         isCollaborating={isCollaborating}
         onPointerUpdate={collabAPI?.onPointerUpdate}
+        viewModeEnabled={isReadOnlySession ? true : undefined}
         UIOptions={{
           canvasActions: {
             toggleTheme: true,
@@ -951,8 +954,10 @@ const ExcalidrawWrapper = () => {
           return (
             <button
               className="dashboard-back-btn"
-              onClick={async () => {
-                await dashboardState.flushAutoSave();
+              onClick={() => {
+                // Save in background — don't block navigation on thumbnail
+                // generation + network upload (which makes the back button feel slow).
+                void dashboardState.flushAutoSave();
                 dashboardState.getOnBack()?.();
               }}
               title="Volver al dashboard"

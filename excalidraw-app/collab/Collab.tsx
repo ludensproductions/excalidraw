@@ -51,7 +51,7 @@ import type {
 } from "@excalidraw/excalidraw/types";
 import type { Mutable, ValueOf } from "@excalidraw/common/utility-types";
 
-import { appJotaiStore, atom, activeBoardAtom } from "../app-jotai";
+import { appJotaiStore, atom, activeBoardAtom, isReadOnlySessionAtom } from "../app-jotai";
 import {
   CURSOR_SYNC_TIMEOUT,
   FILE_UPLOAD_MAX_BYTES,
@@ -493,6 +493,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     this.isReadOnly = false;
     this.isOwnerSession = false;
     appJotaiStore.set(isOwnerAtom, false);
+    appJotaiStore.set(isReadOnlySessionAtom, false);
     this.portal.close();
     this.fileManager.reset();
     this.disposeIdleDetector();
@@ -608,6 +609,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       this.isOwnerSession = getOwnedRooms().has(roomId);
     }
     appJotaiStore.set(isOwnerAtom, this.isOwnerSession);
+    appJotaiStore.set(isReadOnlySessionAtom, this.isReadOnly);
 
     this.setIsCollaborating(true);
     LocalData.pauseSave("collaboration");
@@ -843,17 +845,15 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       // Only attach this user if the owner already published the board.
       // If the room came from a dashboard card, we have a stable board name and
       // can safely fallback to publishing to avoid "vanishing" entries.
-      // Read-only guests are NOT registered in shared_board_members so that
-      // the board doesn't appear in their Compartidos list — reopening it from
-      // there would strip the ",ro" flag and grant edit access.
-      if (!this.isReadOnly) {
-        await SharedBoardsStore.joinExisting({
-          roomId,
-          roomKey,
-          username,
-          fallbackName: activeBoard?.name ?? undefined,
-        });
-      }
+      // Read-only guests are registered with read_only=true so the board appears
+      // in their Compartidos, but the dashboard opens it with the ",ro" URL suffix.
+      await SharedBoardsStore.joinExisting({
+        roomId,
+        roomKey,
+        username,
+        readOnly: this.isReadOnly,
+        fallbackName: activeBoard?.name ?? undefined,
+      });
     } else {
       // Publish every newly-created live room so invitees can see it in their
       // shared dashboard after joining, even if the owner started from a

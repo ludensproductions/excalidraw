@@ -133,7 +133,11 @@ const AppRoot: React.FC = () => {
   const openSharedBoard = (board: SharedBoard) => {
     appJotaiStore.set(hasDashboardBackAtom, true);
     appJotaiStore.set(activeBoardAtom, { id: null, name: board.name });
-    const roomUrl = `${window.location.origin}${window.location.pathname}#room=${board.roomId},${board.roomKey}`;
+    // Restore the read-only suffix if this user only has read-only access.
+    const currentMember = board.members.find((m) => m.userId === user!.id);
+    const isReadOnly = currentMember?.readOnly ?? false;
+    const suffix = isReadOnly ? ",ro" : "";
+    const roomUrl = `${window.location.origin}${window.location.pathname}#room=${board.roomId},${board.roomKey}${suffix}`;
     window.history.pushState({}, "", roomUrl);
     setView({ type: "editor", boardId: null, key: Date.now() });
   };

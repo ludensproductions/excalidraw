@@ -24,6 +24,9 @@ export const activeBoardAtom = atom<{ id: string | null; name: string | null }>(
 /** True while the user is in the editor having come from the dashboard. */
 export const hasDashboardBackAtom = atom(false);
 
+/** True when the current collab session was opened via a read-only (",ro") link. */
+export const isReadOnlySessionAtom = atom(false);
+
 export const useAtomWithInitialValue = <
   T extends unknown,
   A extends PrimitiveAtom<T>,
