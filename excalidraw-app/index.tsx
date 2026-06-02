@@ -84,6 +84,7 @@ const AppRoot: React.FC = () => {
       appJotaiStore.set(hasDashboardBackAtom, true);
       dashboardState.setOnBack(() => {
         appJotaiStore.set(hasDashboardBackAtom, false);
+        window.history.replaceState({}, "", window.location.pathname);
         setView({ type: "dashboard" });
       });
       return () => {
