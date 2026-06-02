@@ -9,6 +9,7 @@
   z-index: 10000;
 
   &__card {
+    position: relative;
     background: #ffffff;
     border-radius: 12px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07),
@@ -166,5 +167,115 @@
   &__toggle-separator {
     margin: 0 0.5rem;
     color: #d1d5db;
+  }
+
+  // ── Theme toggle ──────────────────────────────────────────
+  &__theme-toggle {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 6px;
+    background: transparent;
+    color: #6b7280;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+
+    svg {
+      width: 1rem;
+      height: 1rem;
+    }
+
+    &:hover {
+      border-color: #6965db;
+      color: #6965db;
+      background: #ede9fe;
+    }
+  }
+}
+
+// ── Dark mode ──────────────────────────────────────────────────────────────
+.auth-page--dark {
+  background: #121212;
+
+  .auth-page__card {
+    background: #1e1e2e;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3),
+      0 10px 40px -4px rgba(0, 0, 0, 0.5);
+  }
+
+  .auth-page__logo span {
+    color: #e1e1f0;
+  }
+
+  .auth-page__title {
+    color: #e1e1f0;
+  }
+
+  .auth-page__subtitle {
+    color: #9ca3af;
+  }
+
+  .auth-page__field {
+    label {
+      color: #d1d5db;
+    }
+
+    input {
+      border-color: #2e2e4a;
+      background: #242436;
+      color: #e1e1f0;
+
+      &::placeholder {
+        color: #6b7280;
+      }
+
+      &:focus {
+        border-color: #6965db;
+        box-shadow: 0 0 0 3px rgba(105, 101, 219, 0.2);
+        background: #2a2a40;
+      }
+    }
+  }
+
+  .auth-page__error {
+    background: #2d1515;
+    border-color: #7f1d1d;
+    color: #f87171;
+  }
+
+  .auth-page__message {
+    background: #052e16;
+    border-color: #166534;
+    color: #4ade80;
+  }
+
+  .auth-page__toggle {
+    color: #9ca3af;
+
+    button {
+      color: #a5b4fc;
+    }
+  }
+
+  .auth-page__toggle-separator {
+    color: #374151;
+  }
+
+  .auth-page__theme-toggle {
+    border-color: #2e2e4a;
+    color: #9ca3af;
+
+    &:hover {
+      border-color: #6965db;
+      color: #a5b4fc;
+      background: #1e1e4a;
+    }
   }
 }

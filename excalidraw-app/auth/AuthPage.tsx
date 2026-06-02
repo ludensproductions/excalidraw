@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
 
+import { THEME } from "@excalidraw/excalidraw";
+
+import { useHandleAppTheme } from "../useHandleAppTheme";
+
 import {
   beginPasswordRecoveryFromUrl,
   loginUser,
@@ -19,6 +23,17 @@ interface Props {
 type Mode = "login" | "register" | "forgot" | "reset";
 
 export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
+  const { editorTheme, setAppTheme } = useHandleAppTheme();
+  const isDark = editorTheme === THEME.DARK;
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [isDark]);
+
   const [mode, setMode] = useState<Mode>("login");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -169,7 +184,7 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
     : "Guardar contraseña";
 
   return (
-    <div className="auth-page">
+    <div className={`auth-page${isDark ? " auth-page--dark" : ""}`}>
       <div className="auth-page__card">
         <div className="auth-page__logo">
           <svg
@@ -198,6 +213,30 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
           </svg>
           <span>Excalidraw</span>
         </div>
+
+        <button
+          className="auth-page__theme-toggle"
+          onClick={() => setAppTheme(isDark ? THEME.LIGHT : THEME.DARK)}
+          title={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+        >
+          {isDark ? (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="5" />
+              <line x1="12" y1="1" x2="12" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="23" />
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+              <line x1="1" y1="12" x2="3" y2="12" />
+              <line x1="21" y1="12" x2="23" y2="12" />
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+          )}
+        </button>
 
         <h1 className="auth-page__title">{title}</h1>
         <p className="auth-page__subtitle">{subtitle}</p>
