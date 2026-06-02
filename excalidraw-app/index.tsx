@@ -33,7 +33,7 @@ type AppView =
 const hasExternalLinkInUrl = (): boolean => {
   const hash = window.location.hash;
   return (
-    /^#room=[a-zA-Z0-9_-]+,[a-zA-Z0-9_-]+$/.test(hash) ||
+    /^#room=[a-zA-Z0-9_-]+,[a-zA-Z0-9_-]+(,ro)?$/.test(hash) ||
     /^#json=[a-zA-Z0-9_-]+,[a-zA-Z0-9_-]+$/.test(hash)
   );
 };
@@ -81,6 +81,7 @@ const AppRoot: React.FC = () => {
   // Register back-to-dashboard callback whenever we're in the editor
   useEffect(() => {
     if (view.type === "editor") {
+      appJotaiStore.set(hasDashboardBackAtom, true);
       dashboardState.setOnBack(() => {
         appJotaiStore.set(hasDashboardBackAtom, false);
         setView({ type: "dashboard" });

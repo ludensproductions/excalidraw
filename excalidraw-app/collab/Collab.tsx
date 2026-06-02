@@ -101,6 +101,30 @@ import type {
 export const collabAPIAtom = atom<CollabAPI | null>(null);
 export const isCollaboratingAtom = atom(false);
 export const isOfflineAtom = atom(false);
+export const isOwnerAtom = atom(false);
+
+const OWNED_ROOMS_KEY = "excalidraw_owned_rooms";
+
+const getOwnedRooms = (): Set<string> => {
+  try {
+    const stored = localStorage.getItem(OWNED_ROOMS_KEY);
+    return new Set(stored ? (JSON.parse(stored) as string[]) : []);
+  } catch {
+    return new Set();
+  }
+};
+
+const addOwnedRoom = (roomId: string): void => {
+  const rooms = getOwnedRooms();
+  rooms.add(roomId);
+  localStorage.setItem(OWNED_ROOMS_KEY, JSON.stringify([...rooms]));
+};
+
+const removeOwnedRoom = (roomId: string): void => {
+  const rooms = getOwnedRooms();
+  rooms.delete(roomId);
+  localStorage.setItem(OWNED_ROOMS_KEY, JSON.stringify([...rooms]));
+};
 
 interface CollabState {
   errorMessage: string | null;
@@ -117,9 +141,11 @@ type CollabInstance = InstanceType<typeof Collab>;
 export interface CollabAPI {
   /** function so that we can access the latest value from stale callbacks */
   isCollaborating: () => boolean;
+  isOwner: () => boolean;
   onPointerUpdate: CollabInstance["onPointerUpdate"];
   startCollaboration: CollabInstance["startCollaboration"];
   stopCollaboration: CollabInstance["stopCollaboration"];
+  leaveCollaboration: CollabInstance["leaveCollaboration"];
   flushCollaboration: CollabInstance["flushCollaboration"];
   syncElements: CollabInstance["syncElements"];
   fetchImageFilesFromFirebase: CollabInstance["fetchImageFilesFromFirebase"];
@@ -143,6 +169,8 @@ class Collab extends PureComponent<CollabProps, CollabState> {
   private socketInitializationTimer?: number;
   private lastBroadcastedOrReceivedSceneVersion: number = -1;
   private collaborators = new Map<SocketId, Collaborator>();
+  private isReadOnly = false;
+  private isOwnerSession = false;
 
   constructor(props: CollabProps) {
     super(props);
@@ -234,11 +262,13 @@ class Collab extends PureComponent<CollabProps, CollabState> {
 
     const collabAPI: CollabAPI = {
       isCollaborating: this.isCollaborating,
+      isOwner: this.getIsOwner,
       onPointerUpdate: this.onPointerUpdate,
       startCollaboration: this.startCollaboration,
       syncElements: this.syncElements,
       fetchImageFilesFromFirebase: this.fetchImageFilesFromFirebase,
       stopCollaboration: this.stopCollaboration,
+      leaveCollaboration: this.leaveCollaboration,
       flushCollaboration: this.flushCollaboration,
       setUsername: this.setUsername,
       getUsername: this.getUsername,
@@ -410,6 +440,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     // - remove membership/publication from shared boards
     // - clear persisted collaboration link from the private board record
     if (didStop && roomId && roomKey) {
+      removeOwnedRoom(roomId);
       SharedBoardsStore.leaveByRoom(roomId, roomKey).catch((error) => {
         console.error("Failed to leave shared board on stop:", error);
       });
@@ -456,6 +487,9 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     skipStateUpdate?: boolean;
   }) => {
     this.lastBroadcastedOrReceivedSceneVersion = -1;
+    this.isReadOnly = false;
+    this.isOwnerSession = false;
+    appJotaiStore.set(isOwnerAtom, false);
     this.portal.close();
     this.fileManager.reset();
     this.disposeIdleDetector();
@@ -526,7 +560,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
   private fallbackInitializationHandler: null | (() => any) = null;
 
   startCollaboration = async (
-    existingRoomLinkData: null | { roomId: string; roomKey: string },
+    existingRoomLinkData: null | { roomId: string; roomKey: string; readOnly?: boolean },
   ) => {
     if (!this.getUsername()) {
       import("@excalidraw/random-username").then(({ getRandomUsername }) => {
@@ -558,6 +592,15 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       | (ImportedDataState & { elements: readonly OrderedExcalidrawElement[] })
       | null
     >();
+
+    this.isReadOnly = existingRoomLinkData?.readOnly ?? false;
+    if (existingRoomLinkData === null) {
+      addOwnedRoom(roomId);
+      this.isOwnerSession = true;
+    } else {
+      this.isOwnerSession = getOwnedRooms().has(roomId);
+    }
+    appJotaiStore.set(isOwnerAtom, this.isOwnerSession);
 
     this.setIsCollaborating(true);
     LocalData.pauseSave("collaboration");
@@ -759,7 +802,32 @@ class Collab extends PureComponent<CollabProps, CollabState> {
 
     this.initializeIdleDetector();
 
+    // If joining an existing room and localStorage didn't confirm ownership,
+    // do a fast server check so the Share dialog shows the correct buttons.
+    if (existingRoomLinkData !== null && !this.isOwnerSession) {
+      try {
+        const owned = await SharedBoardsStore.isOwnedByCurrentUser(
+          roomId,
+          roomKey,
+        );
+        if (owned) {
+          this.isOwnerSession = true;
+          addOwnedRoom(roomId);
+          appJotaiStore.set(isOwnerAtom, true);
+        }
+      } catch {
+        // keep non-owner state on error
+      }
+    }
+
     this.setActiveRoomLink(window.location.href);
+
+    if (this.isReadOnly) {
+      this.excalidrawAPI.updateScene({
+        appState: { viewModeEnabled: true },
+        captureUpdate: CaptureUpdateAction.NEVER,
+      });
+    }
 
     const activeBoard = appJotaiStore.get(activeBoardAtom);
     const username = this.getUsername() || "Usuario";
@@ -768,12 +836,17 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       // Only attach this user if the owner already published the board.
       // If the room came from a dashboard card, we have a stable board name and
       // can safely fallback to publishing to avoid "vanishing" entries.
-      await SharedBoardsStore.joinExisting({
-        roomId,
-        roomKey,
-        username,
-        fallbackName: activeBoard?.name ?? undefined,
-      });
+      // Read-only guests are NOT registered in shared_board_members so that
+      // the board doesn't appear in their Compartidos list — reopening it from
+      // there would strip the ",ro" flag and grant edit access.
+      if (!this.isReadOnly) {
+        await SharedBoardsStore.joinExisting({
+          roomId,
+          roomKey,
+          username,
+          fallbackName: activeBoard?.name ?? undefined,
+        });
+      }
     } else {
       // Publish every newly-created live room so invitees can see it in their
       // shared dashboard after joining, even if the owner started from a
@@ -1075,6 +1148,9 @@ class Collab extends PureComponent<CollabProps, CollabState> {
   };
 
   syncElements = (elements: readonly OrderedExcalidrawElement[]) => {
+    if (this.isReadOnly) {
+      return;
+    }
     this.broadcastElements(elements);
     this.queueSaveToFirebase();
   };
@@ -1113,6 +1189,38 @@ class Collab extends PureComponent<CollabProps, CollabState> {
   };
 
   getUsername = () => getCurrentUser()?.username || this.state.username;
+
+  getIsOwner = () => this.isOwnerSession;
+
+  leaveCollaboration = async (): Promise<void> => {
+    const roomId = this.portal.roomId;
+    const roomKey = this.portal.roomKey;
+
+    this.queueBroadcastAllElements.cancel();
+    this.queueSaveToFirebase.cancel();
+    this.loadImageFiles.cancel();
+    this.resetErrorIndicator(true);
+
+    if (this.portal.socket && this.fallbackInitializationHandler) {
+      this.portal.socket.off(
+        "connect_error",
+        this.fallbackInitializationHandler,
+      );
+    }
+
+    resetBrowserStateVersions();
+    window.history.pushState({}, APP_NAME, window.location.origin);
+    LocalData.fileStorage.reset();
+    this.destroySocketClient();
+
+    // Remove the guest's membership so the board disappears from their dashboard.
+    // Await so callers can navigate after the delete completes.
+    if (roomId && roomKey) {
+      await SharedBoardsStore.leaveByRoom(roomId, roomKey).catch((error) => {
+        console.error("Failed to leave shared board on guest leave:", error);
+      });
+    }
+  };
 
   setActiveRoomLink = (activeRoomLink: string | null) => {
     this.setState({ activeRoomLink });

@@ -418,6 +418,9 @@ const initializeScene = async (opts: {
           // necessary if we're invoking from a hashchange handler which doesn't
           // go through App.initializeScene() that resets this flag
           isLoading: false,
+          // enforce view-only mode for read-only links — resetScene() inside
+          // initializeRoom clears the flag that startCollaboration set earlier
+          ...(roomLinkData.readOnly ? { viewModeEnabled: true } : {}),
         },
         elements: reconcileElements(
           scene?.elements || [],

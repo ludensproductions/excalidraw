@@ -135,7 +135,7 @@ export type SocketUpdateData =
     _brand: "socketUpdateData";
   };
 
-const RE_COLLAB_LINK = /^#room=([a-zA-Z0-9_-]+),([a-zA-Z0-9_-]+)$/;
+const RE_COLLAB_LINK = /^#room=([a-zA-Z0-9_-]+),([a-zA-Z0-9_-]+)(,ro)?$/;
 
 export const isCollaborationLink = (link: string | null | undefined) => {
   if (!link) {
@@ -155,7 +155,9 @@ export const getCollaborationLinkData = (link: string | null | undefined) => {
     window.alert(t("alerts.invalidEncryptionKey"));
     return null;
   }
-  return match ? { roomId: match[1], roomKey: match[2] } : null;
+  return match
+    ? { roomId: match[1], roomKey: match[2], readOnly: match[3] === ",ro" }
+    : null;
 };
 
 export const generateCollaborationLinkData = async () => {
@@ -174,6 +176,13 @@ export const getCollaborationLink = (data: {
   roomKey: string;
 }) => {
   return `${window.location.origin}${window.location.pathname}#room=${data.roomId},${data.roomKey}`;
+};
+
+export const getReadOnlyCollaborationLink = (data: {
+  roomId: string;
+  roomKey: string;
+}) => {
+  return `${window.location.origin}${window.location.pathname}#room=${data.roomId},${data.roomKey},ro`;
 };
 
 /**

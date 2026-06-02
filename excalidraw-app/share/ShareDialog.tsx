@@ -5,6 +5,7 @@ import { FilledButton } from "@excalidraw/excalidraw/components/FilledButton";
 import { TextField } from "@excalidraw/excalidraw/components/TextField";
 import {
   copyIcon,
+  eyeIcon,
   LinkIcon,
   playerPlayIcon,
   playerStopFilledIcon,
@@ -19,7 +20,12 @@ import { KEYS, getFrame } from "@excalidraw/common";
 import { useEffect, useRef, useState } from "react";
 
 import { atom, useAtom, useAtomValue } from "../app-jotai";
-import { activeRoomLinkAtom } from "../collab/Collab";
+import { activeRoomLinkAtom, isOwnerAtom } from "../collab/Collab";
+import {
+  getCollaborationLinkData,
+  getReadOnlyCollaborationLink,
+} from "../data";
+import { dashboardState } from "../dashboardState";
 
 import "./ShareDialog.scss";
 import { QRCode } from "./QRCode";
@@ -67,8 +73,17 @@ const ActiveRoomDialog = ({
   const [, setJustCopied] = useState(false);
   const timerRef = useRef<number>(0);
   const ref = useRef<HTMLInputElement>(null);
+  const readOnlyRef = useRef<HTMLInputElement>(null);
   const isShareSupported = "share" in navigator;
   const { onCopy, copyStatus } = useCopyStatus();
+  const { onCopy: onCopyReadOnly, copyStatus: copyStatusReadOnly } =
+    useCopyStatus();
+  const isOwner = useAtomValue(isOwnerAtom);
+
+  const linkData = getCollaborationLinkData(activeRoomLink);
+  const readOnlyLink = linkData
+    ? getReadOnlyCollaborationLink(linkData)
+    : activeRoomLink;
 
   const copyRoomLink = async () => {
     try {
@@ -88,6 +103,15 @@ const ActiveRoomDialog = ({
     }, 3000);
 
     ref.current?.select();
+  };
+
+  const copyReadOnlyLink = async () => {
+    try {
+      await copyTextToSystemClipboard(readOnlyLink);
+    } catch (e) {
+      collabAPI.setCollabError(t("errors.copyToSystemClipboardFailed"));
+    }
+    readOnlyRef.current?.select();
   };
 
   const shareRoomLink = async () => {
@@ -114,36 +138,59 @@ const ActiveRoomDialog = ({
         onChange={collabAPI.setUsername}
         onKeyDown={(event) => event.key === KEYS.ENTER && handleClose()}
       />
-      <div className="ShareDialog__active__linkRow">
-        <TextField
-          ref={ref}
-          label="Link"
-          readonly
-          fullWidth
-          value={activeRoomLink}
-        />
-        {isShareSupported && (
-          <FilledButton
-            size="large"
-            variant="icon"
-            label="Share"
-            icon={getShareIcon()}
-            className="ShareDialog__active__share"
-            onClick={shareRoomLink}
-          />
-        )}
-        <FilledButton
-          size="large"
-          label={t("buttons.copyLink")}
-          icon={copyIcon}
-          status={copyStatus}
-          onClick={() => {
-            copyRoomLink();
-            onCopy();
-          }}
-        />
-      </div>
-      <QRCode value={activeRoomLink} />
+      {isOwner && (
+        <>
+          <div className="ShareDialog__active__linkRow">
+            <TextField
+              ref={ref}
+              label={t("shareDialog.editLink")}
+              readonly
+              fullWidth
+              value={activeRoomLink}
+            />
+            {isShareSupported && (
+              <FilledButton
+                size="large"
+                variant="icon"
+                label="Share"
+                icon={getShareIcon()}
+                className="ShareDialog__active__share"
+                onClick={shareRoomLink}
+              />
+            )}
+            <FilledButton
+              size="large"
+              label={t("buttons.copyLink")}
+              icon={copyIcon}
+              status={copyStatus}
+              onClick={() => {
+                copyRoomLink();
+                onCopy();
+              }}
+            />
+          </div>
+          <div className="ShareDialog__active__linkRow">
+            <TextField
+              ref={readOnlyRef}
+              label={t("shareDialog.viewOnlyLink")}
+              readonly
+              fullWidth
+              value={readOnlyLink}
+            />
+            <FilledButton
+              size="large"
+              label={t("buttons.copyLink")}
+              icon={eyeIcon}
+              status={copyStatusReadOnly}
+              onClick={() => {
+                copyReadOnlyLink();
+                onCopyReadOnly();
+              }}
+            />
+          </div>
+          <QRCode value={activeRoomLink} />
+        </>
+      )}
       <div className="ShareDialog__active__description">
         <p>
           <span
@@ -159,20 +206,36 @@ const ActiveRoomDialog = ({
       </div>
 
       <div className="ShareDialog__active__actions">
-        <FilledButton
-          size="large"
-          variant="outlined"
-          color="danger"
-          label={t("roomDialog.button_stopSession")}
-          icon={playerStopFilledIcon}
-          onClick={() => {
-            trackEvent("share", "room closed");
-            collabAPI.stopCollaboration();
-            if (!collabAPI.isCollaborating()) {
+        {isOwner ? (
+          <FilledButton
+            size="large"
+            variant="outlined"
+            color="danger"
+            label={t("roomDialog.button_stopSession")}
+            icon={playerStopFilledIcon}
+            onClick={() => {
+              trackEvent("share", "room closed");
+              collabAPI.stopCollaboration();
+              if (!collabAPI.isCollaborating()) {
+                handleClose();
+              }
+            }}
+          />
+        ) : (
+          <FilledButton
+            size="large"
+            variant="outlined"
+            color="danger"
+            label={t("roomDialog.button_leaveSession")}
+            icon={playerStopFilledIcon}
+            onClick={async () => {
+              trackEvent("share", "room left");
               handleClose();
-            }
-          }}
-        />
+              await collabAPI.leaveCollaboration();
+              dashboardState.getOnBack()?.();
+            }}
+          />
+        )}
       </div>
     </>
   );

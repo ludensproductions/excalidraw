@@ -223,4 +223,23 @@ export const SharedBoardsStore = {
       throw new Error(error.message);
     }
   },
+
+  async isOwnedByCurrentUser(
+    roomId: string,
+    roomKey: string,
+  ): Promise<boolean> {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return false;
+    }
+    const { data } = await supabase
+      .from("shared_boards")
+      .select("created_by")
+      .eq("room_id", roomId)
+      .eq("room_key", roomKey)
+      .maybeSingle();
+    return !!(data && data.created_by === user.id);
+  },
 };
