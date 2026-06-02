@@ -3,10 +3,7 @@ import { useCallback, useState } from "react";
 
 import { activeBoardAtom, useAtom, useAtomValue } from "../app-jotai";
 import { getCurrentUser } from "../auth/authStore";
-import {
-  activeRoomLinkAtom,
-  isCollaboratingAtom,
-} from "../collab/Collab";
+import { activeRoomLinkAtom, isCollaboratingAtom } from "../collab/Collab";
 import { DrawingsStore } from "../data/DrawingsStore";
 
 export type SaveStatus = "idle" | "saving" | "saved";
@@ -25,7 +22,7 @@ export const useSaveBoard = () => {
 
     if (isCollaborating && !activeBoard.id) {
       window.alert(
-        "Este es un tablero compartido. Se guarda en la sesiÃ³n colaborativa, no en Mis tableros.",
+        "Este es un tablero compartido. Se guarda en la sesión colaborativa, no en Mis tableros.",
       );
       return;
     }
@@ -71,8 +68,7 @@ export const useSaveBoard = () => {
           elements,
           appState: { viewBackgroundColor: appState.viewBackgroundColor },
           thumbnail,
-          collabLink:
-            isCollaborating && activeRoomLink ? activeRoomLink : null,
+          collabLink: isCollaborating && activeRoomLink ? activeRoomLink : null,
           userId: getCurrentUser()?.id,
         },
         activeBoard.id ?? undefined,

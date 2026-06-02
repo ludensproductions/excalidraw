@@ -1,5 +1,4 @@
 import {
-  KEYS,
   CANVAS_SEARCH_TAB,
   CLASSES,
   DEFAULT_SIDEBAR,

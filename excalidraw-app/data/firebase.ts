@@ -338,9 +338,7 @@ const generateShareLinkId = () => {
 export const saveShareLinkToFirebase = async (
   payload: Uint8Array,
 ): Promise<
-  | { id: string }
-  | { error: "TOO_BIG" }
-  | { error: "FAILED"; message?: string }
+  { id: string } | { error: "TOO_BIG" } | { error: "FAILED"; message?: string }
 > => {
   // Soft cap to avoid pathological uploads; Storage itself supports up to 5 TiB
   if (payload.byteLength > 25_000_000) {

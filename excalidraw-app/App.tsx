@@ -146,7 +146,6 @@ import { dashboardState } from "./dashboardState";
 
 import "./index.scss";
 
-import { ExcalidrawPlusPromoBanner } from "./components/ExcalidrawPlusPromoBanner";
 import { AppSidebar } from "./components/AppSidebar";
 import "./components/BoardSaveButton.scss";
 
@@ -907,11 +906,6 @@ const ExcalidrawWrapper = () => {
     [],
   );
 
-  // const onExport = () => {
-  //   return new Promise((r) => setTimeout(r, 2500));
-  //   // console.log("onExport");
-  // };
-
   // browsers generally prevent infinite self-embedding, there are
   // cases where it still happens, and while we disallow self-embedding
   // by not whitelisting our own origin, this serves as an additional guard
@@ -1047,7 +1041,9 @@ const ExcalidrawWrapper = () => {
             <div className="excalidraw-ui-top-right">
               <button
                 className="board-copy-btn"
-                onClick={() => setShareDialogState({ isOpen: true, type: "copyOnly" })}
+                onClick={() =>
+                  setShareDialogState({ isOpen: true, type: "copyOnly" })
+                }
                 title="Mandar copia a otro usuario"
               >
                 Enviar copia
@@ -1111,7 +1107,7 @@ const ExcalidrawWrapper = () => {
             </OverwriteConfirmDialog.Action>
           )}
         </OverwriteConfirmDialog>
-        <AppFooter onChange={() => excalidrawAPI?.refresh()} />
+        <AppFooter />
         {excalidrawAPI && <AIComponents excalidrawAPI={excalidrawAPI} />}
 
         <TTDDialogTrigger />

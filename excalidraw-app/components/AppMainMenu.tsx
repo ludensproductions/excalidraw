@@ -1,7 +1,4 @@
-import {
-  loginIcon,
-  usersIcon,
-} from "@excalidraw/excalidraw/components/icons";
+import { loginIcon, usersIcon } from "@excalidraw/excalidraw/components/icons";
 import { MainMenu } from "@excalidraw/excalidraw/index";
 import { useExcalidrawAPI } from "@excalidraw/excalidraw";
 import React from "react";
@@ -17,8 +14,8 @@ import { getCurrentUser, logoutUser } from "../auth/authStore";
 import { DrawingsStore } from "../data/DrawingsStore";
 import { dashboardState } from "../dashboardState";
 import { useSaveBoard } from "../hooks/useSaveBoard";
-import { DRAWINGS_PANEL_TAB } from "./DrawingsPanel";
 
+import { DRAWINGS_PANEL_TAB } from "./DrawingsPanel";
 
 const homeIcon = (
   <svg

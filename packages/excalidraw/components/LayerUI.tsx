@@ -222,7 +222,15 @@ const LayerUI = ({
   };
 
   const renderCanvasActions = () => (
-    <div style={{ position: "relative", display: "flex", alignItems: "center", flexDirection: "row", gap: "8px" }}>
+    <div
+      style={{
+        position: "relative",
+        display: "flex",
+        alignItems: "center",
+        flexDirection: "row",
+        gap: "8px",
+      }}
+    >
       {/* wrapping to Fragment stops React from occasionally complaining
                 about identical Keys */}
       <tunnels.MainMenuTunnel.Out />

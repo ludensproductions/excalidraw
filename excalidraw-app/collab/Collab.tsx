@@ -446,28 +446,31 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       });
     }
     if (didStop && roomId) {
-      DrawingsStore.normalizeAfterStoppingRoom(roomId, activeBoard?.id).catch(
-        (error) => {
+      DrawingsStore.normalizeAfterStoppingRoom(roomId, activeBoard?.id)
+        .catch((error) => {
           console.error(
             "Failed to normalize local board after stopping collaboration:",
             error,
           );
-        },
-      ).then((keptBoardId) => {
-        if (!keptBoardId) {
-          return;
-        }
-        const current = appJotaiStore.get(activeBoardAtom);
-        if (current?.id !== keptBoardId) {
-          appJotaiStore.set(activeBoardAtom, {
-            id: keptBoardId,
-            name: current?.name ?? activeBoard?.name ?? null,
-          });
-        }
-      });
+        })
+        .then((keptBoardId) => {
+          if (!keptBoardId) {
+            return;
+          }
+          const current = appJotaiStore.get(activeBoardAtom);
+          if (current?.id !== keptBoardId) {
+            appJotaiStore.set(activeBoardAtom, {
+              id: keptBoardId,
+              name: current?.name ?? activeBoard?.name ?? null,
+            });
+          }
+        });
     } else if (didStop && activeBoard?.id) {
       DrawingsStore.setCollabLink(activeBoard.id, null).catch((error) => {
-        console.error("Failed to clear board collaboration link on stop:", error);
+        console.error(
+          "Failed to clear board collaboration link on stop:",
+          error,
+        );
       });
     }
   };
@@ -560,7 +563,11 @@ class Collab extends PureComponent<CollabProps, CollabState> {
   private fallbackInitializationHandler: null | (() => any) = null;
 
   startCollaboration = async (
-    existingRoomLinkData: null | { roomId: string; roomKey: string; readOnly?: boolean },
+    existingRoomLinkData: null | {
+      roomId: string;
+      roomKey: string;
+      readOnly?: boolean;
+    },
   ) => {
     if (!this.getUsername()) {
       import("@excalidraw/random-username").then(({ getRandomUsername }) => {

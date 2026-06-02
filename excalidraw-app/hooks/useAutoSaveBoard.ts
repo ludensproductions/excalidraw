@@ -1,12 +1,9 @@
-﻿import { exportToBlob, useExcalidrawAPI } from "@excalidraw/excalidraw";
+import { exportToBlob, useExcalidrawAPI } from "@excalidraw/excalidraw";
 import { useCallback, useEffect, useRef } from "react";
 
 import { activeBoardAtom, appJotaiStore, useAtomValue } from "../app-jotai";
 import { getCurrentUser } from "../auth/authStore";
-import {
-  activeRoomLinkAtom,
-  isCollaboratingAtom,
-} from "../collab/Collab";
+import { activeRoomLinkAtom, isCollaboratingAtom } from "../collab/Collab";
 import { DrawingsStore } from "../data/DrawingsStore";
 
 const AUTO_SAVE_DELAY = 3000; // ms after last change

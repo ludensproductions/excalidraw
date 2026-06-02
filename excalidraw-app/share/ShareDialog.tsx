@@ -246,36 +246,39 @@ const ShareDialogPicker = (props: ShareDialogProps) => {
 
   const { collabAPI } = props;
 
-  const startCollabJSX = collabAPI && props.type !== "copyOnly" ? (
-    <>
-      <div className="ShareDialog__picker__header">
-        {t("labels.liveCollaboration").replace(/\./g, "")}
-      </div>
-
-      <div className="ShareDialog__picker__description">
-        <div style={{ marginBottom: "1em" }}>{t("roomDialog.desc_intro")}</div>
-        {t("roomDialog.desc_privacy")}
-      </div>
-
-      <div className="ShareDialog__picker__button">
-        <FilledButton
-          size="large"
-          label={t("roomDialog.button_startSession")}
-          icon={playerPlayIcon}
-          onClick={() => {
-            trackEvent("share", "room creation", `ui (${getFrame()})`);
-            collabAPI.startCollaboration(null);
-          }}
-        />
-      </div>
-
-      {props.type !== "collaborationOnly" && (
-        <div className="ShareDialog__separator">
-          <span>{t("shareDialog.or")}</span>
+  const startCollabJSX =
+    collabAPI && props.type !== "copyOnly" ? (
+      <>
+        <div className="ShareDialog__picker__header">
+          {t("labels.liveCollaboration").replace(/\./g, "")}
         </div>
-      )}
-    </>
-  ) : null;
+
+        <div className="ShareDialog__picker__description">
+          <div style={{ marginBottom: "1em" }}>
+            {t("roomDialog.desc_intro")}
+          </div>
+          {t("roomDialog.desc_privacy")}
+        </div>
+
+        <div className="ShareDialog__picker__button">
+          <FilledButton
+            size="large"
+            label={t("roomDialog.button_startSession")}
+            icon={playerPlayIcon}
+            onClick={() => {
+              trackEvent("share", "room creation", `ui (${getFrame()})`);
+              collabAPI.startCollaboration(null);
+            }}
+          />
+        </div>
+
+        {props.type !== "collaborationOnly" && (
+          <div className="ShareDialog__separator">
+            <span>{t("shareDialog.or")}</span>
+          </div>
+        )}
+      </>
+    ) : null;
 
   return (
     <>

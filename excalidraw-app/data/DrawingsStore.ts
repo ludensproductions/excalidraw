@@ -42,7 +42,9 @@ const toInsertDedupKey = (
   const elementsFingerprint = data.elements
     .map(
       (el) =>
-        `${el.id}:${el.version}:${el.versionNonce}:${el.updated}:${el.isDeleted ? 1 : 0}`,
+        `${el.id}:${el.version}:${el.versionNonce}:${el.updated}:${
+          el.isDeleted ? 1 : 0
+        }`,
     )
     .join("|");
   return [

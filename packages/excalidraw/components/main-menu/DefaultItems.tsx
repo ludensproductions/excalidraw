@@ -37,15 +37,8 @@ import Trans from "../Trans";
 import DropdownMenuItem from "../dropdownMenu/DropdownMenuItem";
 import DropdownMenuItemCheckbox from "../dropdownMenu/DropdownMenuItemCheckbox";
 import DropdownMenuItemContentRadio from "../dropdownMenu/DropdownMenuItemContentRadio";
-import DropdownMenuItemLink from "../dropdownMenu/DropdownMenuItemLink";
 import DropdownMenuSub from "../dropdownMenu/DropdownMenuSub";
-import {
-  GithubIcon,
-  DiscordIcon,
-  XBrandIcon,
-  settingsIcon,
-  emptyIcon,
-} from "../icons";
+import { settingsIcon, emptyIcon } from "../icons";
 import {
   boltIcon,
   DeviceDesktopIcon,

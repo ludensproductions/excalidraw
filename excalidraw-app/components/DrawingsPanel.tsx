@@ -1,24 +1,16 @@
 import { exportToBlob, useExcalidrawAPI } from "@excalidraw/excalidraw";
 import { restoreElements } from "@excalidraw/excalidraw/data/restore";
 import { CaptureUpdateAction } from "@excalidraw/element";
-import React, {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { useAtomValue } from "../app-jotai";
 import { getCurrentUser } from "../auth/authStore";
-import {
-  activeRoomLinkAtom,
-  isCollaboratingAtom,
-} from "../collab/Collab";
+import { activeRoomLinkAtom, isCollaboratingAtom } from "../collab/Collab";
 import { DrawingsStore } from "../data/DrawingsStore";
 
-import type { DrawingRecord } from "../data/DrawingsStore";
-
 import "./DrawingsPanel.scss";
+
+import type { DrawingRecord } from "../data/DrawingsStore";
 
 export const DRAWINGS_PANEL_TAB = "drawings";
 
@@ -109,9 +101,7 @@ export const DrawingsPanel: React.FC = () => {
       },
       thumbnail,
       collabLink:
-        isCollaborating && activeRoomLink
-          ? activeRoomLink
-          : existingCollabLink,
+        isCollaborating && activeRoomLink ? activeRoomLink : existingCollabLink,
       userId: getCurrentUser()?.id,
     };
   };
@@ -157,8 +147,7 @@ export const DrawingsPanel: React.FC = () => {
     excalidrawAPI.updateScene({
       elements: restored,
       appState: {
-        viewBackgroundColor:
-          drawing.appState.viewBackgroundColor ?? "#ffffff",
+        viewBackgroundColor: drawing.appState.viewBackgroundColor ?? "#ffffff",
       },
       captureUpdate: CaptureUpdateAction.IMMEDIATELY,
     });

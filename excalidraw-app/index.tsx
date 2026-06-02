@@ -170,4 +170,3 @@ root.render(
     <AppRoot />
   </StrictMode>,
 );
-
