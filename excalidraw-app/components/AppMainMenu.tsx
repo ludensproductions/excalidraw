@@ -1,4 +1,4 @@
-import { loginIcon, usersIcon } from "@excalidraw/excalidraw/components/icons";
+import { usersIcon } from "@excalidraw/excalidraw/components/icons";
 import { MainMenu } from "@excalidraw/excalidraw/index";
 import { useExcalidrawAPI } from "@excalidraw/excalidraw";
 import React from "react";
@@ -8,7 +8,6 @@ import { DEFAULT_SIDEBAR } from "@excalidraw/common";
 import type { Theme } from "@excalidraw/element/types";
 
 import { LanguageList } from "../app-language/LanguageList";
-import { isExcalidrawPlusSignedUser } from "../app_constants";
 import { activeBoardAtom, appJotaiStore, useAtom } from "../app-jotai";
 import { getCurrentUser, logoutUser } from "../auth/authStore";
 import { DrawingsStore } from "../data/DrawingsStore";
@@ -173,20 +172,10 @@ export const AppMainMenu: React.FC<{
       <MainMenu.DefaultItems.Help />
       <MainMenu.DefaultItems.ClearCanvas />
       <MainMenu.Separator />
-      {currentUser ? (
+      {currentUser && (
         <MainMenu.Item icon={usersIcon} onSelect={handleLogout}>
           {currentUser.username} · Cerrar sesión
         </MainMenu.Item>
-      ) : (
-        <MainMenu.ItemLink
-          icon={loginIcon}
-          href={`${import.meta.env.VITE_APP_PLUS_APP}${
-            isExcalidrawPlusSignedUser ? "" : "/sign-up"
-          }?utm_source=signin&utm_medium=app&utm_content=hamburger`}
-          className="highlighted"
-        >
-          {isExcalidrawPlusSignedUser ? "Sign in" : "Sign up"}
-        </MainMenu.ItemLink>
       )}
       <MainMenu.Separator />
       <MainMenu.DefaultItems.Preferences />

@@ -1,8 +1,6 @@
 import { Footer } from "@excalidraw/excalidraw/index";
 import React from "react";
 
-import { isExcalidrawPlusSignedUser } from "../app_constants";
-
 import { EncryptedIcon } from "./EncryptedIcon";
 
 export const AppFooter = React.memo(() => {
@@ -15,7 +13,7 @@ export const AppFooter = React.memo(() => {
           alignItems: "center",
         }}
       >
-        {!isExcalidrawPlusSignedUser && <EncryptedIcon />}
+        <EncryptedIcon />
       </div>
     </Footer>
   );
