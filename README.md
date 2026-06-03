@@ -2,14 +2,12 @@
 
 Fork de [Excalidraw](https://excalidraw.com) con autenticación de usuarios via **Supabase** y dashboard personal de dibujos guardados.
 
-## ¿Qué es este proyecto?
-
-Pizarrón virtual de estilo dibujado a mano, colaborativo y cifrado de extremo a extremo. Esta versión añade:
+## ¿Qué incluye este fork?
 
 - **Autenticación** (registro / login) con Supabase Auth
 - **Dashboard** personal: guarda, carga y gestiona tus dibujos desde cualquier dispositivo
 - **Colaboración en tiempo real** a través de WebSockets (`excalidraw-room`)
-- **IA integrada** para convertir wireframes en código
+- **Links de solo lectura**: comparte un tablero colaborativo en modo vista
 - **PWA**: instalable como app de escritorio/móvil
 
 ---
@@ -18,95 +16,95 @@ Pizarrón virtual de estilo dibujado a mano, colaborativo y cifrado de extremo a
 
 | Herramienta | Versión mínima |
 |---|---|
-| Node.js | 18+ |
-| Yarn    | 1.22+ |
-| Docker + Docker Compose | cualquier versión reciente |
-| Cuenta Supabase | gratuita |
-| Proyecto Firebase | gratuito (Spark) |
+| Docker + Docker Compose | 24+ |
+| Cuenta Supabase | gratuita en [supabase.com](https://supabase.com) |
+
+> Para desarrollo local sin Docker también necesitas Node.js 18+ y Yarn 1.22+.
 
 ---
 
-## Configuración del entorno
+## Paso 1 — Crear y configurar la base de datos en Supabase
 
-1. Copia el archivo de ejemplo:
-   ```bash
-   cp .env.example .env
-   ```
+### 1.1 Crear el proyecto
 
-2. Rellena las variables obligatorias (ver tabla abajo).
+1. Entra en [supabase.com](https://supabase.com) y crea un proyecto nuevo.
+2. Elige región, dale un nombre y establece una contraseña de base de datos (guárdala).
+3. Espera a que el proyecto termine de inicializarse (~1 min).
 
-3. **Nunca** subas `.env` al repositorio — está en `.gitignore`.
+### 1.2 Obtener las credenciales
 
-### Variables obligatorias
+En el dashboard de Supabase ve a **Settings → API** y copia:
 
-| Variable | Descripción | Cómo obtenerla |
+| Campo | Donde usarlo en `.env` |
+|---|---|
+| **Project URL** | `VITE_APP_SUPABASE_URL` |
+| **anon / public key** | `VITE_APP_SUPABASE_ANON_KEY` |
+
+### 1.3 Aplicar las migraciones (crear todas las tablas)
+
+Ve a **SQL Editor → New query**, pega el contenido de cada archivo en orden y ejecútalo con **Run**:
+
+| Orden | Archivo | Qué crea |
 |---|---|---|
-| `VITE_APP_SUPABASE_URL` | URL de tu proyecto Supabase | Supabase Dashboard → Settings → API |
-| `VITE_APP_SUPABASE_ANON_KEY` | Clave anon pública de Supabase | Supabase Dashboard → Settings → API |
-| `VITE_APP_FIREBASE_CONFIG` | JSON de configuración Firebase | Firebase Console → Project Settings → Your apps |
-| `VITE_APP_WS_SERVER_URL` | URL del servidor de colaboración WebSocket | `http://localhost:3002` en local |
+| 1 | `supabase/migrations/0001_init.sql` | Tablas `profiles`, `boards`, `share_links`, `collab_rooms` + triggers RLS |
+| 2 | `supabase/migrations/0002_shared_boards.sql` | Tablas `shared_boards`, `shared_board_members` + políticas RLS |
+| 3 | `supabase/migrations/0003_join_existing_shared_board.sql` | Función RPC `join_existing_shared_board` |
+| 4 | `supabase/migrations/0004_collab_storage.sql` | Bucket de Storage `excalidraw-files` + políticas |
+| 5 | `supabase/migrations/0005_readonly_member.sql` | Columna `read_only` en miembros + actualiza la función RPC |
 
-### Variables opcionales relevantes
+> Ejecuta los 5 en orden. Cada uno es idempotente (`CREATE IF NOT EXISTS`, `DROP IF EXISTS`) — si necesitas re-ejecutar alguno no romperá nada.
 
-| Variable | Default | Descripción |
-|---|---|---|
-| `NODE_ENV` | `production` | Modo de build de Node |
-| `VITE_APP_PORT` | `3000` | Puerto del dev server de Vite |
-| `FAST_REFRESH` | `false` | Fast Refresh de React en dev |
-| `VITE_APP_BACKEND_V2_GET_URL` | URL pública excalidraw.com | Endpoint GET para escenas compartidas |
-| `VITE_APP_BACKEND_V2_POST_URL` | URL pública excalidraw.com | Endpoint POST para escenas compartidas |
-| `VITE_APP_AI_BACKEND` | URL pública excalidraw.com | Backend de IA (wireframes → código) |
-| `VITE_APP_DISABLE_SENTRY` | `true` | Desactiva reporte de errores a Sentry |
-| `VITE_APP_ENABLE_TRACKING` | `false` | Desactiva telemetría de uso |
-| `VITE_APP_ENABLE_PWA` | `true` | Habilita service worker e instalación PWA |
-| `VITE_APP_PLUS_LP` / `VITE_APP_PLUS_APP` | vacío | Solo si integras con Excalidraw+; dejar vacío en self-hosted |
+### 1.4 Habilitar autenticación por email
 
-> **Importante:** las variables `VITE_APP_*` se **hornean en el bundle** en tiempo de build. Cambiarlas después de construir no tiene efecto; hay que reconstruir.
+En Supabase ve a **Authentication → Providers → Email** y asegúrate de que esté habilitado.  
+Si no quieres confirmación por correo en desarrollo, desactiva **"Confirm email"** en esa misma pantalla.
 
 ---
 
-## Desarrollo local
+## Paso 2 — Configurar el archivo `.env`
 
-```bash
-# 1. Instalar dependencias
-yarn
+El `.env` **no está en el repositorio** (está en `.gitignore`). Las credenciales te las pasará el responsable del proyecto de forma segura.
 
-# 2. Levantar todos los servicios (collab room + app)
-docker compose up -d
-#  → App en http://localhost:3000
-#  → Servidor de collab en http://localhost:3002
+Una vez que tengas el archivo `.env`, colócalo en la raíz del repositorio (junto a `docker-compose.yml`).
+
+Las únicas variables que tú necesitas completar/verificar son:
+
+```env
+VITE_APP_SUPABASE_URL=https://<tu-proyecto>.supabase.co
+VITE_APP_SUPABASE_ANON_KEY=<anon-key-del-paso-1.2>
+VITE_APP_WS_SERVER_URL=http://localhost:3002   # en local
 ```
 
-> Para desarrollo con hot-reload en lugar de Docker:
-> ```bash
-> docker compose up -d excalidraw-room   # solo el servidor WebSocket
-> yarn start                              # dev server con HMR
-> ```
-
-### Scripts útiles
-
-```bash
-yarn test:typecheck   # Verificación de tipos TypeScript
-yarn test:app         # Ejecutar tests con Vitest
-yarn test:update      # Ejecutar tests y actualizar snapshots
-yarn fix              # Auto-fix de formato y linting
-yarn build            # Build de producción de la app
-```
+> Las variables `VITE_APP_*` se hornean dentro del bundle en tiempo de **build**.  
+> Si cambias alguna después de construir, debes reconstruir la imagen: `docker compose up -d --build excalidraw`.
 
 ---
 
-## Ejecución con Docker (producción)
-
-Asegúrate de que `.env` tiene todos los valores correctos (especialmente las de Supabase y Firebase).
+## Paso 3 — Levantar la aplicación con Docker
 
 ```bash
-# Primera vez o tras cambiar variables del .env
+# Primera vez (descarga imágenes, compila la app, levanta todo)
 docker compose up -d --build
-#  → App en http://localhost:3000
-#  → Servidor de collab en http://localhost:3002
+
+# La app queda disponible en:
+#   http://localhost:3000   →  aplicación web
+#   http://localhost:3002   →  servidor de colaboración WebSocket
 ```
 
-Para reconstruir solo la app tras cambiar variables del `.env`:
+Para verificar que todo está corriendo:
+
+```bash
+docker compose ps
+docker compose logs -f excalidraw
+```
+
+Para detener:
+
+```bash
+docker compose down
+```
+
+### Reconstruir tras cambiar el `.env`
 
 ```bash
 docker compose up -d --build excalidraw
@@ -114,57 +112,67 @@ docker compose up -d --build excalidraw
 
 ---
 
-## Configurar Supabase
+## Paso 4 (opcional) — Usuarios de prueba
 
-1. Crea un proyecto en [supabase.com](https://supabase.com).
-2. Copia `VITE_APP_SUPABASE_URL` y `VITE_APP_SUPABASE_ANON_KEY` desde **Settings → API**.
-3. Aplica las migraciones de la base de datos:
-   ```bash
-   # Con Supabase CLI instalado
-   supabase db push
-   ```
-   O ejecuta manualmente los archivos en `supabase/migrations/`.
-4. Habilita los providers de autenticación que necesites en **Authentication → Providers**.
+Si quieres crear usuarios de prueba ejecuta el archivo `supabase/seed.sql` en **SQL Editor → New query** del dashboard de Supabase.
 
----
+Crea dos usuarios:
 
-## Configurar Firebase
-
-1. Crea un proyecto en [Firebase Console](https://console.firebase.google.com).
-2. Agrega una **Web App** y copia el objeto de configuración.
-3. Pega el JSON (en una sola línea) en `VITE_APP_FIREBASE_CONFIG`:
-   ```
-   VITE_APP_FIREBASE_CONFIG={"apiKey":"...","authDomain":"...","projectId":"...",...}
-   ```
-4. Habilita **Firestore Database** y **Storage** en tu proyecto Firebase.
+| Email | Contraseña | Rol |
+|---|---|---|
+| `admin@admin.com` | `12345` | admin |
+| `test@test.com` | `12345` | usuario normal |
 
 ---
 
-## Estructura del monorepo
+## Desarrollo local (sin Docker)
+
+```bash
+# 1. Instalar dependencias
+yarn
+
+# 2. Levantar solo el servidor de collab (WebSocket)
+docker compose up -d excalidraw-room
+
+# 3. Dev server con hot-reload
+yarn start
+#  → http://localhost:3000
+```
+
+Scripts útiles:
+
+```bash
+yarn test:typecheck   # Verificación de tipos TypeScript
+yarn build            # Build de producción
+yarn fix              # Auto-fix de formato y linting
+```
+
+---
+
+## Estructura del repositorio
 
 ```
 excalidraw/
-├── excalidraw-app/     # Aplicación web completa (excalidraw.com / este fork)
-│   ├── auth/           # Páginas y store de autenticación (Supabase)
-│   ├── collab/         # Colaboración en tiempo real (WebSocket)
-│   └── components/     # Componentes de la app (AI, menús, sidebar…)
+├── excalidraw-app/        # Aplicación web (auth, dashboard, collab)
+│   ├── auth/              # Login / registro (Supabase Auth)
+│   ├── collab/            # Colaboración en tiempo real (WebSocket)
+│   └── data/              # Stores de Supabase (boards, shared boards, etc.)
 ├── packages/
-│   ├── excalidraw/     # Librería React publicada en npm (@excalidraw/excalidraw)
-│   ├── common/         # Utilidades compartidas
-│   ├── element/        # Lógica de elementos del canvas
-│   ├── math/           # Utilidades matemáticas (Point, vectores…)
-│   └── utils/          # Helpers genéricos
-├── supabase/           # Migraciones y configuración de Supabase
-├── docker-compose.yml  # Orquestación Docker (app + excalidraw-room)
-├── Dockerfile          # Build multi-stage de la app
-└── .env                # Variables de entorno (no subir al repo)
+│   ├── excalidraw/        # Librería React del canvas (@excalidraw/excalidraw)
+│   ├── common/            # Utilidades compartidas
+│   ├── element/           # Lógica de elementos del canvas
+│   └── math/              # Utilidades matemáticas
+├── supabase/
+│   └── migrations/        # SQL de creación de tablas (aplicar en orden)
+├── docker-compose.yml     # Orquestación: app + excalidraw-room
+├── Dockerfile             # Build multi-stage de la app
+└── .env                   # Variables de entorno (NO subir al repo)
 ```
 
 ---
 
 ## Notas de seguridad
 
-- El archivo `.env` **nunca** debe commitearse. Está en `.gitignore`.
-- `VITE_APP_SUPABASE_ANON_KEY` es una clave pública segura (solo acceso anon RLS).
-- `VITE_APP_FIREBASE_CONFIG` contiene claves públicas protegidas por reglas de Firestore/Storage.
-- En producción, asegúrate de configurar las **Row Level Security (RLS)** policies en Supabase.
+- `.env` **nunca** debe commitearse — está protegido en `.gitignore`.
+- `VITE_APP_SUPABASE_ANON_KEY` es una clave **pública** diseñada para estar en el frontend; las políticas RLS en Supabase protegen los datos.
+- En producción configura `VITE_APP_WS_SERVER_URL` con la URL pública de tu instancia de `excalidraw-room`.
