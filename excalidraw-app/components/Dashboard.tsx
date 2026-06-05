@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { THEME } from "@excalidraw/excalidraw";
 
 import { activeBoardAtom, appJotaiStore } from "../app-jotai";
+import { appDialog } from "../appDialog";
 import { getCollaborationLinkData } from "../data";
 import { DrawingsStore } from "../data/DrawingsStore";
 import { SharedBoardsStore } from "../data/SharedBoardsStore";
@@ -120,7 +121,13 @@ const BoardCard: React.FC<BoardCardProps> = ({
 
   const clearCollabLink = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!window.confirm("¿Eliminar el enlace de colaboración de este board?")) {
+    const confirmed = await appDialog.confirm({
+      title: "Eliminar enlace de colaboracion",
+      text: "El board dejara de mostrar este enlace colaborativo guardado.",
+      confirmButtonText: "Eliminar",
+      danger: true,
+    });
+    if (!confirmed) {
       return;
     }
     await onClearCollabLink(board.id);
@@ -351,7 +358,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!window.confirm("¿Eliminar este board?")) {
+    const confirmed = await appDialog.confirm({
+      title: "Eliminar board",
+      text: "Esta accion no se puede deshacer.",
+      confirmButtonText: "Eliminar",
+      danger: true,
+    });
+    if (!confirmed) {
       return;
     }
     await DrawingsStore.delete(id);
@@ -382,8 +395,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   const handleLeaveSharedBoard = async (board: SharedBoard) => {
     const isOwner = board.createdBy === user.id;
-    const action = isOwner ? "Eliminar" : "Salir del";
-    if (!window.confirm(`${action} tablero "${board.name}"?`)) {
+    const confirmed = await appDialog.confirm({
+      title: isOwner ? "Eliminar tablero compartido" : "Salir del tablero",
+      text: isOwner
+        ? `Se eliminara "${board.name}" para los participantes.`
+        : `Dejaras de ver "${board.name}" en tus compartidos.`,
+      confirmButtonText: isOwner ? "Eliminar" : "Salir",
+      danger: true,
+    });
+    if (!confirmed) {
       return;
     }
     await SharedBoardsStore.leave(board.id, isOwner);
@@ -511,13 +531,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <span className="dashboard__username">{user.username}</span>
           <button
             className="dashboard__theme-toggle"
-            onClick={() =>
-              setAppTheme(isDark ? THEME.LIGHT : THEME.DARK)
-            }
+            onClick={() => setAppTheme(isDark ? THEME.LIGHT : THEME.DARK)}
             title={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
           >
             {isDark ? (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <circle cx="12" cy="12" r="5" />
                 <line x1="12" y1="1" x2="12" y2="3" />
                 <line x1="12" y1="21" x2="12" y2="23" />
@@ -529,7 +554,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
               </svg>
             ) : (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
               </svg>
             )}

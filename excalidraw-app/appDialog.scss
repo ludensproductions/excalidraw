@@ -1,0 +1,64 @@
+.app-swal {
+  border: 1px solid rgba(120, 120, 140, 0.25);
+  border-radius: 12px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+  font-family: var(
+    --ui-font,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif
+  );
+}
+
+.app-swal__title {
+  font-size: 1.18rem;
+  font-weight: 700;
+}
+
+.app-swal__content {
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.app-swal__input {
+  border: 1px solid #b7b2ff;
+  border-radius: 8px;
+  box-shadow: none;
+  font: inherit;
+}
+
+.app-swal__input:focus {
+  border-color: #6965db;
+  box-shadow: 0 0 0 3px rgba(105, 101, 219, 0.18);
+}
+
+.app-swal__button {
+  min-width: 6.25rem;
+  border: 1px solid rgba(105, 101, 219, 0.42);
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+}
+
+.app-swal__button--primary {
+  border-color: #6965db;
+  background: #6965db;
+  color: #ffffff;
+}
+
+.app-swal__button--danger {
+  border-color: #d43f3a;
+  background: #d43f3a;
+  color: #ffffff;
+}
+
+.app-swal__validation {
+  border-radius: 8px;
+  font-size: 0.85rem;
+}

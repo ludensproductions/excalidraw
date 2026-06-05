@@ -34,6 +34,7 @@ import {
   FILE_UPLOAD_MAX_BYTES,
   ROOM_ID_BYTES,
 } from "../app_constants";
+import { appDialog } from "../appDialog";
 
 import { encodeFilesForUpload } from "./FileManager";
 import {
@@ -152,7 +153,7 @@ export const getCollaborationLinkData = (link: string | null | undefined) => {
   const hash = new URL(link, window.location.href).hash;
   const match = hash.match(RE_COLLAB_LINK);
   if (match && match[2].length !== 22) {
-    window.alert(t("alerts.invalidEncryptionKey"));
+    void appDialog.error(t("alerts.invalidEncryptionKey"));
     return null;
   }
   return match
@@ -229,7 +230,7 @@ export const importFromBackend = async (
     const buffer = await loadShareLinkFromFirebase(id);
 
     if (!buffer) {
-      window.alert(t("alerts.importBackendFailed"));
+      await appDialog.error(t("alerts.importBackendFailed"));
       return {};
     }
 
@@ -256,7 +257,7 @@ export const importFromBackend = async (
       return legacy_decodeFromBackend({ buffer, decryptionKey });
     }
   } catch (error: any) {
-    window.alert(t("alerts.importBackendFailed"));
+    await appDialog.error(t("alerts.importBackendFailed"));
     console.error(error);
     return {};
   }

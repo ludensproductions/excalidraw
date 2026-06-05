@@ -213,10 +213,10 @@ const ActiveRoomDialog = ({
             color="danger"
             label={t("roomDialog.button_stopSession")}
             icon={playerStopFilledIcon}
-            onClick={() => {
+            onClick={async () => {
               trackEvent("share", "room closed");
-              collabAPI.stopCollaboration();
-              if (!collabAPI.isCollaborating()) {
+              const didStop = await collabAPI.stopCollaboration();
+              if (didStop) {
                 handleClose();
               }
             }}

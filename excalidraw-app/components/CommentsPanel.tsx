@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { activeBoardAtom, useAtomValue } from "../app-jotai";
+import { appDialog } from "../appDialog";
 import { getCurrentUser } from "../auth/authStore";
 import { CommentsStore } from "../data/CommentsStore";
 
@@ -106,7 +107,13 @@ export const CommentsPanel: React.FC = () => {
   };
 
   const deleteComment = async (id: string) => {
-    if (!window.confirm("Eliminar este comentario?")) {
+    const confirmed = await appDialog.confirm({
+      title: "Eliminar comentario",
+      text: "Esta accion no se puede deshacer.",
+      confirmButtonText: "Eliminar",
+      danger: true,
+    });
+    if (!confirmed) {
       return;
     }
     setError(null);

@@ -259,7 +259,7 @@ const initializeScene = async (opts: {
 
   // Override local scene with a board selected from the dashboard
   if (!isExternalScene) {
-    const { board: pending, isNew } = dashboardState.consumePendingBoard();
+    const pending = dashboardState.consumePendingBoard();
     if (pending) {
       scene = {
         elements: restoreElements(pending.elements as any, null, {
@@ -271,12 +271,6 @@ const initializeScene = async (opts: {
           null,
         ),
         scrollToContent: true,
-      };
-    } else if (isNew) {
-      // New blank board — ignore localStorage content
-      scene = {
-        elements: [],
-        appState: restoreAppState({}, null),
       };
     }
   }
@@ -590,7 +584,7 @@ const ExcalidrawWrapper = () => {
           collabAPI?.isCollaborating() &&
           !isCollaborationLink(window.location.href)
         ) {
-          collabAPI.stopCollaboration(false);
+          await collabAPI.stopCollaboration(false);
         }
         excalidrawAPI.updateScene({ appState: { isLoading: true } });
 
@@ -1109,10 +1103,10 @@ const ExcalidrawWrapper = () => {
                 "exit",
                 "collaboration",
               ],
-              perform: () => {
+              perform: async () => {
                 if (collabAPI) {
-                  collabAPI.stopCollaboration();
-                  if (!collabAPI.isCollaborating()) {
+                  const didStop = await collabAPI.stopCollaboration();
+                  if (didStop) {
                     setShareDialogState({ isOpen: false });
                   }
                 }

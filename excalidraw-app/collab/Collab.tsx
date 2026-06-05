@@ -51,7 +51,13 @@ import type {
 } from "@excalidraw/excalidraw/types";
 import type { Mutable, ValueOf } from "@excalidraw/common/utility-types";
 
-import { appJotaiStore, atom, activeBoardAtom, isReadOnlySessionAtom } from "../app-jotai";
+import {
+  activeBoardAtom,
+  appJotaiStore,
+  atom,
+  isReadOnlySessionAtom,
+} from "../app-jotai";
+import { appDialog } from "../appDialog";
 import {
   CURSOR_SYNC_TIMEOUT,
   FILE_UPLOAD_MAX_BYTES,
@@ -382,7 +388,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     }
   };
 
-  stopCollaboration = (keepRemoteState = true) => {
+  stopCollaboration = async (keepRemoteState = true) => {
     const roomId = this.portal.roomId;
     const roomKey = this.portal.roomKey;
     const activeBoard = appJotaiStore.get(activeBoardAtom);
@@ -410,7 +416,14 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       LocalData.fileStorage.reset();
       this.destroySocketClient();
       didStop = true;
-    } else if (window.confirm(t("alerts.collabStopOverridePrompt"))) {
+    } else if (
+      await appDialog.confirm({
+        title: t("roomDialog.button_stopSession"),
+        text: t("alerts.collabStopOverridePrompt"),
+        confirmButtonText: t("roomDialog.button_stopSession"),
+        danger: true,
+      })
+    ) {
       // hack to ensure that we prefer we disregard any new browser state
       // that could have been saved in other tabs while we were collaborating
       resetBrowserStateVersions();
@@ -473,6 +486,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
         );
       });
     }
+    return didStop;
   };
 
   flushCollaboration = async () => {
@@ -553,7 +567,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       );
       return JSON.parse(decodedData);
     } catch (error) {
-      window.alert(t("alerts.decryptFailed"));
+      await appDialog.error(t("alerts.decryptFailed"));
       console.error(error);
       return {
         type: WS_SUBTYPES.INVALID_RESPONSE,

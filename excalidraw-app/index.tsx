@@ -10,6 +10,7 @@ import {
   appJotaiStore,
   hasDashboardBackAtom,
 } from "./app-jotai";
+import { appDialog } from "./appDialog";
 import { AuthPage } from "./auth/AuthPage";
 import {
   getCurrentUser,
@@ -20,6 +21,7 @@ import {
 } from "./auth/authStore";
 import { Dashboard } from "./components/Dashboard";
 import { dashboardState } from "./dashboardState";
+import { DrawingsStore } from "./data/DrawingsStore";
 
 import type { AuthUser } from "./auth/authStore";
 import type { DrawingRecord } from "./data/DrawingsStore";
@@ -50,6 +52,7 @@ const AppRoot: React.FC = () => {
     }
     return { type: "dashboard" };
   });
+  const [isCreatingBoard, setIsCreatingBoard] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -122,12 +125,48 @@ const AppRoot: React.FC = () => {
     setView({ type: "editor", boardId: record.id, key: Date.now() });
   };
 
-  const newBoard = () => {
-    appJotaiStore.set(hasDashboardBackAtom, true);
-    appJotaiStore.set(activeBoardAtom, { id: null, name: null });
-    dashboardState.setNewBoard();
-    window.history.replaceState({}, "", window.location.pathname);
-    setView({ type: "editor", boardId: null, key: Date.now() });
+  const newBoard = async () => {
+    if (isCreatingBoard) {
+      return;
+    }
+
+    const name = await appDialog.promptText({
+      title: "Crear board",
+      label: "Nombre del board",
+      placeholder: "Ej. Mapa de flujo de ventas",
+      confirmButtonText: "Crear board",
+      requiredMessage: "Ponle un nombre al board para poder crearlo.",
+    });
+    if (!name) {
+      return;
+    }
+
+    setIsCreatingBoard(true);
+    try {
+      const record = await DrawingsStore.save({
+        name,
+        elements: [],
+        appState: { viewBackgroundColor: "#ffffff" },
+        thumbnail: null,
+        collabLink: null,
+        userId: getCurrentUser()?.id,
+      });
+
+      appJotaiStore.set(hasDashboardBackAtom, true);
+      appJotaiStore.set(activeBoardAtom, { id: record.id, name: record.name });
+      dashboardState.setPendingBoard(record);
+      window.history.replaceState({}, "", window.location.pathname);
+      setView({ type: "editor", boardId: record.id, key: Date.now() });
+    } catch (error) {
+      await appDialog.error(
+        "No se pudo crear el board",
+        error instanceof Error
+          ? error.message
+          : "No se pudo crear el board. Intenta otra vez.",
+      );
+    } finally {
+      setIsCreatingBoard(false);
+    }
   };
 
   const openSharedBoard = (board: SharedBoard) => {

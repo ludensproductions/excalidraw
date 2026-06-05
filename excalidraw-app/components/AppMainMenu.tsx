@@ -6,6 +6,7 @@ import type { Theme } from "@excalidraw/element/types";
 
 import { LanguageList } from "../app-language/LanguageList";
 import { activeBoardAtom, appJotaiStore, useAtom } from "../app-jotai";
+import { appDialog } from "../appDialog";
 import { getCurrentUser, logoutUser } from "../auth/authStore";
 import { DrawingsStore } from "../data/DrawingsStore";
 import { dashboardState } from "../dashboardState";
@@ -48,16 +49,20 @@ export const AppMainMenu: React.FC<{
 
   const handleRenameBoard = async () => {
     if (!activeBoard.id) {
-      window.alert(
-        "Este board aún no se ha guardado. Guárdalo primero para poder renombrarlo.",
-      );
+      await appDialog.alert({
+        title: "Guarda el board primero",
+        text: "Este board aun no se ha guardado. Guardalo primero para poder renombrarlo.",
+        icon: "info",
+      });
       return;
     }
-    const input = window.prompt(
-      "Nuevo nombre del board:",
-      activeBoard.name ?? "",
-    );
-    const trimmed = input?.trim();
+    const trimmed = await appDialog.promptText({
+      title: "Renombrar board",
+      label: "Nuevo nombre",
+      initialValue: activeBoard.name ?? "",
+      confirmButtonText: "Renombrar",
+      requiredMessage: "Escribe un nombre para el board.",
+    });
     if (!trimmed || trimmed === activeBoard.name) {
       return;
     }

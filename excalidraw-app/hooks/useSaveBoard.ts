@@ -2,6 +2,7 @@ import { exportToBlob, useExcalidrawAPI } from "@excalidraw/excalidraw";
 import { useCallback, useState } from "react";
 
 import { activeBoardAtom, useAtom, useAtomValue } from "../app-jotai";
+import { appDialog } from "../appDialog";
 import { getCurrentUser } from "../auth/authStore";
 import { activeRoomLinkAtom, isCollaboratingAtom } from "../collab/Collab";
 import { DrawingsStore } from "../data/DrawingsStore";
@@ -21,19 +22,27 @@ export const useSaveBoard = () => {
     }
 
     if (isCollaborating && !activeBoard.id) {
-      window.alert(
-        "Este es un tablero compartido. Se guarda en la sesión colaborativa, no en Mis tableros.",
-      );
+      await appDialog.alert({
+        title: "Tablero compartido",
+        text: "Este tablero se guarda en la sesion colaborativa, no en tus boards privados.",
+        icon: "info",
+      });
       return;
     }
 
     let name = activeBoard.name;
     if (!name) {
-      const input = window.prompt("Nombre del board:", "");
-      if (!input?.trim()) {
+      const input = await appDialog.promptText({
+        title: "Guardar board",
+        label: "Nombre del board",
+        placeholder: "Ej. Wireframe principal",
+        confirmButtonText: "Guardar",
+        requiredMessage: "Escribe un nombre para guardar el board.",
+      });
+      if (!input) {
         return;
       }
-      name = input.trim();
+      name = input;
     }
 
     setStatus("saving");

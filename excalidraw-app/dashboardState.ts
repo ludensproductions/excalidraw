@@ -2,7 +2,6 @@ import type { DrawingRecord } from "./data/DrawingsStore";
 
 let _onBack: (() => void) | null = null;
 let _pendingBoard: DrawingRecord | null = null;
-let _isNewBoard = false;
 let _flushAutoSave: (() => Promise<void>) | null = null;
 
 export const dashboardState = {
@@ -26,17 +25,10 @@ export const dashboardState = {
   },
   setPendingBoard(r: DrawingRecord | null): void {
     _pendingBoard = r;
-    _isNewBoard = false;
   },
-  setNewBoard(): void {
-    _pendingBoard = null;
-    _isNewBoard = true;
-  },
-  consumePendingBoard(): { board: DrawingRecord | null; isNew: boolean } {
+  consumePendingBoard(): DrawingRecord | null {
     const board = _pendingBoard;
-    const isNew = _isNewBoard;
     _pendingBoard = null;
-    _isNewBoard = false;
-    return { board, isNew };
+    return board;
   },
 };
