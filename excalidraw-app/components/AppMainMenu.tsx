@@ -1,9 +1,6 @@
 import { usersIcon } from "@excalidraw/excalidraw/components/icons";
 import { MainMenu } from "@excalidraw/excalidraw/index";
-import { useExcalidrawAPI } from "@excalidraw/excalidraw";
 import React from "react";
-
-import { DEFAULT_SIDEBAR } from "@excalidraw/common";
 
 import type { Theme } from "@excalidraw/element/types";
 
@@ -13,8 +10,6 @@ import { getCurrentUser, logoutUser } from "../auth/authStore";
 import { DrawingsStore } from "../data/DrawingsStore";
 import { dashboardState } from "../dashboardState";
 import { useSaveBoard } from "../hooks/useSaveBoard";
-
-import { DRAWINGS_PANEL_TAB } from "./DrawingsPanel";
 
 const homeIcon = (
   <svg
@@ -34,26 +29,6 @@ const homeIcon = (
   </svg>
 );
 
-const drawingsMenuIcon = (
-  <svg
-    aria-hidden="true"
-    focusable="false"
-    role="img"
-    viewBox="0 0 24 24"
-    fill="none"
-    strokeWidth={2}
-    stroke="currentColor"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    style={{ width: "1em", height: "1em" }}
-  >
-    <rect x="3" y="3" width="7" height="7" rx="1" />
-    <rect x="14" y="3" width="7" height="7" rx="1" />
-    <rect x="3" y="14" width="7" height="7" rx="1" />
-    <rect x="14" y="14" width="7" height="7" rx="1" />
-  </svg>
-);
-
 export const AppMainMenu: React.FC<{
   onCollabDialogOpen: () => any;
   isCollaborating: boolean;
@@ -63,7 +38,6 @@ export const AppMainMenu: React.FC<{
   refresh: () => void;
 }> = React.memo((props) => {
   const currentUser = getCurrentUser();
-  const excalidrawAPI = useExcalidrawAPI();
   const { save: saveBoard, status: saveBoardStatus } = useSaveBoard();
   const [activeBoard, setActiveBoard] = useAtom(activeBoardAtom);
 
@@ -91,14 +65,6 @@ export const AppMainMenu: React.FC<{
     setActiveBoard({ id: activeBoard.id, name: trimmed });
     // also keep jotai store in sync (in case the atom default differs)
     appJotaiStore.set(activeBoardAtom, { id: activeBoard.id, name: trimmed });
-  };
-
-  const openDrawingsPanel = () => {
-    excalidrawAPI?.toggleSidebar({
-      name: DEFAULT_SIDEBAR.name,
-      tab: DRAWINGS_PANEL_TAB,
-      force: true,
-    });
   };
 
   const saveBoardIcon = (
@@ -165,9 +131,6 @@ export const AppMainMenu: React.FC<{
           onSelect={() => props.onCollabDialogOpen()}
         />
       )}
-      <MainMenu.Item icon={drawingsMenuIcon} onSelect={openDrawingsPanel}>
-        Mis dibujos
-      </MainMenu.Item>
       <MainMenu.DefaultItems.CommandPalette className="highlighted" />
       <MainMenu.DefaultItems.Help />
       <MainMenu.DefaultItems.ClearCanvas />
