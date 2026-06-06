@@ -1,4 +1,317 @@
+name: excalidraw
+
 services:
+  # ========================================================================
+  # Supabase – Self-Hosted Services
+  # ========================================================================
+
+  # --- Database (PostgreSQL 15 with auth/storage schemas) ---
+  db:
+    container_name: excalidraw-db
+    image: supabase/postgres:15.8.1.085
+    restart: unless-stopped
+    entrypoint: /excalidraw-db-entrypoint.sh
+    volumes:
+      - ./docker/volumes/db/excalidraw-db-entrypoint.sh:/excalidraw-db-entrypoint.sh:ro
+      - ./docker/volumes/db/00-ensure-passwords.sh:/docker-entrypoint-initdb.d/init-scripts/00-ensure-passwords.sh:ro
+      - ./docker/volumes/db/03-webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql:ro
+      - ./docker/volumes/db/99-set-passwords.sql:/docker-entrypoint-initdb.d/init-scripts/99-set-passwords.sql:ro
+      - ./docker/volumes/db/99-jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:ro
+      - ./docker/volumes/db/04-app-migrations.sql:/docker-entrypoint-initdb.d/migrations/9999-app.sql:ro
+      - ./docker/volumes/db/05-seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro
+      - ./docker/volumes/db/97-supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:ro
+      - ./docker/volumes/db/98-pooler.sql:/docker-entrypoint-initdb.d/migrations/98-pooler.sql:ro
+      - ./docker/volumes/db/99-logs.sql:/docker-entrypoint-initdb.d/migrations/99-logs.sql:ro
+      - db-data:/var/lib/postgresql/data
+      - db-config:/etc/postgresql-custom
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "/var/run/postgresql"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    environment:
+      POSTGRES_HOST: /var/run/postgresql
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXP: ${JWT_EXPIRY:-3600}
+    command:
+      [
+        "postgres",
+        "-c", "config_file=/etc/postgresql/postgresql.conf",
+        "-c", "log_min_messages=fatal"
+      ]
+
+  # --- Supavisor (connection pooler) ---
+  supavisor:
+    container_name: excalidraw-pooler
+    image: supabase/supavisor:2.9.5
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+      - "${POOLER_PROXY_PORT_TRANSACTION:-6543}:6543"
+    volumes:
+      - ./docker/volumes/pooler/pooler.exs:/etc/pooler/pooler.exs:ro
+    healthcheck:
+      test:
+        [
+          "CMD", "curl", "-sSfL", "--head", "-o", "/dev/null",
+          "http://127.0.0.1:4000/api/health"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 4000
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_HOST: ${POSTGRES_HOST:-db}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_URL: ecto://supabase_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-db}:${POSTGRES_PORT:-5432}/_supabase
+      CLUSTER_POSTGRES: "true"
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      VAULT_ENC_KEY: ${VAULT_ENC_KEY}
+      API_JWT_SECRET: ${JWT_SECRET}
+      METRICS_JWT_SECRET: ${JWT_SECRET}
+      REGION: local
+      ERL_AFLAGS: -proto_dist inet_tcp
+      POOLER_TENANT_ID: ${POOLER_TENANT_ID:-excalidraw}
+      POOLER_DEFAULT_POOL_SIZE: ${POOLER_DEFAULT_POOL_SIZE:-20}
+      POOLER_MAX_CLIENT_CONN: ${POOLER_MAX_CLIENT_CONN:-100}
+      POOLER_POOL_MODE: ${POOLER_POOL_MODE:-transaction}
+      DB_POOL_SIZE: ${POOLER_DB_POOL_SIZE:-5}
+    command:
+      [
+        "/bin/sh", "-c",
+        "/app/bin/migrate && /app/bin/supavisor eval \"$$(cat /etc/pooler/pooler.exs)\" && /app/bin/server"
+      ]
+
+  # --- GoTrue (Auth) ---
+  auth:
+    container_name: excalidraw-auth
+    image: supabase/gotrue:v2.189.0
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9999/health"]
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: ${API_EXTERNAL_URL:-http://localhost:54321}
+
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-db}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-postgres}
+
+      GOTRUE_SITE_URL: ${SITE_URL:-http://localhost:3000}
+      GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS:-}
+      GOTRUE_DISABLE_SIGNUP: ${DISABLE_SIGNUP:-false}
+
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: ${JWT_EXPIRY:-3600}
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_JWT_ISSUER: ${API_EXTERNAL_URL:-http://localhost:54321}/auth/v1
+
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: ${ENABLE_EMAIL_SIGNUP:-true}
+      GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: ${ENABLE_ANONYMOUS_USERS:-false}
+      GOTRUE_MAILER_AUTOCONFIRM: ${ENABLE_EMAIL_AUTOCONFIRM:-true}
+
+      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL:-admin@example.com}
+      GOTRUE_SMTP_HOST: ${SMTP_HOST:-mail}
+      GOTRUE_SMTP_PORT: ${SMTP_PORT:-2500}
+      GOTRUE_SMTP_USER: ${SMTP_USER:-admin}
+      GOTRUE_SMTP_PASS: ${SMTP_PASS:-admin}
+      GOTRUE_SMTP_SENDER_NAME: ${SMTP_SENDER_NAME:-Excalidraw}
+      GOTRUE_MAILER_URLPATHS_INVITE: ${MAILER_URLPATHS_INVITE:-/auth/v1/verify}
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: ${MAILER_URLPATHS_CONFIRMATION:-/auth/v1/verify}
+      GOTRUE_MAILER_URLPATHS_RECOVERY: ${MAILER_URLPATHS_RECOVERY:-/auth/v1/verify}
+      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: ${MAILER_URLPATHS_EMAIL_CHANGE:-/auth/v1/verify}
+
+      GOTRUE_EXTERNAL_PHONE_ENABLED: ${ENABLE_PHONE_SIGNUP:-false}
+      GOTRUE_SMS_AUTOCONFIRM: ${ENABLE_PHONE_AUTOCONFIRM:-false}
+
+  # --- PostgREST (REST API) ---
+  rest:
+    container_name: excalidraw-rest
+    image: postgrest/postgrest:v14.12
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-db}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-postgres}
+      PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS:-public,storage,graphql_public}
+      PGRST_DB_MAX_ROWS: ${PGRST_DB_MAX_ROWS:-1000}
+      PGRST_DB_EXTRA_SEARCH_PATH: ${PGRST_DB_EXTRA_SEARCH_PATH:-public}
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET}
+      PGRST_APP_SETTINGS_JWT_EXP: ${JWT_EXPIRY:-3600}
+    command: ["postgrest"]
+
+  # --- Storage ---
+  storage:
+    container_name: excalidraw-storage
+    image: supabase/storage-api:v1.60.4
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      rest:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/status"]
+      timeout: 10s
+      interval: 10s
+      retries: 5
+      start_period: 30s
+    environment:
+      ANON_KEY: ${ANON_KEY}
+      SERVICE_KEY: ${SERVICE_ROLE_KEY}
+      POSTGREST_URL: http://rest:3000
+      AUTH_JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-db}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-postgres}
+      STORAGE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:-http://localhost:54321}
+      REQUEST_ALLOW_X_FORWARDED_PATH: "true"
+      FILE_SIZE_LIMIT: ${FILE_SIZE_LIMIT:-52428800}
+      STORAGE_BACKEND: file
+      GLOBAL_S3_BUCKET: ${GLOBAL_S3_BUCKET:-storage}
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: ${STORAGE_TENANT_ID:-stub}
+      REGION: ${REGION:-local}
+      ENABLE_IMAGE_TRANSFORMATION: "false"
+      S3_PROTOCOL_ACCESS_KEY_ID: ${S3_PROTOCOL_ACCESS_KEY_ID}
+      S3_PROTOCOL_ACCESS_KEY_SECRET: ${S3_PROTOCOL_ACCESS_KEY_SECRET}
+    volumes:
+      - storage-data:/var/lib/storage
+
+  # --- postgres-meta (used by Studio) ---
+  meta:
+    container_name: excalidraw-meta
+    image: supabase/postgres-meta:v0.96.6
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: ${POSTGRES_HOST:-db}
+      PG_META_DB_PORT: ${POSTGRES_PORT:-5432}
+      PG_META_DB_NAME: ${POSTGRES_DB:-postgres}
+      PG_META_DB_USER: supabase_admin
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      CRYPTO_KEY: ${PG_META_CRYPTO_KEY}
+
+  # --- Studio (Dashboard) ---
+  studio:
+    container_name: excalidraw-studio
+    image: supabase/studio:2026.06.03-sha-0bca601
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://localhost:3000/api/platform/profile').then((r) => {if (r.status !== 200) throw new Error(r.status)})\""
+        ]
+      timeout: 10s
+      interval: 5s
+      retries: 3
+      start_period: 20s
+    depends_on:
+      meta:
+        condition: service_started
+    environment:
+      HOSTNAME: "0.0.0.0"
+      STUDIO_PG_META_URL: http://meta:8080
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_HOST: ${POSTGRES_HOST:-db}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PG_META_CRYPTO_KEY: ${PG_META_CRYPTO_KEY}
+      PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS:-public,storage,graphql_public}
+      PGRST_DB_MAX_ROWS: ${PGRST_DB_MAX_ROWS:-1000}
+      PGRST_DB_EXTRA_SEARCH_PATH: ${PGRST_DB_EXTRA_SEARCH_PATH:-public}
+      DEFAULT_ORGANIZATION_NAME: ${STUDIO_DEFAULT_ORGANIZATION:-Excalidraw}
+      DEFAULT_PROJECT_NAME: ${STUDIO_DEFAULT_PROJECT:-Excalidraw}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      SUPABASE_URL: http://kong:8000
+      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:-http://localhost:54321}
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+      AUTH_JWT_SECRET: ${JWT_SECRET}
+      SNIPPETS_MANAGEMENT_FOLDER: /app/snippets
+      EDGE_FUNCTIONS_MANAGEMENT_FOLDER: /app/edge-functions
+    volumes:
+      - ./docker/volumes/snippets:/app/snippets:ro
+      - ./docker/volumes/functions:/app/edge-functions:ro
+
+  # --- API Gateway (Kong) ---
+  kong:
+    container_name: excalidraw-kong
+    image: kong/kong:3.9.1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      auth:
+        condition: service_started
+      rest:
+        condition: service_started
+      storage:
+        condition: service_started
+      meta:
+        condition: service_started
+      studio:
+        condition: service_healthy
+    ports:
+      - "${KONG_HTTP_PORT:-54321}:8000/tcp"
+      - "${KONG_HTTPS_PORT:-54322}:8443/tcp"
+    volumes:
+      - ./docker/volumes/api/kong.yml:/home/kong/temp.yml:ro
+      - ./docker/volumes/api/kong-entrypoint.sh:/home/kong/kong-entrypoint.sh:ro
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /usr/local/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_DNS_NOT_FOUND_TTL: 1
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth,request-termination
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+      KONG_PROXY_ACCESS_LOG: /dev/stdout combined
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+      DASHBOARD_USERNAME: ${DASHBOARD_USERNAME:-admin}
+      DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD}
+    entrypoint: /home/kong/kong-entrypoint.sh
+
+  # --- Mail catcher (development SMTP) ---
+  mail:
+    container_name: excalidraw-mail
+    image: axllent/mailpit:v1.23
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+
+  # ========================================================================
+  # Excalidraw Services
+  # ========================================================================
+
+  # --- WebSocket Collaboration Server ---
   excalidraw-room:
     image: excalidraw/excalidraw-room:latest
     container_name: excalidraw-room
@@ -13,6 +326,7 @@ services:
       timeout: 5s
       retries: 5
 
+  # --- Excalidraw Frontend ---
   excalidraw:
     build:
       context: .
@@ -20,29 +334,31 @@ services:
         - NODE_ENV=${NODE_ENV:-production}
         - VITE_APP_PORT=${VITE_APP_PORT:-3000}
         - FAST_REFRESH=${FAST_REFRESH:-false}
-        - VITE_APP_BACKEND_V2_GET_URL=${VITE_APP_BACKEND_V2_GET_URL}
-        - VITE_APP_BACKEND_V2_POST_URL=${VITE_APP_BACKEND_V2_POST_URL}
-        - VITE_APP_LIBRARY_URL=${VITE_APP_LIBRARY_URL}
-        - VITE_APP_LIBRARY_BACKEND=${VITE_APP_LIBRARY_BACKEND}
-        - VITE_APP_WS_SERVER_URL=${VITE_APP_WS_SERVER_URL}
-        - VITE_APP_AI_BACKEND=${VITE_APP_AI_BACKEND}
-        - VITE_APP_FIREBASE_CONFIG=${VITE_APP_FIREBASE_CONFIG}
-        - VITE_APP_SUPABASE_URL=${VITE_APP_SUPABASE_URL}
-        - VITE_APP_SUPABASE_ANON_KEY=${VITE_APP_SUPABASE_ANON_KEY}
+        - VITE_APP_BACKEND_V2_GET_URL=${VITE_APP_BACKEND_V2_GET_URL:-https://json.excalidraw.com/api/v2/}
+        - VITE_APP_BACKEND_V2_POST_URL=${VITE_APP_BACKEND_V2_POST_URL:-https://json.excalidraw.com/api/v2/post/}
+        - VITE_APP_LIBRARY_URL=${VITE_APP_LIBRARY_URL:-https://libraries.excalidraw.com}
+        - VITE_APP_LIBRARY_BACKEND=${VITE_APP_LIBRARY_BACKEND:-https://us-central1-excalidraw-room-persistence.cloudfunctions.net/libraries}
+        - VITE_APP_WS_SERVER_URL=${VITE_APP_WS_SERVER_URL:-http://localhost:3002}
+        - VITE_APP_AI_BACKEND=${VITE_APP_AI_BACKEND:-https://oss-ai.excalidraw.com}
+        - VITE_APP_FIREBASE_CONFIG=${VITE_APP_FIREBASE_CONFIG:-{}}
+        - VITE_APP_SUPABASE_URL=${VITE_APP_SUPABASE_URL:-http://localhost:54321}
+        - VITE_APP_SUPABASE_ANON_KEY=${VITE_APP_SUPABASE_ANON_KEY:-}
         - VITE_APP_DISABLE_SENTRY=${VITE_APP_DISABLE_SENTRY:-true}
         - VITE_APP_ENABLE_TRACKING=${VITE_APP_ENABLE_TRACKING:-false}
         - VITE_APP_ENABLE_PWA=${VITE_APP_ENABLE_PWA:-true}
         - VITE_APP_ENABLE_ESLINT=${VITE_APP_ENABLE_ESLINT:-false}
         - VITE_APP_COLLAPSE_OVERLAY=${VITE_APP_COLLAPSE_OVERLAY:-true}
-        - VITE_APP_DISABLE_PREVENT_UNLOAD=${VITE_APP_DISABLE_PREVENT_UNLOAD}
-        - VITE_APP_DEV_DISABLE_LIVE_RELOAD=${VITE_APP_DEV_DISABLE_LIVE_RELOAD}
+        - VITE_APP_DISABLE_PREVENT_UNLOAD=${VITE_APP_DISABLE_PREVENT_UNLOAD:-false}
+        - VITE_APP_DEV_DISABLE_LIVE_RELOAD=${VITE_APP_DEV_DISABLE_LIVE_RELOAD:-false}
         - VITE_APP_DEBUG_ENABLE_TEXT_CONTAINER_BOUNDING_BOX=${VITE_APP_DEBUG_ENABLE_TEXT_CONTAINER_BOUNDING_BOX:-false}
-        - VITE_APP_GIT_SHA=${VITE_APP_GIT_SHA}
+        - VITE_APP_GIT_SHA=${VITE_APP_GIT_SHA:-}
     container_name: excalidraw
     ports:
       - "${VITE_APP_PORT:-3000}:80"
     restart: unless-stopped
     depends_on:
+      kong:
+        condition: service_healthy
       excalidraw-room:
         condition: service_healthy
     healthcheck:
@@ -51,3 +367,11 @@ services:
       timeout: 10s
       retries: 3
       start_period: 15s
+
+volumes:
+  db-data:
+    driver: local
+  db-config:
+    driver: local
+  storage-data:
+    driver: local
