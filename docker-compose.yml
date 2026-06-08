@@ -7,7 +7,7 @@ services:
   db:
     image: ${POSTGRES_IMAGE:-supabase/postgres:15.8.1.085}
     restart: unless-stopped
-    entrypoint: /excalidraw-db-entrypoint.sh
+    entrypoint: ["bash", "/excalidraw-db-entrypoint.sh"]
     volumes:
       - ./docker/volumes/db/excalidraw-db-entrypoint.sh:/excalidraw-db-entrypoint.sh:ro
       - ./docker/volumes/db/99-load-excalidraw.sql:/docker-entrypoint-initdb.d/init-scripts/99-load-excalidraw.sql:ro
