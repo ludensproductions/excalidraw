@@ -4,6 +4,9 @@
 !.npmrc
 !.prettierrc
 !excalidraw-app/
+!docker/
+!docker/nginx/
+!docker/nginx/excalidraw.conf
 !package.json
 !public/
 !packages/
