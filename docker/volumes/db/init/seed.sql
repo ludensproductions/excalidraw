@@ -6,10 +6,9 @@
 
 INSERT INTO auth.users (
   id, instance_id, aud, role,
-  email, encrypted_password, email_confirmed_at,
+  email, encrypted_password, confirmed_at,
   raw_user_meta_data,
   created_at, updated_at,
-  confirmation_token, recovery_token, email_change_token_new, email_change,
   is_super_admin
 )
 SELECT
@@ -21,7 +20,6 @@ SELECT
   now(),
   jsonb_build_object('username', 'admin'),
   now(), now(),
-  '', '', '', '',
   false
 WHERE NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'admin@admin.com');
 
@@ -31,10 +29,9 @@ WHERE NOT EXISTS (SELECT 1 FROM public.profiles WHERE email = 'admin@admin.com')
 
 INSERT INTO auth.users (
   id, instance_id, aud, role,
-  email, encrypted_password, email_confirmed_at,
+  email, encrypted_password, confirmed_at,
   raw_user_meta_data,
   created_at, updated_at,
-  confirmation_token, recovery_token, email_change_token_new, email_change,
   is_super_admin
 )
 SELECT
@@ -46,7 +43,6 @@ SELECT
   now(),
   jsonb_build_object('username', 'test'),
   now(), now(),
-  '', '', '', '',
   false
 WHERE NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'test@test.com');
 

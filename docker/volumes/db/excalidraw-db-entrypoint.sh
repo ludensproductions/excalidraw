@@ -21,6 +21,9 @@ for role in authenticator pgbouncer supabase_auth_admin supabase_storage_admin s
   fi
 done
 
+echo "excalidraw-db: Fixing auth.uid() ownership for GoTrue migrations..."
+psql -q -U postgres -h /var/run/postgresql -c "ALTER FUNCTION auth.uid() OWNER TO supabase_auth_admin;" 2>/dev/null || true
+
 echo "excalidraw-db: Ready."
 
 # Create excalidraw-files bucket (best-effort; may fail during init)
