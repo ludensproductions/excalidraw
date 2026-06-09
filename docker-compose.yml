@@ -92,12 +92,12 @@ services:
     environment:
       GOTRUE_API_HOST: 0.0.0.0
       GOTRUE_API_PORT: 9999
-      API_EXTERNAL_URL: ${API_EXTERNAL_URL:-${EXCALIDRAW_PUBLIC_URL:-http://localhost:3000}}
+      API_EXTERNAL_URL: ${API_EXTERNAL_URL:-${EXCALIDRAW_PUBLIC_URL:-https://excalidraw.issirmax.mx}}
 
       GOTRUE_DB_DRIVER: postgres
       GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-db}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-postgres}
 
-      GOTRUE_SITE_URL: ${SITE_URL:-${EXCALIDRAW_PUBLIC_URL:-http://localhost:3000}}
+      GOTRUE_SITE_URL: ${SITE_URL:-${EXCALIDRAW_PUBLIC_URL:-https://excalidraw.issirmax.mx}}
       GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS:-}
       GOTRUE_DISABLE_SIGNUP: ${DISABLE_SIGNUP:-false}
 
@@ -106,7 +106,7 @@ services:
       GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
       GOTRUE_JWT_EXP: ${JWT_EXPIRY:-3600}
       GOTRUE_JWT_SECRET: ${JWT_SECRET}
-      GOTRUE_JWT_ISSUER: ${API_EXTERNAL_URL:-${EXCALIDRAW_PUBLIC_URL:-http://localhost:3000}}/auth/v1
+      GOTRUE_JWT_ISSUER: ${API_EXTERNAL_URL:-${EXCALIDRAW_PUBLIC_URL:-https://excalidraw.issirmax.mx}}/auth/v1
 
       GOTRUE_EXTERNAL_EMAIL_ENABLED: ${ENABLE_EMAIL_SIGNUP:-true}
       GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: ${ENABLE_ANONYMOUS_USERS:-false}
@@ -166,7 +166,7 @@ services:
       POSTGREST_URL: http://rest:3000
       AUTH_JWT_SECRET: ${JWT_SECRET}
       DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-db}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-postgres}
-      STORAGE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:-${EXCALIDRAW_PUBLIC_URL:-http://localhost:3000}}
+      STORAGE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:-${EXCALIDRAW_PUBLIC_URL:-https://excalidraw.issirmax.mx}}
       REQUEST_ALLOW_X_FORWARDED_PATH: "true"
       FILE_SIZE_LIMIT: ${FILE_SIZE_LIMIT:-52428800}
       STORAGE_BACKEND: ${STORAGE_BACKEND:-file}
@@ -228,7 +228,7 @@ services:
       DEFAULT_PROJECT_NAME: ${STUDIO_DEFAULT_PROJECT:-Excalidraw}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       SUPABASE_URL: ${SUPABASE_INTERNAL_URL:-http://kong:8000}
-      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:-${EXCALIDRAW_PUBLIC_URL:-http://localhost:3000}}
+      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:-${EXCALIDRAW_PUBLIC_URL:-https://excalidraw.issirmax.mx}}
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
       AUTH_JWT_SECRET: ${JWT_SECRET}
@@ -310,7 +310,7 @@ services:
         - VITE_APP_BACKEND_V2_POST_URL=${VITE_APP_BACKEND_V2_POST_URL:-https://json.excalidraw.com/api/v2/post/}
         - VITE_APP_LIBRARY_URL=${VITE_APP_LIBRARY_URL:-https://libraries.excalidraw.com}
         - VITE_APP_LIBRARY_BACKEND=${VITE_APP_LIBRARY_BACKEND:-https://us-central1-excalidraw-room-persistence.cloudfunctions.net/libraries}
-        - VITE_APP_WS_SERVER_URL=${VITE_APP_WS_SERVER_URL:-${EXCALIDRAW_ROOM_PUBLIC_URL:-http://localhost:3002}}
+        - VITE_APP_WS_SERVER_URL=${VITE_APP_WS_SERVER_URL:-${EXCALIDRAW_ROOM_PUBLIC_URL:-https://room.excalidraw.issirmax.mx}}
         - VITE_APP_AI_BACKEND=${VITE_APP_AI_BACKEND:-https://oss-ai.excalidraw.com}
         - VITE_APP_FIREBASE_CONFIG=${VITE_APP_FIREBASE_CONFIG:-{}}
         - VITE_APP_SUPABASE_URL=${VITE_APP_SUPABASE_URL:-/}
