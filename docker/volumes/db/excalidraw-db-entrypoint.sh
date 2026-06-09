@@ -21,6 +21,10 @@ for role in authenticator pgbouncer supabase_auth_admin supabase_storage_admin s
   fi
 done
 
+echo "excalidraw-db: Fixing NULL confirmation_token for GoTrue compatibility..."
+psql -q -U postgres -h /var/run/postgresql -c "UPDATE auth.users SET confirmation_token = '' WHERE confirmation_token IS NULL;" 2>/dev/null || true
+psql -q -U postgres -h /var/run/postgresql -c "ALTER TABLE auth.users ALTER COLUMN confirmation_token SET DEFAULT '';" 2>/dev/null || true
+
 echo "excalidraw-db: Fixing auth.uid() ownership for GoTrue migrations..."
 psql -q -U postgres -h /var/run/postgresql -c "ALTER FUNCTION auth.uid() OWNER TO supabase_auth_admin;" 2>/dev/null || true
 
