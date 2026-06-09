@@ -21,22 +21,37 @@ for role in authenticator pgbouncer supabase_auth_admin supabase_storage_admin s
   fi
 done
 
-echo "excalidraw-db: Fixing NULL text columns for GoTrue compatibility..."
+echo "excalidraw-db: Fixing NULL text/varchar columns for Go service compatibility..."
 psql -q -U postgres -h /var/run/postgresql -c "
 DO \$\$
 DECLARE
-  col record;
+  rec record;
 BEGIN
-  FOR col IN
-    SELECT column_name
+  FOR rec IN
+    SELECT table_schema, table_name, column_name
     FROM information_schema.columns
-    WHERE table_schema = 'auth'
-      AND table_name = 'users'
-      AND data_type IN ('text', 'character varying')
+    WHERE table_schema IN ('auth', 'storage')
+      AND data_type IN ('text', 'character varying', 'character', 'varchar')
+      AND is_nullable = 'YES'
+      AND column_default IS NULL
+  LOOP
+    EXECUTE format(
+      'ALTER TABLE %I.%I ALTER COLUMN %I SET DEFAULT '''''', 
+      rec.table_schema, rec.table_name, rec.column_name
+    );
+  END LOOP;
+
+  FOR rec IN
+    SELECT table_schema, table_name, column_name
+    FROM information_schema.columns
+    WHERE table_schema IN ('auth', 'storage')
+      AND data_type IN ('text', 'character varying', 'character', 'varchar')
       AND is_nullable = 'YES'
   LOOP
-    EXECUTE format('UPDATE auth.users SET %I = '''' WHERE %I IS NULL', col.column_name, col.column_name);
-    EXECUTE format('ALTER TABLE auth.users ALTER COLUMN %I SET DEFAULT '''''', col.column_name);
+    EXECUTE format(
+      'UPDATE %I.%I SET %I = '''' WHERE %I IS NULL',
+      rec.table_schema, rec.table_name, rec.column_name, rec.column_name
+    );
   END LOOP;
 END
 \$\$;" 2>/dev/null || true
