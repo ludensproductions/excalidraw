@@ -21,7 +21,36 @@ for role in authenticator pgbouncer supabase_auth_admin supabase_storage_admin s
   fi
 done
 
-echo "excalidraw-db: Fixing NULL text/varchar columns for Go service compatibility..."
+echo "excalidraw-db: Fixing GoTrue required columns with empty string defaults..."
+psql -q -U postgres -h /var/run/postgresql -c "
+UPDATE auth.users SET
+  confirmation_token         = COALESCE(confirmation_token, ''),
+  recovery_token             = COALESCE(recovery_token, ''),
+  email_change_token_new     = COALESCE(email_change_token_new, ''),
+  email_change_token_current = COALESCE(email_change_token_current, ''),
+  reauthentication_token     = COALESCE(reauthentication_token, ''),
+  phone_change_token         = COALESCE(phone_change_token, ''),
+  email_change               = COALESCE(email_change, '')
+WHERE
+  confirmation_token IS NULL
+  OR recovery_token IS NULL
+  OR email_change_token_new IS NULL
+  OR email_change_token_current IS NULL
+  OR reauthentication_token IS NULL
+  OR phone_change_token IS NULL
+  OR email_change IS NULL;
+
+ALTER TABLE auth.users
+  ALTER COLUMN confirmation_token         SET DEFAULT '',
+  ALTER COLUMN recovery_token             SET DEFAULT '',
+  ALTER COLUMN email_change_token_new     SET DEFAULT '',
+  ALTER COLUMN email_change_token_current SET DEFAULT '',
+  ALTER COLUMN reauthentication_token     SET DEFAULT '',
+  ALTER COLUMN phone_change_token         SET DEFAULT '',
+  ALTER COLUMN email_change               SET DEFAULT '';
+" 2>/dev/null || true
+
+echo "excalidraw-db: Fixing remaining NULL text/varchar columns for Go service compatibility..."
 psql -q -U postgres -h /var/run/postgresql -c "
 DO \$\$
 DECLARE
