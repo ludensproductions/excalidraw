@@ -16,7 +16,7 @@ declare
 begin
   insert into auth.users (
     id, instance_id, aud, role,
-    email, encrypted_password, confirmed_at,
+    email, encrypted_password, confirmation_token, confirmed_at,
     raw_user_meta_data,
     created_at, updated_at
   ) values (
@@ -25,6 +25,7 @@ begin
     'authenticated', 'authenticated',
     'admin@admin.com',
     crypt('12345', gen_salt('bf')),
+    '',
     now(),
     jsonb_build_object('username', 'admin'),
     now(), now()
@@ -46,7 +47,7 @@ declare
 begin
   insert into auth.users (
     id, instance_id, aud, role,
-    email, encrypted_password, confirmed_at,
+    email, encrypted_password, confirmation_token, confirmed_at,
     raw_user_meta_data,
     created_at, updated_at
   ) values (
@@ -55,6 +56,7 @@ begin
     'authenticated', 'authenticated',
     'test@test.com',
     crypt('12345', gen_salt('bf')),
+    '',
     now(),
     jsonb_build_object('username', 'test'),
     now(), now()
