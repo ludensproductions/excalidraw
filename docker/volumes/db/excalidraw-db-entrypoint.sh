@@ -21,8 +21,13 @@ for role in authenticator pgbouncer supabase_auth_admin supabase_storage_admin s
   fi
 done
 
+auth_admin_psql() {
+  PGPASSWORD="${POSTGRES_PASSWORD}" \
+    psql -v ON_ERROR_STOP=1 -q -U supabase_auth_admin -h 127.0.0.1 -d postgres -c "$1"
+}
+
 echo "excalidraw-db: Fixing GoTrue required columns with empty string defaults..."
-psql -q -U postgres -h /var/run/postgresql -c "
+psql -v ON_ERROR_STOP=1 -q -U postgres -h /var/run/postgresql -c "
 UPDATE auth.users SET
   confirmation_token         = COALESCE(confirmation_token, ''),
   recovery_token             = COALESCE(recovery_token, ''),
@@ -39,16 +44,24 @@ WHERE
   OR reauthentication_token IS NULL
   OR phone_change_token IS NULL
   OR email_change IS NULL;
+" >/dev/null
 
-ALTER TABLE auth.users
-  ALTER COLUMN confirmation_token         SET DEFAULT '',
-  ALTER COLUMN recovery_token             SET DEFAULT '',
-  ALTER COLUMN email_change_token_new     SET DEFAULT '',
-  ALTER COLUMN email_change_token_current SET DEFAULT '',
-  ALTER COLUMN reauthentication_token     SET DEFAULT '',
-  ALTER COLUMN phone_change_token         SET DEFAULT '',
-  ALTER COLUMN email_change               SET DEFAULT '';
-" 2>/dev/null || true
+if psql -qAt -U postgres -h /var/run/postgresql -c "SELECT 1 FROM pg_roles WHERE rolname='supabase_auth_admin'" 2>/dev/null | grep -q 1; then
+  if ! auth_admin_psql "
+  ALTER TABLE auth.users
+    ALTER COLUMN confirmation_token         SET DEFAULT '',
+    ALTER COLUMN recovery_token             SET DEFAULT '',
+    ALTER COLUMN email_change_token_new     SET DEFAULT '',
+    ALTER COLUMN email_change_token_current SET DEFAULT '',
+    ALTER COLUMN reauthentication_token     SET DEFAULT '',
+    ALTER COLUMN phone_change_token         SET DEFAULT '',
+    ALTER COLUMN email_change               SET DEFAULT '';
+  " >/dev/null; then
+    echo "excalidraw-db: WARNING: Failed to enforce auth.users defaults as supabase_auth_admin." >&2
+  fi
+else
+  echo "excalidraw-db: WARNING: supabase_auth_admin role not found; auth.users defaults were not enforced." >&2
+fi
 
 echo "excalidraw-db: Fixing remaining NULL text/varchar columns for Go service compatibility..."
 psql -q -U postgres -h /var/run/postgresql -c "
