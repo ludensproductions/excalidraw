@@ -7,4 +7,3 @@
 \i /excalidraw-init/init-scripts/99-set-passwords.sql
 \i /excalidraw-init/init-scripts/99-jwt.sql
 \i /excalidraw-init/migrations/9999-app.sql
-\i /excalidraw-init/seed.sql

@@ -26,80 +26,238 @@ auth_admin_psql() {
     psql -v ON_ERROR_STOP=1 -q -U supabase_auth_admin -h 127.0.0.1 -d postgres -c "$1"
 }
 
-echo "excalidraw-db: Fixing GoTrue required columns with empty string defaults..."
-psql -v ON_ERROR_STOP=1 -q -U postgres -h /var/run/postgresql -c "
-UPDATE auth.users SET
-  confirmation_token         = COALESCE(confirmation_token, ''),
-  recovery_token             = COALESCE(recovery_token, ''),
-  email_change_token_new     = COALESCE(email_change_token_new, ''),
-  email_change_token_current = COALESCE(email_change_token_current, ''),
-  reauthentication_token     = COALESCE(reauthentication_token, ''),
-  phone_change_token         = COALESCE(phone_change_token, ''),
-  email_change               = COALESCE(email_change, '')
-WHERE
-  confirmation_token IS NULL
-  OR recovery_token IS NULL
-  OR email_change_token_new IS NULL
-  OR email_change_token_current IS NULL
-  OR reauthentication_token IS NULL
-  OR phone_change_token IS NULL
-  OR email_change IS NULL;
-" >/dev/null
+wait_for_excalidraw_schema() {
+  local retries=120
 
-if psql -qAt -U postgres -h /var/run/postgresql -c "SELECT 1 FROM pg_roles WHERE rolname='supabase_auth_admin'" 2>/dev/null | grep -q 1; then
-  if ! auth_admin_psql "
-  ALTER TABLE auth.users
-    ALTER COLUMN confirmation_token         SET DEFAULT '',
-    ALTER COLUMN recovery_token             SET DEFAULT '',
-    ALTER COLUMN email_change_token_new     SET DEFAULT '',
-    ALTER COLUMN email_change_token_current SET DEFAULT '',
-    ALTER COLUMN reauthentication_token     SET DEFAULT '',
-    ALTER COLUMN phone_change_token         SET DEFAULT '',
-    ALTER COLUMN email_change               SET DEFAULT '';
-  " >/dev/null; then
-    echo "excalidraw-db: WARNING: Failed to enforce auth.users defaults as supabase_auth_admin." >&2
+  until psql -qAt -U postgres -h /var/run/postgresql -d postgres -c \
+    "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='profiles'" \
+    2>/dev/null | grep -q 1; do
+    retries=$((retries - 1))
+    if [ "$retries" -le 0 ]; then
+      echo "excalidraw-db: WARNING: Timed out waiting for app schema initialization; skipping auth compatibility fix." >&2
+      return 1
+    fi
+    sleep 0.5
+  done
+}
+
+wait_for_auth_runtime_schema() {
+  local retries=240
+
+  until psql -qAt -U postgres -h /var/run/postgresql -d postgres -c \
+    "SELECT 1
+     FROM information_schema.columns
+     WHERE table_schema='auth'
+       AND table_name='users'
+       AND column_name='email_change_token_current'" \
+    2>/dev/null | grep -q 1; do
+    retries=$((retries - 1))
+    if [ "$retries" -le 0 ]; then
+      echo "excalidraw-db: WARNING: Timed out waiting for GoTrue auth schema migrations." >&2
+      return 1
+    fi
+    sleep 0.5
+  done
+}
+
+seed_dev_auth_users() {
+  echo "excalidraw-db: Seeding development auth users..."
+  psql -v ON_ERROR_STOP=1 -q -U postgres -h /var/run/postgresql -d postgres -c "
+  INSERT INTO auth.users (
+    id, instance_id, aud, role,
+    email, encrypted_password,
+    confirmation_token, recovery_token,
+    email_change_token_new, email_change,
+    email_change_token_current, reauthentication_token,
+    phone_change_token, phone_change,
+    email_confirmed_at,
+    raw_user_meta_data,
+    created_at, updated_at,
+    is_super_admin
+  )
+  SELECT
+    'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    '00000000-0000-0000-0000-000000000000',
+    'authenticated', 'authenticated',
+    'admin@admin.com',
+    crypt('12345', gen_salt('bf')),
+    '', '', '', '', '', '', '', '',
+    now(),
+    jsonb_build_object('username', 'admin'),
+    now(), now(),
+    false
+  WHERE NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'admin@admin.com');
+
+  INSERT INTO public.profiles (id, username, email)
+  SELECT 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'admin', 'admin@admin.com'
+  WHERE NOT EXISTS (SELECT 1 FROM public.profiles WHERE email = 'admin@admin.com');
+
+  INSERT INTO auth.users (
+    id, instance_id, aud, role,
+    email, encrypted_password,
+    confirmation_token, recovery_token,
+    email_change_token_new, email_change,
+    email_change_token_current, reauthentication_token,
+    phone_change_token, phone_change,
+    email_confirmed_at,
+    raw_user_meta_data,
+    created_at, updated_at,
+    is_super_admin
+  )
+  SELECT
+    'b2c3d4e5-f6a7-8901-bcde-f12345678901',
+    '00000000-0000-0000-0000-000000000000',
+    'authenticated', 'authenticated',
+    'test@test.com',
+    crypt('12345', gen_salt('bf')),
+    '', '', '', '', '', '', '', '',
+    now(),
+    jsonb_build_object('username', 'test'),
+    now(), now(),
+    false
+  WHERE NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'test@test.com');
+
+  INSERT INTO public.profiles (id, username, email)
+  SELECT 'b2c3d4e5-f6a7-8901-bcde-f12345678901', 'test', 'test@test.com'
+  WHERE NOT EXISTS (SELECT 1 FROM public.profiles WHERE email = 'test@test.com');
+  " >/dev/null
+}
+
+reconcile_auth_runtime_state() {
+  wait_for_excalidraw_schema || return 0
+  wait_for_auth_runtime_schema || return 0
+
+  echo "excalidraw-db: Fixing GoTrue required columns with empty string defaults..."
+  psql -v ON_ERROR_STOP=1 -q -U postgres -h /var/run/postgresql -d postgres -c "
+  DO \$\$
+  DECLARE
+    target_column text;
+    update_sql text := 'UPDATE auth.users SET ';
+    where_sql text := '';
+    first_column boolean := true;
+  BEGIN
+    IF to_regclass('auth.users') IS NULL THEN
+      RETURN;
+    END IF;
+
+    FOREACH target_column IN ARRAY ARRAY[
+      'confirmation_token',
+      'recovery_token',
+      'email_change_token_new',
+      'email_change_token_current',
+      'reauthentication_token',
+      'phone_change_token',
+      'email_change'
+    ]
+    LOOP
+      IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'auth'
+          AND table_name = 'users'
+          AND column_name = target_column
+      ) THEN
+        IF NOT first_column THEN
+          update_sql := update_sql || ', ';
+          where_sql := where_sql || ' OR ';
+        END IF;
+
+        update_sql := update_sql || format('%I = COALESCE(%I, '''')', target_column, target_column);
+        where_sql := where_sql || format('%I IS NULL', target_column);
+        first_column := false;
+      END IF;
+    END LOOP;
+
+    IF first_column THEN
+      RETURN;
+    END IF;
+
+    EXECUTE update_sql || ' WHERE ' || where_sql;
+  END
+  \$\$;
+  " >/dev/null
+
+  seed_dev_auth_users
+
+  if psql -qAt -U postgres -h /var/run/postgresql -c "SELECT 1 FROM pg_roles WHERE rolname='supabase_auth_admin'" 2>/dev/null | grep -q 1; then
+    if ! auth_admin_psql "
+    DO \$\$
+    DECLARE
+      target_column text;
+      alter_sql text := 'ALTER TABLE auth.users ';
+      first_column boolean := true;
+    BEGIN
+      IF to_regclass('auth.users') IS NULL THEN
+        RETURN;
+      END IF;
+
+      FOREACH target_column IN ARRAY ARRAY[
+        'confirmation_token',
+        'recovery_token',
+        'email_change_token_new',
+        'email_change_token_current',
+        'reauthentication_token',
+        'phone_change_token',
+        'email_change'
+      ]
+      LOOP
+        IF EXISTS (
+          SELECT 1
+          FROM information_schema.columns
+          WHERE table_schema = 'auth'
+            AND table_name = 'users'
+            AND column_name = target_column
+        ) THEN
+          IF NOT first_column THEN
+            alter_sql := alter_sql || ', ';
+          END IF;
+
+          alter_sql := alter_sql || format('ALTER COLUMN %I SET DEFAULT ''''', target_column);
+          first_column := false;
+        END IF;
+      END LOOP;
+
+      IF first_column THEN
+        RETURN;
+      END IF;
+
+      EXECUTE alter_sql;
+    END
+    \$\$;
+    " >/dev/null; then
+      echo "excalidraw-db: WARNING: Failed to enforce auth.users defaults as supabase_auth_admin." >&2
+    fi
+  else
+    echo "excalidraw-db: WARNING: supabase_auth_admin role not found; auth.users defaults were not enforced." >&2
   fi
-else
-  echo "excalidraw-db: WARNING: supabase_auth_admin role not found; auth.users defaults were not enforced." >&2
-fi
+}
 
-echo "excalidraw-db: Fixing remaining NULL text/varchar columns for Go service compatibility..."
-psql -q -U postgres -h /var/run/postgresql -c "
+reconcile_auth_runtime_state &
+
+echo "excalidraw-db: Fixing auth helper function ownership for GoTrue migrations..."
+psql -q -U postgres -h /var/run/postgresql -d postgres -c "
 DO \$\$
 DECLARE
-  rec record;
+  helper_name text;
 BEGIN
-  FOR rec IN
-    SELECT table_schema, table_name, column_name
-    FROM information_schema.columns
-    WHERE table_schema IN ('auth', 'storage')
-      AND data_type IN ('text', 'character varying', 'character', 'varchar')
-      AND is_nullable = 'YES'
-      AND column_default IS NULL
+  FOREACH helper_name IN ARRAY ARRAY['uid', 'role', 'email']
   LOOP
-    EXECUTE format(
-      'ALTER TABLE %I.%I ALTER COLUMN %I SET DEFAULT '''''', 
-      rec.table_schema, rec.table_name, rec.column_name
-    );
-  END LOOP;
-
-  FOR rec IN
-    SELECT table_schema, table_name, column_name
-    FROM information_schema.columns
-    WHERE table_schema IN ('auth', 'storage')
-      AND data_type IN ('text', 'character varying', 'character', 'varchar')
-      AND is_nullable = 'YES'
-  LOOP
-    EXECUTE format(
-      'UPDATE %I.%I SET %I = '''' WHERE %I IS NULL',
-      rec.table_schema, rec.table_name, rec.column_name, rec.column_name
-    );
+    IF EXISTS (
+      SELECT 1
+      FROM pg_proc p
+      JOIN pg_namespace n ON n.oid = p.pronamespace
+      WHERE n.nspname = 'auth'
+        AND p.proname = helper_name
+        AND pg_get_function_identity_arguments(p.oid) = ''
+    ) THEN
+      EXECUTE format(
+        'ALTER FUNCTION auth.%I() OWNER TO supabase_auth_admin',
+        helper_name
+      );
+    END IF;
   END LOOP;
 END
 \$\$;" 2>/dev/null || true
-
-echo "excalidraw-db: Fixing auth.uid() ownership for GoTrue migrations..."
-psql -q -U postgres -h /var/run/postgresql -c "ALTER FUNCTION auth.uid() OWNER TO supabase_auth_admin;" 2>/dev/null || true
 
 echo "excalidraw-db: Ready."
 
