@@ -3,11 +3,14 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { activeBoardAtom, useAtomValue } from "../app-jotai";
 import { appDialog } from "../appDialog";
 import { getCurrentUser } from "../auth/authStore";
+import { activeRoomLinkAtom } from "../collab/Collab";
 import { CommentsStore } from "../data/CommentsStore";
+import { SharedBoardsStore } from "../data/SharedBoardsStore";
+import { getCollaborationLinkData } from "../data";
 
 import "./CommentsPanel.scss";
 
-import type { BoardComment } from "../data/CommentsStore";
+import type { BoardComment, CommentTarget } from "../data/CommentsStore";
 
 const formatDate = (ts: number): string => {
   const d = new Date(ts);
@@ -19,9 +22,30 @@ const formatDate = (ts: number): string => {
   });
 };
 
+const areCommentsEqual = (
+  prev: readonly BoardComment[],
+  next: readonly BoardComment[],
+) => {
+  if (prev.length !== next.length) {
+    return false;
+  }
+
+  return prev.every((comment, index) => {
+    const nextComment = next[index];
+    return (
+      comment.id === nextComment.id &&
+      comment.body === nextComment.body &&
+      comment.updatedAt === nextComment.updatedAt
+    );
+  });
+};
+
 export const CommentsPanel: React.FC = () => {
   const activeBoard = useAtomValue(activeBoardAtom);
+  const activeRoomLink = useAtomValue(activeRoomLinkAtom);
   const currentUser = getCurrentUser();
+  const [target, setTarget] = useState<CommentTarget | null>(null);
+  const [isResolvingTarget, setIsResolvingTarget] = useState(false);
   const [comments, setComments] = useState<BoardComment[]>([]);
   const [body, setBody] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -31,30 +55,104 @@ export const CommentsPanel: React.FC = () => {
   const [editingBody, setEditingBody] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const refresh = useCallback(async () => {
-    if (!activeBoard.id) {
-      setComments([]);
+  useEffect(() => {
+    let isCancelled = false;
+
+    const resolveTarget = async () => {
+      const collabLinkData = getCollaborationLinkData(
+        activeRoomLink || window.location.href,
+      );
+
+      if (collabLinkData?.roomId) {
+        setIsResolvingTarget(true);
+        try {
+          const sharedBoard = await SharedBoardsStore.getByRoom(
+            collabLinkData.roomId,
+            collabLinkData.roomKey,
+          );
+
+          if (!isCancelled) {
+            setTarget(
+              sharedBoard
+                ? {
+                    kind: "shared",
+                    id: sharedBoard.id,
+                    name: sharedBoard.name || activeBoard.name,
+                  }
+                : null,
+            );
+          }
+        } finally {
+          if (!isCancelled) {
+            setIsResolvingTarget(false);
+          }
+        }
+        return;
+      }
+
+      setIsResolvingTarget(false);
+      setTarget(
+        activeBoard.id
+          ? { kind: "board", id: activeBoard.id, name: activeBoard.name }
+          : null,
+      );
+    };
+
+    void resolveTarget();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeBoard.id, activeBoard.name, activeRoomLink]);
+
+  const refresh = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      if (!target) {
+        setComments([]);
+        return;
+      }
+
+      if (!opts?.silent) {
+        setIsLoading(true);
+      }
+      setError(null);
+      try {
+        const nextComments = await CommentsStore.getAll(target);
+        setComments((prev) =>
+          areCommentsEqual(prev, nextComments) ? prev : nextComments,
+        );
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "No se pudieron cargar.");
+      } finally {
+        if (!opts?.silent) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [target],
+  );
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  useEffect(() => {
+    if (!target || target.kind !== "shared") {
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
-    try {
-      setComments(await CommentsStore.getAll(activeBoard.id));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudieron cargar.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [activeBoard.id]);
+    const intervalId = window.setInterval(() => {
+      void refresh({ silent: true });
+    }, 2000);
 
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [refresh, target]);
 
   const addComment = async () => {
     const trimmed = body.trim();
-    if (!activeBoard.id || !trimmed || isSaving) {
+    if (!target || !trimmed || isSaving) {
       return;
     }
 
@@ -62,7 +160,7 @@ export const CommentsPanel: React.FC = () => {
     setError(null);
     try {
       const comment = await CommentsStore.add({
-        boardId: activeBoard.id,
+        target,
         body: trimmed,
         authorName: currentUser?.username || "Usuario",
       });
@@ -88,13 +186,13 @@ export const CommentsPanel: React.FC = () => {
 
   const commitEdit = async () => {
     const trimmed = editingBody.trim();
-    if (!editingId || !trimmed) {
+    if (!target || !editingId || !trimmed) {
       return;
     }
 
     setError(null);
     try {
-      const updated = await CommentsStore.update(editingId, trimmed);
+      const updated = await CommentsStore.update(target, editingId, trimmed);
       setComments((prev) =>
         prev.map((comment) => (comment.id === updated.id ? updated : comment)),
       );
@@ -107,6 +205,10 @@ export const CommentsPanel: React.FC = () => {
   };
 
   const deleteComment = async (id: string) => {
+    if (!target) {
+      return;
+    }
+
     const confirmed = await appDialog.confirm({
       title: "Eliminar comentario",
       text: "Esta accion no se puede deshacer.",
@@ -118,7 +220,7 @@ export const CommentsPanel: React.FC = () => {
     }
     setError(null);
     try {
-      await CommentsStore.delete(id);
+      await CommentsStore.delete(target, id);
       setComments((prev) => prev.filter((comment) => comment.id !== id));
     } catch (err) {
       setError(
@@ -129,11 +231,19 @@ export const CommentsPanel: React.FC = () => {
     }
   };
 
-  if (!activeBoard.id) {
+  if (isResolvingTarget) {
+    return (
+      <div className="comments-panel comments-panel--empty-state">
+        <div className="comments-panel__empty">Preparando comentarios...</div>
+      </div>
+    );
+  }
+
+  if (!target) {
     return (
       <div className="comments-panel comments-panel--empty-state">
         <div className="comments-panel__empty">
-          Guarda este board para poder dejar comentarios.
+          Guarda este board o abre un board compartido para poder comentar.
         </div>
       </div>
     );
@@ -144,11 +254,11 @@ export const CommentsPanel: React.FC = () => {
       <div className="comments-panel__header">
         <div>
           <div className="comments-panel__title">Comentarios</div>
-          {activeBoard.name && (
-            <div className="comments-panel__subtitle">{activeBoard.name}</div>
+          {target.name && (
+            <div className="comments-panel__subtitle">{target.name}</div>
           )}
         </div>
-        <button className="comments-panel__refresh" onClick={refresh}>
+        <button className="comments-panel__refresh" onClick={() => void refresh()}>
           Actualizar
         </button>
       </div>
@@ -163,14 +273,14 @@ export const CommentsPanel: React.FC = () => {
           rows={3}
           onKeyDown={(event) => {
             if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
-              addComment();
+              void addComment();
             }
           }}
         />
         <button
           className="comments-panel__send"
           disabled={!body.trim() || isSaving}
-          onClick={addComment}
+          onClick={() => void addComment()}
         >
           {isSaving ? "Enviando..." : "Comentar"}
         </button>
@@ -212,7 +322,7 @@ export const CommentsPanel: React.FC = () => {
                       <button
                         className="comments-panel__action"
                         disabled={!editingBody.trim()}
-                        onClick={commitEdit}
+                        onClick={() => void commitEdit()}
                       >
                         Guardar
                       </button>
@@ -237,7 +347,7 @@ export const CommentsPanel: React.FC = () => {
                         </button>
                         <button
                           className="comments-panel__action comments-panel__action--danger"
-                          onClick={() => deleteComment(comment.id)}
+                          onClick={() => void deleteComment(comment.id)}
                         >
                           Eliminar
                         </button>

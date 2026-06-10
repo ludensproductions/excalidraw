@@ -39,6 +39,31 @@ function rowToBoard(row: any): SharedBoard {
 }
 
 export const SharedBoardsStore = {
+  async getByRoom(
+    roomId: string,
+    roomKey?: string,
+  ): Promise<SharedBoard | null> {
+    let query = supabase
+      .from("shared_boards")
+      .select(
+        "id, room_id, room_key, name, created_by, created_at, updated_at, shared_board_members (user_id, username, joined_at, read_only)",
+      )
+      .eq("room_id", roomId);
+
+    if (roomKey) {
+      query = query.eq("room_key", roomKey);
+    }
+
+    const { data, error } = await query.maybeSingle();
+
+    if (error) {
+      console.error("SharedBoardsStore.getByRoom:", error);
+      return null;
+    }
+
+    return data ? rowToBoard(data) : null;
+  },
+
   async isVisibleByRoom(roomId: string, roomKey: string): Promise<boolean> {
     const { data, error } = await supabase
       .from("shared_boards")
