@@ -66,6 +66,14 @@ export const AppMainMenu: React.FC<{
     if (!trimmed || trimmed === activeBoard.name) {
       return;
     }
+    const isTaken = await DrawingsStore.isNameTaken(trimmed, activeBoard.id);
+    if (isTaken) {
+      await appDialog.alert({
+        title: t("app.duplicateName"),
+        icon: "warning",
+      });
+      return;
+    }
     await DrawingsStore.rename(activeBoard.id, trimmed);
     setActiveBoard({ id: activeBoard.id, name: trimmed });
     appJotaiStore.set(activeBoardAtom, { id: activeBoard.id, name: trimmed });

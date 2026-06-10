@@ -22,6 +22,8 @@ import {
 import { Dashboard } from "./components/Dashboard";
 import { dashboardState } from "./dashboardState";
 import { DrawingsStore } from "./data/DrawingsStore";
+import { t, setLanguage } from "@excalidraw/excalidraw/i18n";
+import { getPreferredLanguage } from "./app-language/language-detector";
 
 import type { AuthUser } from "./auth/authStore";
 import type { DrawingRecord } from "./data/DrawingsStore";
@@ -136,20 +138,30 @@ const AppRoot: React.FC = () => {
     }
 
     const name = await appDialog.promptText({
-      title: "Crear tablero",
-      label: "Nombre del tablero",
-      placeholder: "Ej. Mapa de flujo de ventas",
-      confirmButtonText: "Crear tablero",
-      requiredMessage: "Ponle un nombre al tablero para poder crearlo.",
+      title: t("app.createBoard"),
+      label: t("app.boardName"),
+      placeholder: t("app.boardNamePlaceholder"),
+      confirmButtonText: t("app.createBoardConfirm"),
+      requiredMessage: t("app.enterBoardNameCreate"),
     });
     if (!name) {
+      return;
+    }
+
+    const trimmed = name.trim();
+    const isTaken = await DrawingsStore.isNameTaken(trimmed);
+    if (isTaken) {
+      await appDialog.alert({
+        title: t("app.duplicateName"),
+        icon: "warning",
+      });
       return;
     }
 
     setIsCreatingBoard(true);
     try {
       const record = await DrawingsStore.save({
-        name,
+        name: trimmed,
         elements: [],
         appState: { viewBackgroundColor: "#ffffff" },
         thumbnail: null,
@@ -211,11 +223,33 @@ const AppRoot: React.FC = () => {
 };
 
 window.__EXCALIDRAW_SHA__ = import.meta.env.VITE_APP_GIT_SHA;
+
 const rootElement = document.getElementById("root")!;
 const root = createRoot(rootElement);
-registerSW();
-root.render(
-  <StrictMode>
-    <AppRoot />
-  </StrictMode>,
-);
+
+const SW_CLEARED_KEY = "__excalidraw_sw_cleared__";
+
+const bootstrap = async () => {
+  // Limpiar caches viejos del service worker una sola vez
+  if ("serviceWorker" in navigator && !sessionStorage.getItem(SW_CLEARED_KEY)) {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    for (const reg of registrations) {
+      await reg.unregister();
+    }
+    const cacheNames = await caches.keys();
+    for (const name of cacheNames) {
+      await caches.delete(name);
+    }
+    sessionStorage.setItem(SW_CLEARED_KEY, "1");
+  }
+
+  await setLanguage({ code: getPreferredLanguage(), label: "" });
+  registerSW();
+  root.render(
+    <StrictMode>
+      <AppRoot />
+    </StrictMode>,
+  );
+};
+
+bootstrap();

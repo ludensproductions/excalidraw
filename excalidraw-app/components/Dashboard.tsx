@@ -377,6 +377,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const handleRename = async (id: string, newName: string) => {
+    const isTaken = await DrawingsStore.isNameTaken(newName, id);
+    if (isTaken) {
+      await appDialog.alert({
+        title: t("app.duplicateName"),
+        icon: "warning",
+      });
+      return;
+    }
     await DrawingsStore.rename(id, newName);
     const now = Date.now();
     setBoards((prev) =>

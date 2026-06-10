@@ -271,4 +271,34 @@ export const DrawingsStore = {
       throw new Error(error.message);
     }
   },
+
+  async isNameTaken(name: string, excludeId?: string): Promise<boolean> {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return false;
+    }
+
+    const trimmed = name.trim();
+    const { data, error } = await supabase
+      .from("boards")
+      .select("id")
+      .ilike("name", trimmed)
+      .limit(1);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    if (!data || data.length === 0) {
+      return false;
+    }
+
+    if (excludeId && data[0].id === excludeId) {
+      return false;
+    }
+
+    return true;
+  },
 };

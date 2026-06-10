@@ -830,6 +830,12 @@
     "tooManyRequests": "Demasiadas solicitudes hoy, intenta de nuevo mañana.",
     "tryExcalidrawPlus": "También puedes probar Excalidraw+ para obtener más solicitudes.",
     "generationFailedInvalid": "Generación fallida (respuesta inválida)",
-    "notAPretzel": "¡No soy un pretzel!"
+    "notAPretzel": "¡No soy un pretzel!",
+    "duplicateName": "Ya existe un tablero con ese nombre. Elige otro.",
+    "createBoard": "Crear tablero",
+    "boardName": "Nombre del tablero",
+    "boardNamePlaceholder": "Ej. Mapa de flujo de ventas",
+    "createBoardConfirm": "Crear tablero",
+    "enterBoardNameCreate": "Ponle un nombre al tablero para poder crearlo."
   }
 }

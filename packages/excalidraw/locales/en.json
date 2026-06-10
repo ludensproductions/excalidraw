@@ -830,6 +830,12 @@
     "tooManyRequests": "Too many requests today, please try again tomorrow!",
     "tryExcalidrawPlus": "You can also try Excalidraw+ to get more requests.",
     "generationFailedInvalid": "Generation failed (invalid response)",
-    "notAPretzel": "I'm not a pretzel!"
+    "notAPretzel": "I'm not a pretzel!",
+    "duplicateName": "A board with this name already exists. Please choose another.",
+    "createBoard": "Create board",
+    "boardName": "Board name",
+    "boardNamePlaceholder": "Eg. Sales flow map",
+    "createBoardConfirm": "Create board",
+    "enterBoardNameCreate": "Give the board a name to create it."
   }
 }
