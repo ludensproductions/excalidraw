@@ -89,7 +89,7 @@ const AppRoot: React.FC = () => {
       appJotaiStore.set(hasDashboardBackAtom, true);
       dashboardState.setOnBack(() => {
         appJotaiStore.set(hasDashboardBackAtom, false);
-        window.history.replaceState({}, "", window.location.pathname);
+        window.history.replaceState({}, "", "/");
         setView({ type: "dashboard" });
       });
       return () => {
@@ -104,9 +104,31 @@ const AppRoot: React.FC = () => {
     setUser(u);
     if (hasExternalLinkInUrl()) {
       setView({ type: "editor", boardId: null, key: Date.now() });
-    } else {
-      setView({ type: "dashboard" });
+      return;
     }
+
+    // Restaurar tablero si la URL contiene /board/{id}
+    const boardMatch = window.location.pathname.match(/^\/board\/([a-zA-Z0-9_-]+)$/);
+    if (boardMatch) {
+      const boardId = boardMatch[1];
+      DrawingsStore.get(boardId).then((record) => {
+        if (record) {
+          appJotaiStore.set(hasDashboardBackAtom, true);
+          appJotaiStore.set(activeBoardAtom, { id: record.id, name: record.name });
+          dashboardState.setPendingBoard(record);
+          setView({ type: "editor", boardId: record.id, key: Date.now() });
+        } else {
+          window.history.replaceState({}, "", "/");
+          setView({ type: "dashboard" });
+        }
+      }).catch(() => {
+        window.history.replaceState({}, "", "/");
+        setView({ type: "dashboard" });
+      });
+      return;
+    }
+
+    setView({ type: "dashboard" });
   };
 
   const handleLogout = () => {
@@ -125,10 +147,7 @@ const AppRoot: React.FC = () => {
       name: latestRecord.name,
     });
     dashboardState.setPendingBoard(latestRecord);
-    // Always open as a private editor session. Collaboration must be started
-    // explicitly by the user via the Share dialog (or by opening a #room=...
-    // URL directly). This avoids surprising the user with auto-rejoin.
-    window.history.replaceState({}, "", window.location.pathname);
+    window.history.replaceState({}, "", "/board/" + latestRecord.id);
     setView({ type: "editor", boardId: latestRecord.id, key: Date.now() });
   };
 
@@ -172,7 +191,7 @@ const AppRoot: React.FC = () => {
       appJotaiStore.set(hasDashboardBackAtom, true);
       appJotaiStore.set(activeBoardAtom, { id: record.id, name: record.name });
       dashboardState.setPendingBoard(record);
-      window.history.replaceState({}, "", window.location.pathname);
+      window.history.replaceState({}, "", "/board/" + record.id);
       setView({ type: "editor", boardId: record.id, key: Date.now() });
     } catch (error) {
       await appDialog.error(

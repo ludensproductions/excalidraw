@@ -267,7 +267,10 @@ const initializeScene = async (opts: {
           deleteInvisibleElements: true,
         }),
         appState: restoreAppState(
-          { viewBackgroundColor: pending.appState.viewBackgroundColor },
+          {
+            ...localDataState?.appState,
+            viewBackgroundColor: pending.appState.viewBackgroundColor,
+          },
           null,
         ),
         scrollToContent: true,
