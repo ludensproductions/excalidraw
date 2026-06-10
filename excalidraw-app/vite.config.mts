@@ -11,12 +11,18 @@ import { woff2BrowserPlugin } from "../scripts/woff2/woff2-vite-plugins";
 export default defineConfig(({ mode }) => {
   // To load .env variables
   const envVars = loadEnv(mode, `../`);
+  const devProxyTarget = envVars.VITE_APP_DEV_PROXY_TARGET || "http://localhost:8000";
   // https://vitejs.dev/config/
   return {
     server: {
       port: Number(envVars.VITE_APP_PORT || 3000),
       // open the browser
       open: true,
+      proxy: {
+        "/auth/v1": devProxyTarget,
+        "/rest/v1": devProxyTarget,
+        "/storage/v1": devProxyTarget,
+      },
     },
     // We need to specify the envDir since now there are no
     //more located in parallel with the vite.config.ts file but in parent dir

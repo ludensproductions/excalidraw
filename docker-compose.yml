@@ -275,6 +275,17 @@ services:
       DASHBOARD_USERNAME: ${DASHBOARD_USERNAME:-admin}
       DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD}
     entrypoint: ["bash", "/home/kong/kong-entrypoint.sh"]
+
+  kong-dev-proxy:
+    image: alpine/socat
+    profiles: ["dev"]
+    restart: unless-stopped
+    depends_on:
+      kong:
+        condition: service_healthy
+    command: ["TCP-LISTEN:8000,fork,reuseaddr", "TCP:kong:8000"]
+    ports:
+      - "${KONG_DEV_PROXY_PORT:-8000}:8000"
   # --- Mail catcher (development SMTP) ---
   mail:
     image: ${MAILPIT_IMAGE:-axllent/mailpit:v1.23}
@@ -300,6 +311,7 @@ services:
 
   # --- Excalidraw Frontend ---
   excalidraw:
+    profiles: ["prod"]
     build:
       context: .
       args:
