@@ -849,6 +849,11 @@ const ExcalidrawWrapper = () => {
     [setShareDialogState],
   );
 
+  const navigateBackToDashboard = useCallback(async () => {
+    await dashboardState.flushAutoSave();
+    dashboardState.getOnBack()?.();
+  }, []);
+
   // ---------------------------------------------------------------------------
   // onExport — intercepts file save to wait for pending image loads
   // ---------------------------------------------------------------------------
@@ -949,10 +954,7 @@ const ExcalidrawWrapper = () => {
             <button
               className="dashboard-back-btn"
               onClick={() => {
-                // Save in background — don't block navigation on thumbnail
-                // generation + network upload (which makes the back button feel slow).
-                void dashboardState.flushAutoSave();
-                dashboardState.getOnBack()?.();
+                void navigateBackToDashboard();
               }}
               title="Volver al dashboard"
             >

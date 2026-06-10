@@ -108,8 +108,8 @@ export const AppMainMenu: React.FC<{
       {dashboardState.getOnBack() && (
         <MainMenu.Item
           icon={homeIcon}
-          onSelect={() => {
-            void dashboardState.flushAutoSave();
+          onSelect={async () => {
+            await dashboardState.flushAutoSave();
             dashboardState.getOnBack()?.();
           }}
         >

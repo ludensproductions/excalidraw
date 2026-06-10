@@ -52,7 +52,7 @@ const PencilIcon = () => (
 
 interface BoardCardProps {
   board: DrawingRecord;
-  onOpen: (board: DrawingRecord) => void;
+  onOpen: (board: DrawingRecord) => void | Promise<void>;
   onDelete: (id: string, e: React.MouseEvent) => void;
   onRename: (id: string, newName: string) => Promise<void>;
   onClearCollabLink: (id: string) => Promise<void>;
@@ -136,7 +136,11 @@ const BoardCard: React.FC<BoardCardProps> = ({
   return (
     <div
       className="dashboard__card"
-      onClick={() => !isEditing && onOpen(board)}
+      onClick={() => {
+        if (!isEditing) {
+          void onOpen(board);
+        }
+      }}
     >
       <div className="dashboard__card-thumb">
         {board.thumbnail ? (
@@ -428,10 +432,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
     setSharedBoards((prev) => prev.filter((b) => b.id !== board.id));
   };
 
-  const handleOpenBoard = (board: DrawingRecord) => {
+  const handleOpenBoard = async (board: DrawingRecord) => {
     // Own boards always open as local editor sessions. Live collaboration
     // should be started explicitly from the Share dialog.
-    onOpenBoard(board);
+    await onOpenBoard(board);
   };
 
   const sharedRoomIds = new Set(sharedBoards.map((board) => board.roomId));

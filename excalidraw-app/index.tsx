@@ -114,15 +114,20 @@ const AppRoot: React.FC = () => {
     setView({ type: "auth" });
   };
 
-  const openBoard = (record: DrawingRecord) => {
+  const openBoard = async (record: DrawingRecord) => {
+    const latestRecord = (await DrawingsStore.get(record.id)) ?? record;
+
     appJotaiStore.set(hasDashboardBackAtom, true);
-    appJotaiStore.set(activeBoardAtom, { id: record.id, name: record.name });
-    dashboardState.setPendingBoard(record);
+    appJotaiStore.set(activeBoardAtom, {
+      id: latestRecord.id,
+      name: latestRecord.name,
+    });
+    dashboardState.setPendingBoard(latestRecord);
     // Always open as a private editor session. Collaboration must be started
     // explicitly by the user via the Share dialog (or by opening a #room=...
     // URL directly). This avoids surprising the user with auto-rejoin.
     window.history.replaceState({}, "", window.location.pathname);
-    setView({ type: "editor", boardId: record.id, key: Date.now() });
+    setView({ type: "editor", boardId: latestRecord.id, key: Date.now() });
   };
 
   const newBoard = async () => {
