@@ -136,11 +136,11 @@ const AppRoot: React.FC = () => {
     }
 
     const name = await appDialog.promptText({
-      title: "Crear board",
-      label: "Nombre del board",
+      title: "Crear tablero",
+      label: "Nombre del tablero",
       placeholder: "Ej. Mapa de flujo de ventas",
-      confirmButtonText: "Crear board",
-      requiredMessage: "Ponle un nombre al board para poder crearlo.",
+      confirmButtonText: "Crear tablero",
+      requiredMessage: "Ponle un nombre al tablero para poder crearlo.",
     });
     if (!name) {
       return;
@@ -164,10 +164,10 @@ const AppRoot: React.FC = () => {
       setView({ type: "editor", boardId: record.id, key: Date.now() });
     } catch (error) {
       await appDialog.error(
-        "No se pudo crear el board",
+        "No se pudo crear el tablero",
         error instanceof Error
           ? error.message
-          : "No se pudo crear el board. Intenta otra vez.",
+          : "No se pudo crear el tablero. Intenta otra vez.",
       );
     } finally {
       setIsCreatingBoard(false);

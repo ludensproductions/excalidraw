@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useI18n } from "@excalidraw/excalidraw";
 
 import { activeBoardAtom, useAtomValue } from "../app-jotai";
 import { appDialog } from "../appDialog";
@@ -41,6 +42,7 @@ const areCommentsEqual = (
 };
 
 export const CommentsPanel: React.FC = () => {
+  const { t } = useI18n();
   const activeBoard = useAtomValue(activeBoardAtom);
   const activeRoomLink = useAtomValue(activeRoomLinkAtom);
   const currentUser = getCurrentUser();
@@ -122,7 +124,7 @@ export const CommentsPanel: React.FC = () => {
           areCommentsEqual(prev, nextComments) ? prev : nextComments,
         );
       } catch (err) {
-        setError(err instanceof Error ? err.message : "No se pudieron cargar.");
+        setError(err instanceof Error ? err.message : t("app.couldNotLoadComments"));
       } finally {
         if (!opts?.silent) {
           setIsLoading(false);
@@ -162,13 +164,13 @@ export const CommentsPanel: React.FC = () => {
       const comment = await CommentsStore.add({
         target,
         body: trimmed,
-        authorName: currentUser?.username || "Usuario",
+        authorName: currentUser?.username || t("app.user"),
       });
       setComments((prev) => [...prev, comment]);
       setBody("");
       inputRef.current?.focus();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo comentar.");
+      setError(err instanceof Error ? err.message : t("app.couldNotComment"));
     } finally {
       setIsSaving(false);
     }
@@ -199,7 +201,7 @@ export const CommentsPanel: React.FC = () => {
       cancelEdit();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "No se pudo editar el comentario.",
+        err instanceof Error ? err.message : t("app.couldNotEditComment"),
       );
     }
   };
@@ -210,9 +212,9 @@ export const CommentsPanel: React.FC = () => {
     }
 
     const confirmed = await appDialog.confirm({
-      title: "Eliminar comentario",
-      text: "Esta accion no se puede deshacer.",
-      confirmButtonText: "Eliminar",
+      title: t("app.deleteComment"),
+      text: t("app.deleteCommentConfirm"),
+      confirmButtonText: t("app.delete"),
       danger: true,
     });
     if (!confirmed) {
@@ -226,7 +228,7 @@ export const CommentsPanel: React.FC = () => {
       setError(
         err instanceof Error
           ? err.message
-          : "No se pudo eliminar el comentario.",
+          : t("app.couldNotDeleteComment"),
       );
     }
   };
@@ -234,7 +236,7 @@ export const CommentsPanel: React.FC = () => {
   if (isResolvingTarget) {
     return (
       <div className="comments-panel comments-panel--empty-state">
-        <div className="comments-panel__empty">Preparando comentarios...</div>
+        <div className="comments-panel__empty">{t("app.preparingComments")}</div>
       </div>
     );
   }
@@ -243,7 +245,7 @@ export const CommentsPanel: React.FC = () => {
     return (
       <div className="comments-panel comments-panel--empty-state">
         <div className="comments-panel__empty">
-          Guarda este board o abre un board compartido para poder comentar.
+          {t("app.saveToComment")}
         </div>
       </div>
     );
@@ -253,13 +255,13 @@ export const CommentsPanel: React.FC = () => {
     <div className="comments-panel">
       <div className="comments-panel__header">
         <div>
-          <div className="comments-panel__title">Comentarios</div>
+          <div className="comments-panel__title">{t("app.comments")}</div>
           {target.name && (
             <div className="comments-panel__subtitle">{target.name}</div>
           )}
         </div>
         <button className="comments-panel__refresh" onClick={() => void refresh()}>
-          Actualizar
+          {t("app.refresh")}
         </button>
       </div>
 
@@ -269,7 +271,7 @@ export const CommentsPanel: React.FC = () => {
           className="comments-panel__textarea"
           value={body}
           onChange={(event) => setBody(event.target.value)}
-          placeholder="Escribe un comentario..."
+          placeholder={t("app.writeComment")}
           rows={3}
           onKeyDown={(event) => {
             if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
@@ -282,7 +284,7 @@ export const CommentsPanel: React.FC = () => {
           disabled={!body.trim() || isSaving}
           onClick={() => void addComment()}
         >
-          {isSaving ? "Enviando..." : "Comentar"}
+          {isSaving ? t("app.sending") : t("app.comment")}
         </button>
       </div>
 
@@ -290,10 +292,10 @@ export const CommentsPanel: React.FC = () => {
 
       <div className="comments-panel__list">
         {isLoading ? (
-          <div className="comments-panel__empty">Cargando comentarios...</div>
+          <div className="comments-panel__empty">{t("app.loadingComments")}</div>
         ) : comments.length === 0 ? (
           <div className="comments-panel__empty">
-            Todavia no hay comentarios.
+            {t("app.noComments")}
           </div>
         ) : (
           comments.map((comment) => {
@@ -324,13 +326,13 @@ export const CommentsPanel: React.FC = () => {
                         disabled={!editingBody.trim()}
                         onClick={() => void commitEdit()}
                       >
-                        Guardar
+                        {t("app.save")}
                       </button>
                       <button
                         className="comments-panel__action"
                         onClick={cancelEdit}
                       >
-                        Cancelar
+                        {t("app.cancel")}
                       </button>
                     </div>
                   </>
@@ -343,13 +345,13 @@ export const CommentsPanel: React.FC = () => {
                           className="comments-panel__action"
                           onClick={() => startEdit(comment)}
                         >
-                          Editar
+                          {t("app.edit")}
                         </button>
                         <button
                           className="comments-panel__action comments-panel__action--danger"
                           onClick={() => void deleteComment(comment.id)}
                         >
-                          Eliminar
+                          {t("app.delete")}
                         </button>
                       </div>
                     )}

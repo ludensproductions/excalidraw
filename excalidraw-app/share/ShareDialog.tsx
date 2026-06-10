@@ -133,8 +133,8 @@ const ActiveRoomDialog = ({
       </h3>
       <TextField
         defaultValue={collabAPI.getUsername()}
-        placeholder="Your name"
-        label="Your name"
+        placeholder="Tu nombre"
+        label="Tu nombre"
         onChange={collabAPI.setUsername}
         onKeyDown={(event) => event.key === KEYS.ENTER && handleClose()}
       />
@@ -152,7 +152,7 @@ const ActiveRoomDialog = ({
               <FilledButton
                 size="large"
                 variant="icon"
-                label="Share"
+                label="Compartir"
                 icon={getShareIcon()}
                 className="ShareDialog__active__share"
                 onClick={shareRoomLink}

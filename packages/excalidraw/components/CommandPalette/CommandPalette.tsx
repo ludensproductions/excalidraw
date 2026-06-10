@@ -75,22 +75,14 @@ import * as defaultItems from "./defaultCommandPaletteItems";
 import "./CommandPalette.scss";
 
 import type { CommandPaletteItem } from "./types";
+import { DEFAULT_CATEGORIES } from "./types";
+export { DEFAULT_CATEGORIES };
 import type { AppProps, AppState, LibraryItem, UIAppState } from "../../types";
 import type { ShortcutName } from "../../actions/shortcuts";
 import type { TranslationKeys } from "../../i18n";
 import type { Action } from "../../actions/types";
 
 const lastUsedPaletteItem = atom<CommandPaletteItem | null>(null);
-
-export const DEFAULT_CATEGORIES = {
-  app: "App",
-  export: "Export",
-  tools: "Tools",
-  editor: "Editor",
-  elements: "Elements",
-  links: "Links",
-  library: "Library",
-};
 
 const getCategoryOrder = (category: string) => {
   switch (category) {
@@ -233,8 +225,8 @@ function CommandPaletteInner({
               elements={libraryItem.elements}
             />
           ),
-          category: "Library",
-          order: getCategoryOrder("Library"),
+          category: DEFAULT_CATEGORIES.library,
+          order: getCategoryOrder(DEFAULT_CATEGORIES.library),
           haystack: deburr(libraryItem.name),
           perform: () => {
             app.onInsertElements(
@@ -956,7 +948,7 @@ function CommandPaletteInner({
                     onMouseMove={() => setCurrentCommand(command)}
                     showShortcut={app.editorInterface.formFactor !== "phone"}
                     appState={uiAppState}
-                    size={category === "Library" ? "large" : "small"}
+                    size={category === DEFAULT_CATEGORIES.library ? "large" : "small"}
                   />
                 ))}
               </div>

@@ -42,7 +42,7 @@ const ConditionalTooltipWrapper = ({
   username?: string | null;
 }) =>
   shouldWrap ? (
-    <Tooltip label={username || "Unknown user"}>{children}</Tooltip>
+    <Tooltip label={username || t("userList.unknownUser")}>{children}</Tooltip>
   ) : (
     <>{children}</>
   );

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { THEME } from "@excalidraw/excalidraw";
+import { t } from "@excalidraw/excalidraw/i18n";
 
 import { activeBoardAtom, appJotaiStore } from "../app-jotai";
 import { appDialog } from "../appDialog";
@@ -20,13 +21,13 @@ const formatDate = (ts: number): string => {
   const now = Date.now();
   const diff = now - ts;
   if (diff < 60_000) {
-    return "Ahora mismo";
+    return t("app.justNow");
   }
   if (diff < 3_600_000) {
-    return `Hace ${Math.floor(diff / 60_000)} min`;
+    return t("app.minutesAgo", { count: Math.floor(diff / 60_000) });
   }
   if (diff < 86_400_000) {
-    return `Hace ${Math.floor(diff / 3_600_000)} h`;
+    return t("app.hoursAgo", { count: Math.floor(diff / 3_600_000) });
   }
   return d.toLocaleDateString(undefined, {
     month: "short",
@@ -122,9 +123,9 @@ const BoardCard: React.FC<BoardCardProps> = ({
   const clearCollabLink = async (e: React.MouseEvent) => {
     e.stopPropagation();
     const confirmed = await appDialog.confirm({
-      title: "Eliminar enlace de colaboracion",
-      text: "El board dejara de mostrar este enlace colaborativo guardado.",
-      confirmButtonText: "Eliminar",
+      title: t("app.deleteCollabLink"),
+      text: t("app.deleteCollabLinkText"),
+      confirmButtonText: t("app.delete"),
       danger: true,
     });
     if (!confirmed) {
@@ -187,14 +188,14 @@ const BoardCard: React.FC<BoardCardProps> = ({
           <div className="dashboard__card-collab-row">
             <button
               className="dashboard__card-collab"
-              title="Copiar enlace de colaboración"
+              title={t("app.copyCollabLinkTitle")}
               onClick={copyCollabLink}
             >
-              {copied ? "✓ Copiado" : "● Copiar enlace"}
+              {copied ? t("app.copied") : t("app.copyLink")}
             </button>
             <button
               className="dashboard__card-collab-clear"
-              title="Eliminar enlace de colaboración"
+              title={t("app.deleteCollabLinkTitle")}
               onClick={clearCollabLink}
             >
               ×
@@ -204,14 +205,14 @@ const BoardCard: React.FC<BoardCardProps> = ({
       </div>
       <button
         className="dashboard__card-rename"
-        title="Renombrar board"
+        title={t("app.renameBoard")}
         onClick={startRename}
       >
         ✎
       </button>
       <button
         className="dashboard__card-delete"
-        title="Eliminar board"
+        title={t("app.deleteBoard")}
         onClick={(e) => onDelete(board.id, e)}
       >
         ×
@@ -245,7 +246,7 @@ const SharedBoardCard: React.FC<SharedBoardCardProps> = ({
           {board.name}
         </span>
         {isOwner && (
-          <span className="dashboard__shared-card-owner-badge">Tuyo</span>
+          <span className="dashboard__shared-card-owner-badge">{t("app.yours")}</span>
         )}
       </div>
 
@@ -279,17 +280,17 @@ const SharedBoardCard: React.FC<SharedBoardCardProps> = ({
             onJoin(board);
           }}
         >
-          Unirse
+          {t("app.open")}
         </button>
         <button
           className="dashboard__shared-card-leave"
-          title="Salir del tablero compartido"
+          title={t("app.leaveSharedBoard")}
           onClick={(e) => {
             e.stopPropagation();
             onLeave(board);
           }}
         >
-          Salir
+          {t("app.leave")}
         </button>
       </div>
     </div>
@@ -363,9 +364,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const confirmed = await appDialog.confirm({
-      title: "Eliminar board",
-      text: "Esta accion no se puede deshacer.",
-      confirmButtonText: "Eliminar",
+      title: t("app.deleteBoard"),
+      text: t("app.deleteBoardConfirm"),
+      confirmButtonText: t("app.delete"),
       danger: true,
     });
     if (!confirmed) {
@@ -383,7 +384,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
         b.id === id ? { ...b, name: newName, updatedAt: now } : b,
       ),
     );
-    // Keep the editor's active board name in sync if it's the one open
     const active = appJotaiStore.get(activeBoardAtom);
     if (active?.id === id) {
       appJotaiStore.set(activeBoardAtom, { ...active, name: newName });
@@ -400,11 +400,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const handleLeaveSharedBoard = async (board: SharedBoard) => {
     const isOwner = board.createdBy === user.id;
     const confirmed = await appDialog.confirm({
-      title: isOwner ? "Eliminar tablero compartido" : "Salir del tablero",
+      title: isOwner ? t("app.deleteSharedBoard") : t("app.leaveSharedBoard"),
       text: isOwner
-        ? `Se eliminara "${board.name}" para los participantes.`
-        : `Dejaras de ver "${board.name}" en tus compartidos.`,
-      confirmButtonText: isOwner ? "Eliminar" : "Salir",
+        ? t("app.deleteSharedConfirmText", { name: board.name })
+        : t("app.leaveConfirmText", { name: board.name }),
+      confirmButtonText: isOwner ? t("app.delete") : t("app.leave"),
       danger: true,
     });
     if (!confirmed) {
@@ -433,8 +433,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const handleOpenBoard = async (board: DrawingRecord) => {
-    // Own boards always open as local editor sessions. Live collaboration
-    // should be started explicitly from the Share dialog.
     await onOpenBoard(board);
   };
 
@@ -508,13 +506,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
             }`}
             onClick={() => setActiveTab("recent")}
           >
-            Recientes
+            {t("app.recent")}
           </button>
           <button
             className={`dashboard__tab${activeTab === "all" ? " active" : ""}`}
             onClick={() => setActiveTab("all")}
           >
-            Mis tableros
+            {t("app.myBoards")}
           </button>
           <button
             className={`dashboard__tab${
@@ -522,7 +520,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             }`}
             onClick={() => setActiveTab("shared")}
           >
-            Compartidos
+            {t("app.shared")}
             {sharedBoards.length > 0 && (
               <span className="dashboard__tab-badge">
                 {sharedBoards.length}
@@ -536,7 +534,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <button
             className="dashboard__theme-toggle"
             onClick={() => setAppTheme(isDark ? THEME.LIGHT : THEME.DARK)}
-            title={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+            title={isDark ? t("app.switchToLight") : t("app.switchToDark")}
           >
             {isDark ? (
               <svg
@@ -571,7 +569,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             )}
           </button>
           <button className="dashboard__logout-btn" onClick={onLogout}>
-            Cerrar sesión
+            {t("app.logOut")}
           </button>
         </div>
       </header>
@@ -581,7 +579,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <>
             <div className="dashboard__section-header">
               <h2>
-                Tableros compartidos
+                {t("app.sharedBoards")}
                 {!loading && sharedBoards.length > 0 && (
                   <span
                     style={{
@@ -599,27 +597,26 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 className="dashboard__shared-refresh"
                 onClick={fetchBoards}
                 disabled={loading}
-                title="Actualizar tableros compartidos"
+                title={t("app.refreshSharedBoards")}
               >
                 ↻
               </button>
             </div>
             {sharedError && (
               <div className="dashboard__shared-error">
-                <strong>Error al cargar tableros compartidos:</strong>{" "}
+                <strong>{t("app.errorLoadingSharedBoards")}</strong>{" "}
                 {sharedError}
               </div>
             )}
             {loading ? (
               <div className="dashboard__loading">
-                <p>Cargando tableros compartidos...</p>
+                <p>{t("app.loadingSharedBoards")}</p>
               </div>
             ) : sharedBoards.length === 0 ? (
               <div className="dashboard__empty">
-                <p>Aún no participas en ningún tablero compartido.</p>
+                <p>{t("app.noSharedBoards")}</p>
                 <p style={{ fontSize: "0.875rem", color: "#9ca3af" }}>
-                  Inicia o únete a una sesión de colaboración en vivo para que
-                  aparezca aquí.
+                  {t("app.sharedBoardsHint")}
                 </p>
               </div>
             ) : (
@@ -640,7 +637,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <>
             <div className="dashboard__section-header">
               <h2>
-                {activeTab === "recent" ? "Recientes" : "Mis tableros"}
+                {activeTab === "recent" ? t("app.recent") : t("app.myBoards")}
                 {!loading &&
                   (activeTab === "recent"
                     ? recentItems.length > 0
@@ -660,28 +657,28 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   )}
               </h2>
               <button className="dashboard__new-btn" onClick={onNewBoard}>
-                + Nuevo board
+                {t("app.newBoard")}
               </button>
             </div>
 
             {loading ? (
               <div className="dashboard__loading">
-                <p>Cargando boards...</p>
+                <p>{t("app.loadingBoards")}</p>
               </div>
             ) : activeTab === "recent" && recentItems.length === 0 ? (
               <div className="dashboard__empty">
                 <PencilIcon />
-                <p>No tienes boards aún.</p>
+                <p>{t("app.noBoards")}</p>
                 <button className="dashboard__new-btn" onClick={onNewBoard}>
-                  Crear tu primer board
+                  {t("app.createFirstBoard")}
                 </button>
               </div>
             ) : activeTab === "all" && displayedBoards.length === 0 ? (
               <div className="dashboard__empty">
                 <PencilIcon />
-                <p>No tienes boards guardados.</p>
+                <p>{t("app.noSavedBoards")}</p>
                 <button className="dashboard__new-btn" onClick={onNewBoard}>
-                  Crear tu primer board
+                  {t("app.createFirstBoard")}
                 </button>
               </div>
             ) : activeTab === "recent" ? (

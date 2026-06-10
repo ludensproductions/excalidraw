@@ -1,4 +1,4 @@
-import { defaultLang, languages } from "@excalidraw/excalidraw";
+import { languages } from "@excalidraw/excalidraw";
 import LanguageDetector from "i18next-browser-languagedetector";
 
 export const languageDetector = new LanguageDetector();
@@ -8,18 +8,9 @@ languageDetector.init({
 });
 
 export const getPreferredLanguage = () => {
-  const detectedLanguages = languageDetector.detect();
-
-  const detectedLanguage = Array.isArray(detectedLanguages)
-    ? detectedLanguages[0]
-    : detectedLanguages;
-
-  const initialLanguage =
-    (detectedLanguage
-      ? // region code may not be defined if user uses generic preferred language
-        // (e.g. chinese vs instead of chinese-simplified)
-        languages.find((lang) => lang.code.startsWith(detectedLanguage))?.code
-      : null) || defaultLang.code;
-
-  return initialLanguage;
+  const browserLang = navigator.language || (navigator as any).userLanguage || "";
+  if (browserLang.toLowerCase().startsWith("es")) {
+    return languages.find((lang) => lang.code === "es-ES")?.code || "en";
+  }
+  return "en";
 };

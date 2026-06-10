@@ -64,7 +64,7 @@ export const ShadeList = ({
                 "color-picker__button color-picker__button--large has-outline",
                 { active: i === shade },
               )}
-              aria-label="Shade"
+              aria-label={t("colorPicker.shade")}
               title={`${colorName} - ${i + 1}`}
               style={color ? { "--swatch-color": color } : undefined}
               onClick={() => {

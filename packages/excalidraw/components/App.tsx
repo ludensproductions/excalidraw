@@ -1598,7 +1598,7 @@ class App extends React.Component<AppProps, AppState> {
             const data: MagicGenerationData = (el.customData?.generationData ??
               this.magicGenerations.get(el.id)) || {
               status: "error",
-              message: "No generation data",
+              message: t("magic.noGenerationData"),
               code: "ERR_NO_GENERATION_DATA",
             };
 
@@ -1689,16 +1689,16 @@ class App extends React.Component<AppProps, AppState> {
                         />
                       </svg>
                     </div>
-                    <div>Generating...</div>
+                    <div>{t("magic.generating")}</div>
                   `);
                 },
               } as const;
             } else {
               let message: string;
               if (data.code === "ERR_GENERATION_INTERRUPTED") {
-                message = "Generation was interrupted...";
+                message = t("magic.generationInterrupted");
               } else {
-                message = data.message || "Generation failed";
+                message = data.message || t("magic.generationFailed");
               }
               src = {
                 intrinsicSize: { w: el.width, h: el.height },
@@ -1841,7 +1841,7 @@ class App extends React.Component<AppProps, AppState> {
                         // https://stackoverflow.com/q/18470015
                         scrolling="no"
                         referrerPolicy="no-referrer-when-downgrade"
-                        title="Excalidraw Embedded Content"
+                        title={t("labels.embeddedContent")}
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen={true}
                         sandbox={`${
@@ -2280,7 +2280,7 @@ class App extends React.Component<AppProps, AppState> {
                                   }
                                 />
                                 <ElementCanvasButton
-                                  title="Enter fullscreen"
+                                  title={t("buttons.enterFullscreen")}
                                   icon={fullscreenIcon}
                                   checked={false}
                                   onChange={() => {
@@ -2554,7 +2554,7 @@ class App extends React.Component<AppProps, AppState> {
 
     if (!generateDiagramToCode) {
       this.setState({
-        errorMessage: "No diagram to code plugin found",
+        errorMessage: t("errors.noDiagramToCodePlugin"),
       });
       return;
     }
@@ -2567,7 +2567,7 @@ class App extends React.Component<AppProps, AppState> {
 
     if (!magicFrameChildren.length) {
       if (source === "button") {
-        this.setState({ errorMessage: "Cannot generate from an empty frame" });
+        this.setState({ errorMessage: t("errors.emptyFrameGeneration") });
         trackEvent("ai", "generate (no-children)", "d2c");
       } else {
         this.setActiveTool({ type: "magicframe" });
@@ -2635,7 +2635,7 @@ class App extends React.Component<AppProps, AppState> {
         data: {
           status: "error",
           code: "ERR_OAI",
-          message: error.message || "Unknown error during generation",
+          message: error.message || t("magic.unknownError"),
         },
       });
     }

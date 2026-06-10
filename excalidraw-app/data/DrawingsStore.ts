@@ -162,7 +162,7 @@ export const DrawingsStore = {
         throw new Error(insertError.message);
       }
       if (!insertedRow) {
-        throw new Error("No se pudo guardar el board");
+        throw new Error("No se pudo guardar el tablero");
       }
       return rowToRecord(insertedRow);
     };

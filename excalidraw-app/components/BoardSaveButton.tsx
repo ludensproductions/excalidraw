@@ -1,4 +1,5 @@
 import React from "react";
+import { useI18n } from "@excalidraw/excalidraw";
 
 import { useSaveBoard } from "../hooks/useSaveBoard";
 
@@ -22,13 +23,14 @@ const SaveIcon = () => (
 
 export const BoardSaveButton: React.FC = () => {
   const { save, status, activeBoard } = useSaveBoard();
+  const { t } = useI18n();
 
   const label =
     status === "saving"
-      ? "Guardando..."
+      ? t("app.saving")
       : status === "saved"
-      ? "✓ Guardado"
-      : activeBoard.name ?? "Guardar board";
+        ? t("app.saved")
+        : activeBoard.name ?? t("app.saveBoard");
 
   return (
     <button
@@ -38,7 +40,9 @@ export const BoardSaveButton: React.FC = () => {
       onClick={save}
       disabled={status === "saving"}
       title={
-        activeBoard.name ? `Guardar "${activeBoard.name}"` : "Guardar board"
+        activeBoard.name
+          ? t("app.saveBoard") + ` "${activeBoard.name}"`
+          : t("app.saveBoard")
       }
     >
       {status !== "saved" && <SaveIcon />}

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="utf-8" />
-    <title>Excalidraw Whiteboard</title>
+    <title>Excalidraw | Pizarra colaborativa</title>
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, shrink-to-fit=no"
@@ -11,43 +11,40 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#121212" />
 
-    <!-- Primary Meta Tags -->
     <meta
       name="title"
-      content="Free, collaborative whiteboard • Hand-drawn look & feel | Excalidraw"
+      content="Excalidraw | Pizarra colaborativa con estilo dibujado a mano"
     />
     <meta
       name="description"
-      content="Excalidraw is a virtual collaborative whiteboard tool that lets you easily sketch diagrams that have a hand-drawn feel to them."
+      content="Excalidraw es una pizarra colaborativa virtual para crear diagramas y bocetos con una apariencia dibujada a mano."
     />
     <meta name="image" content="https://excalidraw.com/og-image-3.png" />
 
-    <!-- Open Graph / Facebook -->
     <meta property="og:site_name" content="Excalidraw" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://excalidraw.com" />
     <meta
       property="og:title"
-      content="Excalidraw — Collaborative whiteboarding made easy"
+      content="Excalidraw | Pizarra colaborativa facil de usar"
     />
-    <meta property="og:image:alt" content="Excalidraw logo" />
+    <meta property="og:image:alt" content="Logotipo de Excalidraw" />
     <meta
       property="og:description"
-      content="Excalidraw is a virtual collaborative whiteboard tool that lets you easily sketch diagrams that have a hand-drawn feel to them."
+      content="Excalidraw es una pizarra colaborativa virtual para crear diagramas y bocetos con una apariencia dibujada a mano."
     />
     <meta property="og:image" content="https://excalidraw.com/og-image-3.png" />
 
-    <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:site" content="@excalidraw" />
     <meta property="twitter:url" content="https://excalidraw.com" />
     <meta
       property="twitter:title"
-      content="Excalidraw — Collaborative whiteboarding made easy"
+      content="Excalidraw | Pizarra colaborativa facil de usar"
     />
     <meta
       property="twitter:description"
-      content="Excalidraw is a virtual collaborative whiteboard tool that lets you easily sketch diagrams that have a hand-drawn feel to them."
+      content="Excalidraw es una pizarra colaborativa virtual para crear diagramas y bocetos con una apariencia dibujada a mano."
     />
     <meta
       property="twitter:image"
@@ -56,8 +53,6 @@
 
     <link rel="canonical" href="https://excalidraw.com" />
 
-    <!------------------------------------------------------------------------->
-    <!--   to minimize white flash on load when user has dark mode enabled   -->
     <script>
       try {
         function setTheme(theme) {
@@ -82,7 +77,7 @@
 
         setTheme(getTheme());
       } catch (e) {
-        console.error("Error setting dark mode", e);
+        console.error("Error al establecer el tema", e);
       }
     </script>
     <style>
@@ -92,35 +87,23 @@
       }
     </style>
 
-    <!-- Warmup the connection for Google fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-    <!------------------------------------------------------------------------->
     <% if (typeof PROD != 'undefined' && PROD == true) { %>
     <script>
-      // Redirect Excalidraw+ users which have auto-redirect enabled.
-      //
-      // Redirect only the bare root path, so link/room/library urls are not
-      // redirected.
-      //
-      // Putting into index.html for best performance (can't redirect on server
-      // due to location.hash checks).
       if (
         window.location.pathname === "/" &&
         !window.location.hash &&
         !window.location.search &&
-        // if its present redirect
         document.cookie.includes("excplus-autoredirect=true")
       ) {
         window.location.href = "https://app.excalidraw.com";
       }
     </script>
 
-    <!-- Following placeholder is replaced during the build step -->
     <!-- PLACEHOLDER:EXCALIDRAW_APP_FONTS -->
 
-    <!-- Register Assistant as the UI font, before the scene inits -->
     <link
       rel="stylesheet"
       href="../packages/excalidraw/fonts/fonts.css"
@@ -137,7 +120,6 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
 
-    <!-- Excalidraw version -->
     <meta name="version" content="{version}" />
 
     <% if (typeof VITE_APP_DEV_DISABLE_LIVE_RELOAD != 'undefined' &&
@@ -148,7 +130,7 @@
         window.WebSocket = function (url) {
           if (/ws:\/\/localhost:.+?\/sockjs-node/.test(url)) {
             console.info(
-              "[!!!] Live reload is disabled via VITE_APP_DEV_DISABLE_LIVE_RELOAD [!!!]",
+              "[!!!] La recarga en vivo esta desactivada por VITE_APP_DEV_DISABLE_LIVE_RELOAD [!!!]",
             );
           } else {
             return new _WebSocket(url);
@@ -158,11 +140,9 @@
     </script>
     <% } %>
     <script>
-      // setting this so that libraries installation reuses this window tab.
       window.name = "_excalidraw";
     </script>
 
-    <!-- FIXME: remove this when we update CRA (fix SW caching) -->
     <style>
       body,
       html {
@@ -208,16 +188,14 @@
   </head>
 
   <body>
-    <noscript> You need to enable JavaScript to run this app. </noscript>
+    <noscript>Necesitas activar JavaScript para usar esta aplicacion.</noscript>
     <header>
       <h1 class="visually-hidden">Excalidraw</h1>
     </header>
     <div id="root"></div>
     <script type="module" src="index.tsx"></script>
     <% if (typeof PROD != 'undefined' && PROD == true) { %>
-    <!-- 100% privacy friendly analytics -->
     <script>
-      // need to load this script dynamically bcs. of iframe embed tracking
       var scriptEle = document.createElement("script");
       scriptEle.setAttribute(
         "src",
@@ -226,14 +204,12 @@
       scriptEle.setAttribute("type", "text/javascript");
       scriptEle.setAttribute("defer", true);
       scriptEle.setAttribute("async", true);
-      // if iframe
       if (window.self !== window.top) {
         scriptEle.setAttribute("data-auto-collect", true);
       }
 
       document.body.appendChild(scriptEle);
 
-      // if iframe
       if (window.self !== window.top) {
         scriptEle.addEventListener("load", () => {
           if (window.sa_pageview) {
@@ -246,7 +222,6 @@
         });
       }
     </script>
-    <!-- end LEGACY GOOGLE ANALYTICS -->
     <% } %>
   </body>
 </html>

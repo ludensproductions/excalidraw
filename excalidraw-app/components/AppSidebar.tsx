@@ -1,4 +1,4 @@
-import { DefaultSidebar, Sidebar } from "@excalidraw/excalidraw";
+import { DefaultSidebar, Sidebar, useI18n } from "@excalidraw/excalidraw";
 import { messageCircleIcon } from "@excalidraw/excalidraw/components/icons";
 import { useUIAppState } from "@excalidraw/excalidraw/context/ui-appState";
 
@@ -6,6 +6,7 @@ import { CommentsPanel } from "./CommentsPanel";
 
 export const AppSidebar = () => {
   const { openSidebar } = useUIAppState();
+  const { t } = useI18n();
 
   return (
     <DefaultSidebar>
@@ -13,7 +14,7 @@ export const AppSidebar = () => {
         <Sidebar.TabTrigger
           tab="comments"
           style={{ opacity: openSidebar?.tab === "comments" ? 1 : 0.4 }}
-          title="Comentarios"
+          title={t("app.comments")}
         >
           {messageCircleIcon}
         </Sidebar.TabTrigger>

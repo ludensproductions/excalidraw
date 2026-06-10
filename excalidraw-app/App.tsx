@@ -214,7 +214,7 @@ const buildCopiedBoardName = (
   sourceName: string | null,
   creatorName: string | null,
 ) => {
-  const normalizedSource = (sourceName || "").trim() || "Board";
+  const normalizedSource = (sourceName || "").trim() || "Tablero";
   const normalizedCreator = (creatorName || "").trim() || "usuario";
   return `${normalizedSource} (de ${normalizedCreator})`;
 };
@@ -790,7 +790,7 @@ const ExcalidrawWrapper = () => {
         files,
         {
           creatorName: getCurrentUser()?.username || null,
-          boardName: activeBoard.name || "Board",
+          boardName: activeBoard.name || "Tablero",
         },
       );
 
@@ -872,7 +872,7 @@ const ExcalidrawWrapper = () => {
       yield {
         type: "progress",
         progress: (total - pending) / total,
-        message: `Loading images (${total - pending}/${total})...`,
+        message: `Cargando imagenes (${total - pending}/${total})...`,
       };
 
       // Wait for all pending images to finish
@@ -884,14 +884,14 @@ const ExcalidrawWrapper = () => {
         yield {
           type: "progress",
           progress: (nowTotal - nowPending) / nowTotal,
-          message: `Loading images (${nowTotal - nowPending}/${nowTotal})...`,
+          message: `Cargando imagenes (${nowTotal - nowPending}/${nowTotal})...`,
         };
 
         if (nowPending === 0) {
           await new Promise((r) => setTimeout(r, 500));
           yield {
             type: "progress",
-            message: `Preparing export...`,
+            message: "Preparando exportacion...",
           };
           return;
         }
@@ -914,7 +914,7 @@ const ExcalidrawWrapper = () => {
           height: "100%",
         }}
       >
-        <h1>I'm not a pretzel!</h1>
+        <h1>{t("app.notAPretzel")}</h1>
       </div>
     );
   }
@@ -957,9 +957,9 @@ const ExcalidrawWrapper = () => {
               onClick={() => {
                 void navigateBackToDashboard();
               }}
-              title="Volver al dashboard"
+              title={t("app.backToHome")}
             >
-              ← Volver
+              {t("app.back")}
             </button>
           );
         }}
@@ -975,9 +975,9 @@ const ExcalidrawWrapper = () => {
                 onClick={() =>
                   setShareDialogState({ isOpen: true, type: "copyOnly" })
                 }
-                title="Mandar copia a otro usuario"
+                title={t("app.sendCopyTitle")}
               >
-                Enviar copia
+                {t("app.sendCopy")}
               </button>
               {!isCollabDisabled && collabAPI && (
                 <>

@@ -3,6 +3,8 @@ import "sweetalert2/dist/sweetalert2.min.css";
 
 import "./appDialog.scss";
 
+import { t } from "@excalidraw/excalidraw/i18n";
+
 type DialogIcon = "success" | "error" | "warning" | "info" | "question";
 
 const baseOptions = () => ({
@@ -37,7 +39,7 @@ export const appDialog = {
       title: options.title,
       text: options.text,
       icon: options.icon ?? "info",
-      confirmButtonText: options.confirmButtonText ?? "Entendido",
+      confirmButtonText: options.confirmButtonText ?? t("app.gotIt"),
     });
   },
 
@@ -59,8 +61,8 @@ export const appDialog = {
       text: options.text,
       icon: options.icon ?? "warning",
       showCancelButton: true,
-      confirmButtonText: options.confirmButtonText ?? "Confirmar",
-      cancelButtonText: options.cancelButtonText ?? "Cancelar",
+      confirmButtonText: options.confirmButtonText ?? t("app.confirm"),
+      cancelButtonText: options.cancelButtonText ?? t("app.cancel"),
       customClass: {
         ...baseOptions().customClass,
         confirmButton: `app-swal__button ${
@@ -92,15 +94,15 @@ export const appDialog = {
       inputPlaceholder: options.placeholder,
       inputValue: options.initialValue ?? "",
       showCancelButton: true,
-      confirmButtonText: options.confirmButtonText ?? "Guardar",
-      cancelButtonText: options.cancelButtonText ?? "Cancelar",
+      confirmButtonText: options.confirmButtonText ?? t("app.save"),
+      cancelButtonText: options.cancelButtonText ?? t("app.cancel"),
       inputAttributes: {
         maxlength: String(options.maxLength ?? 120),
         autocapitalize: "sentences",
       },
       inputValidator: (value) => {
         if (!value.trim()) {
-          return options.requiredMessage ?? "Este campo es obligatorio.";
+          return options.requiredMessage ?? t("app.fieldRequired");
         }
         return undefined;
       },

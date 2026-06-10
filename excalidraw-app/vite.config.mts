@@ -225,7 +225,7 @@ export default defineConfig(({ mode }) => {
           short_name: "Excalidraw",
           name: "Excalidraw",
           description:
-            "Excalidraw is a whiteboard tool that lets you easily sketch diagrams that have a hand-drawn feel to them.",
+            "Excalidraw es una herramienta de pizarra que te permite crear diagramas facilmente con un estilo de trazo a mano.",
           icons: [
             {
               src: "android-chrome-192x192.png",

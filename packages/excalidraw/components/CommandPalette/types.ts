@@ -1,6 +1,16 @@
 import type { ActionManager } from "../../actions/manager";
 import type { Action } from "../../actions/types";
 
+export const DEFAULT_CATEGORIES = {
+  app: "Aplicación",
+  export: "Exportar",
+  tools: "Herramientas",
+  editor: "Editor",
+  elements: "Elementos",
+  links: "Enlaces",
+  library: "Biblioteca",
+};
+
 export type CommandPaletteItem = {
   label: string;
   /** additional keywords to match against

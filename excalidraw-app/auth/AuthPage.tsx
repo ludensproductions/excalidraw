@@ -50,7 +50,7 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
       .then((isRecovery) => {
         if (!cancelled && isRecovery) {
           setMode("reset");
-          setMessage("Ingresa tu nueva contraseña.");
+          setMessage("Ingresa tu nueva contrasena.");
         }
       })
       .catch((err: unknown) => {
@@ -59,7 +59,7 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
           setError(
             err instanceof Error
               ? err.message
-              : "No se pudo abrir el enlace de recuperación.",
+              : "No se pudo abrir el enlace de recuperacion.",
           );
         }
       });
@@ -87,7 +87,7 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
           );
         }
         if (password.length < 6) {
-          throw new Error("La contraseña debe tener al menos 6 caracteres.");
+          throw new Error("La contrasena debe tener al menos 6 caracteres.");
         }
 
         const user = await registerUser(
@@ -102,14 +102,14 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
       if (mode === "forgot") {
         await requestPasswordReset(email);
         setMessage(
-          "Te enviamos un correo con el enlace para recuperar tu contraseña.",
+          "Te enviamos un correo con el enlace para recuperar tu contrasena.",
         );
         return;
       }
 
       if (mode === "reset") {
         if (password !== confirmPassword) {
-          throw new Error("Las contraseñas no coinciden.");
+          throw new Error("Las contrasenas no coinciden.");
         }
 
         const user = await updatePassword(password);
@@ -121,7 +121,7 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
       onAuthenticated(user);
     } catch (err: unknown) {
       setError(
-        err instanceof Error ? err.message : "Ocurrió un error inesperado.",
+        err instanceof Error ? err.message : "Ocurrio un error inesperado.",
       );
     } finally {
       setLoading(false);
@@ -159,29 +159,29 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
     mode === "login"
       ? "Bienvenido de vuelta"
       : mode === "register"
-      ? "Crear cuenta"
-      : mode === "forgot"
-      ? "Recuperar contraseña"
-      : "Nueva contraseña";
+        ? "Crear cuenta"
+        : mode === "forgot"
+          ? "Recuperar contrasena"
+          : "Nueva contrasena";
 
   const subtitle =
     mode === "login"
-      ? "Inicia sesión para continuar"
+      ? "Inicia sesion para continuar"
       : mode === "register"
-      ? "Regístrate para empezar a dibujar"
-      : mode === "forgot"
-      ? "Te enviaremos un enlace a tu correo"
-      : "Escribe los datos nuevos de acceso";
+        ? "Registrate para empezar a dibujar"
+        : mode === "forgot"
+          ? "Te enviaremos un enlace a tu correo"
+          : "Escribe los nuevos datos de acceso";
 
   const submitLabel = loading
     ? "Cargando..."
     : mode === "login"
-    ? "Iniciar sesión"
-    : mode === "register"
-    ? "Crear cuenta"
-    : mode === "forgot"
-    ? "Enviar correo"
-    : "Guardar contraseña";
+      ? "Iniciar sesion"
+      : mode === "register"
+        ? "Crear cuenta"
+        : mode === "forgot"
+          ? "Enviar correo"
+          : "Guardar contrasena";
 
   return (
     <div className={`auth-page${isDark ? " auth-page--dark" : ""}`}>
@@ -220,7 +220,14 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
           title={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
         >
           {isDark ? (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <circle cx="12" cy="12" r="5" />
               <line x1="12" y1="1" x2="12" y2="3" />
               <line x1="12" y1="21" x2="12" y2="23" />
@@ -232,7 +239,14 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
               <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
             </svg>
           ) : (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
             </svg>
           )}
@@ -260,7 +274,7 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
 
           {mode !== "reset" && (
             <div className="auth-page__field">
-              <label htmlFor="auth-email">Correo electrónico</label>
+              <label htmlFor="auth-email">Correo electronico</label>
               <input
                 id="auth-email"
                 type="email"
@@ -277,13 +291,13 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
           {mode !== "forgot" && (
             <div className="auth-page__field">
               <label htmlFor="auth-password">
-                {mode === "reset" ? "Nueva contraseña" : "Contraseña"}
+                {mode === "reset" ? "Nueva contrasena" : "Contrasena"}
               </label>
               <input
                 id="auth-password"
                 type="password"
                 placeholder={
-                  mode === "login" ? "Tu contraseña" : "Mínimo 6 caracteres"
+                  mode === "login" ? "Tu contrasena" : "Minimo 6 caracteres"
                 }
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -299,12 +313,12 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
           {mode === "reset" && (
             <div className="auth-page__field">
               <label htmlFor="auth-confirm-password">
-                Confirmar contraseña
+                Confirmar contrasena
               </label>
               <input
                 id="auth-confirm-password"
                 type="password"
-                placeholder="Repite la contraseña"
+                placeholder="Repite la contrasena"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
@@ -333,24 +347,24 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
           {mode === "login" ? (
             <>
               <button type="button" onClick={goToForgotPassword}>
-                Olvidé mi contraseña
+                Olvide mi contrasena
               </button>
               <span className="auth-page__toggle-separator">|</span>
               No tienes cuenta?{" "}
               <button type="button" onClick={switchMode}>
-                Regístrate
+                Registrate
               </button>
             </>
           ) : mode === "register" ? (
             <>
               Ya tienes cuenta?{" "}
               <button type="button" onClick={switchMode}>
-                Inicia sesión
+                Inicia sesion
               </button>
             </>
           ) : (
             <button type="button" onClick={goToLogin}>
-              Volver al inicio de sesión
+              Volver al inicio de sesion
             </button>
           )}
         </div>

@@ -24,7 +24,7 @@ export const useSaveBoard = () => {
     if (isCollaborating && !activeBoard.id) {
       await appDialog.alert({
         title: "Tablero compartido",
-        text: "Este tablero se guarda en la sesion colaborativa, no en tus boards privados.",
+        text: "Este tablero se guarda en la sesion colaborativa, no en tus tableros privados.",
         icon: "info",
       });
       return;
@@ -33,11 +33,11 @@ export const useSaveBoard = () => {
     let name = activeBoard.name;
     if (!name) {
       const input = await appDialog.promptText({
-        title: "Guardar board",
-        label: "Nombre del board",
+        title: "Guardar tablero",
+        label: "Nombre del tablero",
         placeholder: "Ej. Wireframe principal",
         confirmButtonText: "Guardar",
-        requiredMessage: "Escribe un nombre para guardar el board.",
+        requiredMessage: "Escribe un nombre para guardar el tablero.",
       });
       if (!input) {
         return;

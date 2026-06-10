@@ -1,10 +1,9 @@
 import { usersIcon } from "@excalidraw/excalidraw/components/icons";
-import { MainMenu } from "@excalidraw/excalidraw/index";
+import { MainMenu, useI18n } from "@excalidraw/excalidraw/index";
 import React from "react";
 
 import type { Theme } from "@excalidraw/element/types";
 
-import { LanguageList } from "../app-language/LanguageList";
 import { activeBoardAtom, appJotaiStore, useAtom } from "../app-jotai";
 import { appDialog } from "../appDialog";
 import { getCurrentUser, logoutUser } from "../auth/authStore";
@@ -41,6 +40,7 @@ export const AppMainMenu: React.FC<{
   const currentUser = getCurrentUser();
   const { save: saveBoard, status: saveBoardStatus } = useSaveBoard();
   const [activeBoard, setActiveBoard] = useAtom(activeBoardAtom);
+  const { t } = useI18n();
 
   const handleLogout = () => {
     logoutUser();
@@ -50,25 +50,24 @@ export const AppMainMenu: React.FC<{
   const handleRenameBoard = async () => {
     if (!activeBoard.id) {
       await appDialog.alert({
-        title: "Guarda el board primero",
-        text: "Este board aun no se ha guardado. Guardalo primero para poder renombrarlo.",
+        title: t("app.saveBoardFirst"),
+        text: t("app.saveBoardFirstText"),
         icon: "info",
       });
       return;
     }
     const trimmed = await appDialog.promptText({
-      title: "Renombrar board",
-      label: "Nuevo nombre",
+      title: t("app.renameBoard"),
+      label: t("app.newName"),
       initialValue: activeBoard.name ?? "",
-      confirmButtonText: "Renombrar",
-      requiredMessage: "Escribe un nombre para el board.",
+      confirmButtonText: t("app.rename"),
+      requiredMessage: t("app.enterBoardName"),
     });
     if (!trimmed || trimmed === activeBoard.name) {
       return;
     }
     await DrawingsStore.rename(activeBoard.id, trimmed);
     setActiveBoard({ id: activeBoard.id, name: trimmed });
-    // also keep jotai store in sync (in case the atom default differs)
     appJotaiStore.set(activeBoardAtom, { id: activeBoard.id, name: trimmed });
   };
 
@@ -113,18 +112,18 @@ export const AppMainMenu: React.FC<{
             dashboardState.getOnBack()?.();
           }}
         >
-          Dashboard
+          {t("app.home")}
         </MainMenu.Item>
       )}
       <MainMenu.Item icon={saveBoardIcon} onSelect={saveBoard}>
         {saveBoardStatus === "saving"
-          ? "Guardando..."
+          ? t("app.saving")
           : saveBoardStatus === "saved"
-          ? "✓ Guardado"
-          : "Guardar board"}
+            ? t("app.saved")
+            : t("app.saveBoard")}
       </MainMenu.Item>
       <MainMenu.Item icon={renameIcon} onSelect={handleRenameBoard}>
-        Renombrar board
+        {t("app.renameBoard")}
       </MainMenu.Item>
       <MainMenu.DefaultItems.LoadScene />
       <MainMenu.DefaultItems.SaveToActiveFile />
@@ -142,7 +141,7 @@ export const AppMainMenu: React.FC<{
       <MainMenu.Separator />
       {currentUser && (
         <MainMenu.Item icon={usersIcon} onSelect={handleLogout}>
-          {currentUser.username} · Cerrar sesión
+          {currentUser.username} - {t("app.logOut")}
         </MainMenu.Item>
       )}
       <MainMenu.Separator />
@@ -152,9 +151,6 @@ export const AppMainMenu: React.FC<{
         theme={props.theme}
         onSelect={props.setTheme}
       />
-      <MainMenu.ItemCustom>
-        <LanguageList style={{ width: "100%" }} />
-      </MainMenu.ItemCustom>
       <MainMenu.DefaultItems.ChangeCanvasBackground />
     </MainMenu>
   );

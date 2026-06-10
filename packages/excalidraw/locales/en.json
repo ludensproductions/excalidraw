@@ -125,7 +125,7 @@
     "flipHorizontal": "Flip horizontal",
     "flipVertical": "Flip vertical",
     "viewMode": "View mode",
-    "share": "Colaboración",
+    "share": "Share",
     "showStroke": "Show stroke color picker",
     "showBackground": "Show background color picker",
     "showFonts": "Show font picker",
@@ -189,7 +189,8 @@
     "boxSelectionContain": "Wrap",
     "boxSelectionOverlap": "Overlap",
     "arrowBinding": "Arrow binding",
-    "midpointSnapping": "Snap to midpoints"
+    "midpointSnapping": "Snap to midpoints",
+    "embeddedContent": "Excalidraw Embedded Content"
   },
   "elementLink": {
     "title": "Link to object",
@@ -205,7 +206,8 @@
       "heading": "Library matches",
       "noResults": "No matching items found...",
       "clearSearch": "Clear search"
-    }
+    },
+    "importDialogDescription": "Excalidraw library files"
   },
   "search": {
     "title": "Find on canvas",
@@ -255,7 +257,8 @@
     "publishLibrary": "Rename or publish",
     "submit": "Submit",
     "confirm": "Confirm",
-    "embeddableInteractionButton": "Click to interact"
+    "embeddableInteractionButton": "Click to interact",
+    "enterFullscreen": "Enter fullscreen"
   },
   "alerts": {
     "clearReset": "This will clear the whole canvas. Are you sure?",
@@ -306,7 +309,9 @@
     },
     "asyncPasteFailedOnRead": "Couldn't paste (couldn't read from system clipboard).",
     "asyncPasteFailedOnParse": "Couldn't paste.",
-    "copyToSystemClipboardFailed": "Couldn't copy to clipboard."
+    "copyToSystemClipboardFailed": "Couldn't copy to clipboard.",
+    "noDiagramToCodePlugin": "No diagram to code plugin found",
+    "emptyFrameGeneration": "Cannot generate from an empty frame"
   },
   "toolBar": {
     "selection": "Selection",
@@ -546,7 +551,9 @@
     "version": "Version",
     "versionCopy": "Click to copy",
     "versionNotAvailable": "Version not available",
-    "width": "Width"
+    "width": "Width",
+    "gridStep": "Grid step",
+    "canvas": "Canvas"
   },
   "toast": {
     "addedToLibrary": "Added to library",
@@ -601,7 +608,8 @@
     "colors": "Colors",
     "shades": "Shades",
     "hexCode": "Hex code",
-    "noShades": "No shades available for this color"
+    "noShades": "No shades available for this color",
+    "shade": "Shade"
   },
   "overwriteConfirm": {
     "action": {
@@ -703,6 +711,7 @@
   },
   "userList": {
     "empty": "No users found",
+    "unknownUser": "Unknown user",
     "hint": {
       "text": "Click on user to follow",
       "followStatus": "You're currently following this user",
@@ -737,5 +746,90 @@
     "spacebar": "Space",
     "delete": "Delete",
     "mmb": "Scroll wheel"
+  },
+  "magic": {
+    "noGenerationData": "No generation data",
+    "generating": "Generating...",
+    "generationInterrupted": "Generation was interrupted...",
+    "generationFailed": "Generation failed",
+    "unknownError": "Unknown error during generation"
+  },
+  "app": {
+    "saveBoard": "Save board",
+    "saving": "Saving...",
+    "saved": "Ready",
+    "renameBoard": "Rename board",
+    "newName": "New name",
+    "rename": "Rename",
+    "enterBoardName": "Enter a name for the board.",
+    "saveBoardFirst": "Save board first",
+    "saveBoardFirstText": "This board hasn't been saved yet. Save it first to rename it.",
+    "newBoard": "+ New board",
+    "home": "Home",
+    "back": "← Back",
+    "backToHome": "Back to home",
+    "sendCopy": "Send copy",
+    "sendCopyTitle": "Send copy to another user",
+    "copyLink": "Copy link",
+    "copied": "Ready",
+    "deleteCollabLink": "Delete collaboration link",
+    "deleteCollabLinkText": "This board will stop showing the saved collaboration link.",
+    "copyCollabLinkTitle": "Copy collaboration link",
+    "deleteCollabLinkTitle": "Delete collaboration link",
+    "sharedBoards": "Shared boards",
+    "refreshSharedBoards": "Refresh shared boards",
+    "loadingSharedBoards": "Loading shared boards...",
+    "errorLoadingSharedBoards": "Error loading shared boards:",
+    "noSharedBoards": "You are not participating in any shared board yet.",
+    "sharedBoardsHint": "Start or join a live collaboration session to have it appear here.",
+    "leaveSharedBoard": "Leave shared board",
+    "deleteSharedBoard": "Delete shared board",
+    "leaveConfirmText": "You will stop seeing \"{{name}}\" in your shared boards.",
+    "deleteSharedConfirmText": "\"{{name}}\" will be deleted for all participants.",
+    "leave": "Leave",
+    "open": "Open",
+    "yours": "Yours",
+    "recent": "Recent",
+    "myBoards": "My boards",
+    "shared": "Shared",
+    "loadingBoards": "Loading boards...",
+    "noBoards": "You don't have any boards yet.",
+    "noSavedBoards": "You have no saved boards.",
+    "createFirstBoard": "Create your first board",
+    "deleteBoard": "Delete board",
+    "deleteBoardConfirm": "This action cannot be undone.",
+    "delete": "Delete",
+    "comments": "Comments",
+    "refresh": "Refresh",
+    "writeComment": "Write a comment...",
+    "comment": "Comment",
+    "sending": "Sending...",
+    "loadingComments": "Loading comments...",
+    "noComments": "No comments yet.",
+    "preparingComments": "Preparing comments...",
+    "saveToComment": "Save this board or open a shared board to comment.",
+    "edit": "Edit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "deleteComment": "Delete comment",
+    "deleteCommentConfirm": "This action cannot be undone.",
+    "couldNotLoadComments": "Could not load.",
+    "couldNotComment": "Could not comment.",
+    "couldNotEditComment": "Could not edit comment.",
+    "couldNotDeleteComment": "Could not delete comment.",
+    "user": "User",
+    "logOut": "Log out",
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode",
+    "justNow": "Just now",
+    "minutesAgo": "{{count}} min ago",
+    "hoursAgo": "{{count}} h ago",
+    "gotIt": "Got it",
+    "confirm": "Confirm",
+    "fieldRequired": "This field is required.",
+    "tooManyRequests": "Too many requests today, please try again tomorrow!",
+    "tryExcalidrawPlus": "You can also try Excalidraw+ to get more requests.",
+    "generationFailedInvalid": "Generation failed (invalid response)",
+    "notAPretzel": "I'm not a pretzel!"
   }
 }
