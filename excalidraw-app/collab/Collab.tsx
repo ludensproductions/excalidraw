@@ -44,6 +44,7 @@ import type {
 } from "@excalidraw/element/types";
 import type {
   BinaryFileData,
+  BinaryFiles,
   ExcalidrawImperativeAPI,
   SocketId,
   Collaborator,
@@ -154,6 +155,7 @@ export interface CollabAPI {
   leaveCollaboration: CollabInstance["leaveCollaboration"];
   flushCollaboration: CollabInstance["flushCollaboration"];
   syncElements: CollabInstance["syncElements"];
+  syncImageFiles: CollabInstance["syncImageFiles"];
   fetchImageFilesFromFirebase: CollabInstance["fetchImageFilesFromFirebase"];
   setUsername: CollabInstance["setUsername"];
   getUsername: CollabInstance["getUsername"];
@@ -171,6 +173,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
   excalidrawAPI: CollabProps["excalidrawAPI"];
   activeIntervalId: number | null;
   idleTimeoutId: number | null;
+  private imageRetryTimeoutId: number | null = null;
 
   private socketInitializationTimer?: number;
   private lastBroadcastedOrReceivedSceneVersion: number = -1;
@@ -272,6 +275,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       onPointerUpdate: this.onPointerUpdate,
       startCollaboration: this.startCollaboration,
       syncElements: this.syncElements,
+      syncImageFiles: this.syncImageFiles,
       fetchImageFilesFromFirebase: this.fetchImageFilesFromFirebase,
       stopCollaboration: this.stopCollaboration,
       leaveCollaboration: this.leaveCollaboration,
@@ -309,6 +313,10 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     window.removeEventListener(EVENT.BEFORE_UNLOAD, this.beforeUnload);
     window.removeEventListener(EVENT.UNLOAD, this.onUnload);
     this.disposeIdleDetector();
+    if (this.imageRetryTimeoutId) {
+      window.clearTimeout(this.imageRetryTimeoutId);
+      this.imageRetryTimeoutId = null;
+    }
     this.onUmmount?.();
   }
 
@@ -539,14 +547,22 @@ class Collab extends PureComponent<CollabProps, CollabState> {
   }) => {
     const unfetchedImages = opts.elements
       .filter((element) => {
+        if (!isInitializedImageElement(element) || element.isDeleted) {
+          return false;
+        }
+
+        if (opts.forceFetchFiles) {
+          return (
+            !this.fileManager.isFileSaved(element.fileId) &&
+            !this.fileManager.isFileFetching(element.fileId) &&
+            (element.status !== "pending" ||
+              Date.now() - element.updated > 10000)
+          );
+        }
+
         return (
-          isInitializedImageElement(element) &&
           !this.fileManager.isFileTracked(element.fileId) &&
-          !element.isDeleted &&
-          (opts.forceFetchFiles
-            ? element.status !== "pending" ||
-              Date.now() - element.updated > 10000
-            : element.status === "saved")
+          element.status === "saved"
         );
       })
       .map((element) => (element as InitializedExcalidrawImageElement).fileId);
@@ -985,6 +1001,28 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       erroredFiles,
       elements: this.excalidrawAPI.getSceneElementsIncludingDeleted(),
     });
+
+    if (erroredFiles.size) {
+      if (this.imageRetryTimeoutId) {
+        window.clearTimeout(this.imageRetryTimeoutId);
+      }
+      // A collaborator may receive the image element before the uploader has
+      // finished persisting the binary payload. Retry shortly after.
+      this.imageRetryTimeoutId = window.setTimeout(() => {
+        this.imageRetryTimeoutId = null;
+        void this.fetchImageFilesFromFirebase({
+          elements: this.excalidrawAPI.getSceneElementsIncludingDeleted(),
+          forceFetchFiles: true,
+        }).then(({ loadedFiles, erroredFiles }) => {
+          this.excalidrawAPI.addFiles(loadedFiles);
+          updateStaleImageStatuses({
+            excalidrawAPI: this.excalidrawAPI,
+            erroredFiles,
+            elements: this.excalidrawAPI.getSceneElementsIncludingDeleted(),
+          });
+        });
+      }, 1500);
+    }
   }, LOAD_IMAGES_TIMEOUT);
 
   private handleRemoteSceneUpdate = (
@@ -1174,6 +1212,16 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     }
     this.broadcastElements(elements);
     this.queueSaveToFirebase();
+  };
+
+  syncImageFiles = (
+    elements: readonly OrderedExcalidrawElement[],
+    files: BinaryFiles,
+  ) => {
+    if (this.isReadOnly) {
+      return;
+    }
+    void this.portal.uploadFiles(elements, files);
   };
 
   queueBroadcastAllElements = throttle(() => {

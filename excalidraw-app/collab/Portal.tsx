@@ -7,12 +7,13 @@ import throttle from "lodash.throttle";
 import type { UserIdleState } from "@excalidraw/common";
 import type { OrderedExcalidrawElement } from "@excalidraw/element/types";
 import type {
+  BinaryFiles,
   OnUserFollowedPayload,
   SocketId,
 } from "@excalidraw/excalidraw/types";
 
 import { WS_EVENTS, FILE_UPLOAD_TIMEOUT, WS_SUBTYPES } from "../app_constants";
-import { isSyncableElement } from "../data";
+import { getSyncableElements, isSyncableElement } from "../data";
 
 import type {
   SocketUpdateData,
@@ -101,11 +102,14 @@ class Portal {
     }
   }
 
-  queueFileUpload = throttle(async () => {
+  uploadFiles = async (
+    elements: readonly OrderedExcalidrawElement[],
+    files: BinaryFiles,
+  ) => {
     try {
       await this.collab.fileManager.saveFiles({
-        elements: this.collab.excalidrawAPI.getSceneElementsIncludingDeleted(),
-        files: this.collab.excalidrawAPI.getFiles(),
+        elements,
+        files,
       });
     } catch (error: any) {
       if (error.name !== "AbortError") {
@@ -136,7 +140,20 @@ class Portal {
         elements: newElements,
         captureUpdate: CaptureUpdateAction.NEVER,
       });
+      // After the binary file is uploaded, propagate the new "saved" status so
+      // collaborators know they can fetch the image payload from shared storage.
+      void this.broadcastScene(WS_SUBTYPES.UPDATE, newElements, false);
+      void this.collab.saveCollabRoomToFirebase(
+        getSyncableElements(newElements),
+      );
     }
+  };
+
+  queueFileUpload = throttle(async () => {
+    await this.uploadFiles(
+      this.collab.excalidrawAPI.getSceneElementsIncludingDeleted(),
+      this.collab.excalidrawAPI.getFiles(),
+    );
   }, FILE_UPLOAD_TIMEOUT);
 
   broadcastScene = async (

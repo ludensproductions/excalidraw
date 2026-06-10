@@ -728,6 +728,7 @@ const ExcalidrawWrapper = () => {
   ) => {
     if (collabAPI?.isCollaborating()) {
       collabAPI.syncElements(elements);
+      collabAPI.syncImageFiles(elements, files);
     }
 
     scheduleAutoSave();

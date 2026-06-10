@@ -77,6 +77,14 @@ export class FileManager {
     );
   };
 
+  isFileSaved = (id: FileId) => {
+    return this.savedFiles.has(id);
+  };
+
+  isFileFetching = (id: FileId) => {
+    return this.fetchingFiles.has(id);
+  };
+
   isFileSavedOrBeingSaved = (file: BinaryFileData) => {
     const fileVersion = this.getFileVersion(file);
     return (
@@ -119,6 +127,7 @@ export class FileManager {
 
       for (const [fileId, fileData] of savedFiles) {
         this.savedFiles.set(fileId, this.getFileVersion(fileData));
+        this.erroredFiles_save.delete(fileId);
       }
 
       for (const [fileId, fileData] of erroredFiles) {
@@ -159,6 +168,7 @@ export class FileManager {
 
       for (const file of loadedFiles) {
         this.savedFiles.set(file.id, this.getFileVersion(file));
+        this.erroredFiles_fetch.delete(file.id);
       }
       for (const [fileId] of erroredFiles) {
         this.erroredFiles_fetch.set(fileId, true);
