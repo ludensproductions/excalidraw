@@ -96,6 +96,7 @@ import { resetBrowserStateVersions } from "../data/tabSync";
 import { SharedBoardsStore } from "../data/SharedBoardsStore";
 import { getCurrentUser } from "../auth/authStore";
 import { DrawingsStore } from "../data/DrawingsStore";
+import { dashboardState } from "../dashboardState";
 
 import { collabErrorIndicatorAtom } from "./CollabError";
 import Portal from "./Portal";
@@ -396,7 +397,32 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     }
   };
 
-  stopCollaboration = async (keepRemoteState = true) => {
+  private saveCurrentSceneAsDraft = async (preferredBoardId?: string | null) => {
+    const activeBoard = appJotaiStore.get(activeBoardAtom);
+    const appState = this.excalidrawAPI.getAppState();
+    const record = await DrawingsStore.save(
+      {
+        name: activeBoard?.name || "Borrador compartido",
+        elements: this.excalidrawAPI.getSceneElements(),
+        appState: {
+          viewBackgroundColor: appState.viewBackgroundColor,
+        },
+        thumbnail: null,
+        collabLink: null,
+        userId: getCurrentUser()?.id,
+      },
+      preferredBoardId ?? undefined,
+    );
+
+    appJotaiStore.set(activeBoardAtom, {
+      id: record.id,
+      name: record.name,
+    });
+
+    return record;
+  };
+
+  stopCollaboration = async (keepRemoteState = true, saveDraft = false) => {
     const roomId = this.portal.roomId;
     const roomKey = this.portal.roomKey;
     const activeBoard = appJotaiStore.get(activeBoardAtom);
@@ -457,6 +483,22 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       didStop = true;
     }
 
+    let draftRecordId: string | null = null;
+    if (didStop && saveDraft) {
+      await LocalData.saveImmediate(
+        this.excalidrawAPI.getSceneElementsIncludingDeleted(),
+        this.excalidrawAPI.getAppState(),
+        this.excalidrawAPI.getFiles(),
+      );
+
+      try {
+        const draftRecord = await this.saveCurrentSceneAsDraft(activeBoard?.id);
+        draftRecordId = draftRecord.id;
+      } catch (error) {
+        console.error("Failed to save shared board draft on stop:", error);
+      }
+    }
+
     // Convert the current board back to local-only:
     // - remove membership/publication from shared boards
     // - clear persisted collaboration link from the private board record
@@ -466,8 +508,11 @@ class Collab extends PureComponent<CollabProps, CollabState> {
         console.error("Failed to leave shared board on stop:", error);
       });
     }
-    if (didStop && roomId) {
-      DrawingsStore.normalizeAfterStoppingRoom(roomId, activeBoard?.id)
+    if (didStop && saveDraft && roomId) {
+      DrawingsStore.normalizeAfterStoppingRoom(
+        roomId,
+        draftRecordId ?? activeBoard?.id,
+      )
         .catch((error) => {
           console.error(
             "Failed to normalize local board after stopping collaboration:",
@@ -505,6 +550,18 @@ class Collab extends PureComponent<CollabProps, CollabState> {
         this.excalidrawAPI.getSceneElementsIncludingDeleted(),
       ),
     );
+  };
+
+  private handleClosedCollaboration = async () => {
+    window.history.replaceState({}, APP_NAME, window.location.origin);
+    this.destroySocketClient();
+    await appDialog.alert({
+      title: "Colaboración cerrada",
+      text: "Esta colaboración ya no existe o ya fue cerrada por el propietario.",
+      icon: "warning",
+    });
+    await dashboardState.flushAutoSave();
+    dashboardState.getOnBack()?.();
   };
 
   private destroySocketClient = (opts?: {
@@ -932,7 +989,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
           roomLinkData.roomKey,
           this.portal.socket,
         );
-        if (elements) {
+        if (elements !== null) {
           this.setLastBroadcastedOrReceivedSceneVersion(
             getSceneVersion(elements),
           );
@@ -941,6 +998,14 @@ class Collab extends PureComponent<CollabProps, CollabState> {
             elements,
             scrollToContent: true,
           };
+        }
+
+        const isVisible = await SharedBoardsStore.isVisibleByRoom(
+          roomLinkData.roomId,
+          roomLinkData.roomKey,
+        );
+        if (!isVisible) {
+          await this.handleClosedCollaboration();
         }
       } catch (error: any) {
         // log the error and move on. other peers will sync us the scene.
@@ -1261,7 +1326,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
 
   getIsOwner = () => this.isOwnerSession;
 
-  leaveCollaboration = async (): Promise<void> => {
+  leaveCollaboration = async (saveDraft = false): Promise<boolean> => {
     const roomId = this.portal.roomId;
     const roomKey = this.portal.roomKey;
 

@@ -135,6 +135,7 @@ import { getPreferredLanguage } from "./app-language/language-detector";
 import { useAppLangCode } from "./app-language/language-state";
 
 import { AIComponents } from "./components/AI";
+
 import { dashboardState } from "./dashboardState";
 
 import "./index.scss";
@@ -388,19 +389,33 @@ const initializeScene = async (opts: {
   if (roomLinkData && opts.collabAPI) {
     const { excalidrawAPI } = opts;
 
-    const scene = await opts.collabAPI.startCollaboration(roomLinkData);
+    const collabScene = await opts.collabAPI.startCollaboration(roomLinkData);
+
+    if (!collabScene) {
+      return {
+        scene: {
+          appState: {
+            errorMessage: "Esta colaboración ya no existe o ya fue cerrada por el propietario.",
+          },
+        },
+        isExternalScene: true,
+        id: roomLinkData.roomId,
+        key: roomLinkData.roomKey,
+      };
+    }
 
     return {
       // when collaborating, the state may have already been updated at this
       // point (we may have received updates from other clients), so reconcile
       // elements and appState with existing state
       scene: {
-        ...scene,
+        ...collabScene,
         appState: {
           ...restoreAppState(
             {
-              ...scene?.appState,
-              theme: localDataState?.appState?.theme || scene?.appState?.theme,
+              ...collabScene.appState,
+              theme:
+                localDataState?.appState?.theme || collabScene.appState?.theme,
             },
             excalidrawAPI.getAppState(),
           ),
@@ -412,7 +427,7 @@ const initializeScene = async (opts: {
           ...(roomLinkData.readOnly ? { viewModeEnabled: true } : {}),
         },
         elements: reconcileElements(
-          scene?.elements || [],
+          collabScene.elements || [],
           excalidrawAPI.getSceneElementsIncludingDeleted() as RemoteExcalidrawElement[],
           excalidrawAPI.getAppState(),
         ),

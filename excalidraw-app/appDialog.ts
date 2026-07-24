@@ -23,6 +23,7 @@ const baseOptions = () => ({
     input: "app-swal__input",
     confirmButton: "app-swal__button app-swal__button--primary",
     cancelButton: "app-swal__button",
+    denyButton: "app-swal__button",
     validationMessage: "app-swal__validation",
   },
 });
@@ -74,6 +75,45 @@ export const appDialog = {
     });
 
     return result.isConfirmed;
+  },
+
+  async choose(options: {
+    title: string;
+    text?: string;
+    confirmButtonText: string;
+    denyButtonText: string;
+    cancelButtonText?: string;
+    icon?: DialogIcon;
+    danger?: boolean;
+  }): Promise<"confirm" | "deny" | "cancel"> {
+    const result = await Swal.fire({
+      ...baseOptions(),
+      title: options.title,
+      text: options.text,
+      icon: options.icon ?? "question",
+      showDenyButton: true,
+      showCancelButton: true,
+      confirmButtonText: options.confirmButtonText,
+      denyButtonText: options.denyButtonText,
+      cancelButtonText: options.cancelButtonText ?? t("app.cancel"),
+      customClass: {
+        ...baseOptions().customClass,
+        confirmButton: `app-swal__button ${
+          options.danger
+            ? "app-swal__button--danger"
+            : "app-swal__button--primary"
+        }`,
+        denyButton: "app-swal__button",
+      },
+    });
+
+    if (result.isConfirmed) {
+      return "confirm";
+    }
+    if (result.isDenied) {
+      return "deny";
+    }
+    return "cancel";
   },
 
   async promptText(options: {

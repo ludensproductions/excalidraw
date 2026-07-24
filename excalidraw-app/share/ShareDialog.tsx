@@ -25,6 +25,7 @@ import {
   getCollaborationLinkData,
   getReadOnlyCollaborationLink,
 } from "../data";
+
 import { dashboardState } from "../dashboardState";
 
 import "./ShareDialog.scss";
@@ -113,6 +114,7 @@ const ActiveRoomDialog = ({
     }
     readOnlyRef.current?.select();
   };
+
 
   const shareRoomLink = async () => {
     try {

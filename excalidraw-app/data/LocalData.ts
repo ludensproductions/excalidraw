@@ -150,6 +150,22 @@ export class LocalData {
     this._save.flush();
   };
 
+  static saveImmediate = async (
+    elements: readonly ExcalidrawElement[],
+    appState: AppState,
+    files: BinaryFiles,
+    onFilesSaved: () => void = () => {},
+  ) => {
+    this._save.cancel();
+    saveDataStateToLocalStorage(elements, appState);
+
+    await this.fileStorage.saveFiles({
+      elements,
+      files,
+    });
+    onFilesSaved();
+  };
+
   private static locker = new Locker<SavingLockTypes>();
 
   static pauseSave = (lockType: SavingLockTypes) => {

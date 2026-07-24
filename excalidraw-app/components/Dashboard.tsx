@@ -8,6 +8,7 @@ import { appDialog } from "../appDialog";
 import { getCollaborationLinkData } from "../data";
 import { DrawingsStore } from "../data/DrawingsStore";
 import { SharedBoardsStore } from "../data/SharedBoardsStore";
+import { loadFromFirebase } from "../data/firebase";
 import { useHandleAppTheme } from "../useHandleAppTheme";
 
 import "./Dashboard.scss";
@@ -407,41 +408,134 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   const handleLeaveSharedBoard = async (board: SharedBoard) => {
     const isOwner = board.createdBy === user.id;
-    const confirmed = await appDialog.confirm({
+    const choice = await appDialog.choose({
       title: isOwner ? t("app.deleteSharedBoard") : t("app.leaveSharedBoard"),
-      text: isOwner
-        ? t("app.deleteSharedConfirmText", { name: board.name })
-        : t("app.leaveConfirmText", { name: board.name }),
-      confirmButtonText: isOwner ? t("app.delete") : t("app.leave"),
+      text: "Quieres guardar este tablero compartido como borrador antes de salir?",
+      confirmButtonText: "Guardar borrador",
+      denyButtonText: isOwner ? "Cerrar sin guardar" : "Salir sin guardar",
+      cancelButtonText: "Cancelar",
+      icon: "question",
       danger: true,
     });
-    if (!confirmed) {
+    if (choice === "cancel") {
       return;
     }
+
+    const shouldSaveDraft = choice === "confirm";
+    const linkedBoards = isOwner
+      ? boards.filter(
+          (ownBoard) =>
+            getRoomIdFromCollabLink(ownBoard.collabLink) === board.roomId,
+        )
+      : [];
+
+    let persistedBoards: DrawingRecord[] = [];
+    if (shouldSaveDraft) {
+      try {
+        const remoteElements = await loadFromFirebase(
+          board.roomId,
+          board.roomKey,
+          null,
+        );
+        const draftElements = remoteElements ?? [];
+
+        if (isOwner && linkedBoards.length > 0) {
+          persistedBoards = await Promise.all(
+            linkedBoards.map((ownBoard) =>
+              DrawingsStore.save(
+                {
+                  name: ownBoard.name,
+                  elements: draftElements,
+                  appState: ownBoard.appState,
+                  thumbnail: ownBoard.thumbnail,
+                  collabLink: null,
+                  userId: ownBoard.userId,
+                },
+                ownBoard.id,
+              ),
+            ),
+          );
+
+          setBoards((prev) =>
+            prev.map((ownBoard) => {
+              const updated = persistedBoards.find(
+                (persistedBoard) => persistedBoard.id === ownBoard.id,
+              );
+              return updated ?? ownBoard;
+            }),
+          );
+        }
+
+        if (!isOwner) {
+          const draftBoard = await DrawingsStore.save({
+            name: `${board.name} (borrador)`,
+            elements: draftElements,
+            appState: { viewBackgroundColor: "#ffffff" },
+            thumbnail: null,
+            collabLink: null,
+            userId: user.id,
+          });
+          setBoards((prev) => [draftBoard, ...prev]);
+        }
+      } catch (error) {
+        console.error(
+          "Failed to persist shared board draft before leaving:",
+          error,
+        );
+      }
+    }
+
     await SharedBoardsStore.leave(board.id, isOwner);
     if (isOwner) {
-      const linkedBoards = boards.filter(
-        (ownBoard) =>
-          getRoomIdFromCollabLink(ownBoard.collabLink) === board.roomId,
-      );
-      await Promise.all(
-        linkedBoards.map((ownBoard) =>
-          DrawingsStore.setCollabLink(ownBoard.id, null),
-        ),
-      );
-      setBoards((prev) =>
-        prev.map((ownBoard) =>
-          getRoomIdFromCollabLink(ownBoard.collabLink) === board.roomId
-            ? { ...ownBoard, collabLink: null }
-            : ownBoard,
-        ),
-      );
+      if (shouldSaveDraft) {
+        await Promise.all(
+          linkedBoards.map((ownBoard) =>
+            DrawingsStore.setCollabLink(ownBoard.id, null),
+          ),
+        );
+        setBoards((prev) =>
+          prev.map((ownBoard) =>
+            getRoomIdFromCollabLink(ownBoard.collabLink) === board.roomId
+              ? { ...ownBoard, collabLink: null }
+              : ownBoard,
+          ),
+        );
+      } else {
+        await Promise.all(
+          linkedBoards.map((ownBoard) => DrawingsStore.delete(ownBoard.id)),
+        );
+        setBoards((prev) =>
+          prev.filter(
+            (ownBoard) =>
+              getRoomIdFromCollabLink(ownBoard.collabLink) !== board.roomId,
+          ),
+        );
+      }
     }
     setSharedBoards((prev) => prev.filter((b) => b.id !== board.id));
   };
 
   const handleOpenBoard = async (board: DrawingRecord) => {
     await onOpenBoard(board);
+  };
+
+  const handleOpenSharedBoard = async (board: SharedBoard) => {
+    const stillExists = await SharedBoardsStore.isVisibleByRoom(
+      board.roomId,
+      board.roomKey,
+    );
+
+    if (!stillExists) {
+      setSharedBoards((prev) => prev.filter((item) => item.id !== board.id));
+      await appDialog.alert({
+        title: "Colaboración cerrada",
+        text: "Esta colaboración ya no existe o ya fue cerrada por el propietario.",
+        icon: "warning",
+      });
+      return;
+    }
+
+    await onOpenSharedBoard(board);
   };
 
   const sharedRoomIds = new Set(sharedBoards.map((board) => board.roomId));
@@ -634,7 +728,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     key={board.id}
                     board={board}
                     currentUserId={user.id}
-                    onJoin={onOpenSharedBoard}
+                    onJoin={handleOpenSharedBoard}
                     onLeave={handleLeaveSharedBoard}
                   />
                 ))}
@@ -706,7 +800,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       key={`shared:${item.board.id}`}
                       board={item.board}
                       currentUserId={user.id}
-                      onJoin={onOpenSharedBoard}
+                      onJoin={handleOpenSharedBoard}
                       onLeave={handleLeaveSharedBoard}
                     />
                   ),
