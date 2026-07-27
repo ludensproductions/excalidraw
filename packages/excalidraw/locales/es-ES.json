@@ -143,7 +143,7 @@
     },
     "polygon": {
       "breakPolygon": "Abrir polígono",
-      "convertToPolygon": "Convertir en poligono"
+      "convertToPolygon": "Convertir en polígono"
     },
     "elementLock": {
       "lock": "Bloquear",
@@ -170,11 +170,11 @@
     "copyElementLink": "Copiar enlace al objeto",
     "linkToElement": "Enlace al objeto",
     "wrapSelectionInFrame": "Ajustar la selección en el marco",
-    "tab": "Pestana",
+    "tab": "Pestaña",
     "shapeSwitch": "Cambiar forma",
-    "chartType_bar": "Grafico de barras",
-    "chartType_line": "Grafico de lineas",
-    "chartType_radar": "Grafico radial",
+    "chartType_bar": "Gráfico de barras",
+    "chartType_line": "Gráfico de líneas",
+    "chartType_radar": "Gráfico radial",
     "chartType_plaintext": "Texto plano",
     "arrowhead_cardinality_one": "Uno",
     "arrowhead_cardinality_many": "Muchos",
@@ -188,7 +188,7 @@
     "boxSelectionMode": "Seleccionar",
     "boxSelectionContain": "Contener",
     "boxSelectionOverlap": "Solapar",
-    "arrowBinding": "Vinculo de flechas",
+    "arrowBinding": "Vínculo de flechas",
     "midpointSnapping": "Ajuste al punto medio",
     "embeddedContent": "Contenido incrustado de Excalidraw"
   },
@@ -205,7 +205,7 @@
       "inputPlaceholder": "Buscar en biblioteca",
       "heading": "Coincidencias en biblioteca",
       "noResults": "No se encontraron resultados",
-      "clearSearch": "Limpiar busqueda"
+      "clearSearch": "Limpiar búsqueda"
     },
     "importDialogDescription": "Archivos de biblioteca Excalidraw"
   },
@@ -261,12 +261,12 @@
     "enterFullscreen": "Pantalla completa"
   },
   "alerts": {
-    "clearReset": "Esto limpiará todo el lienzo. Estás seguro?",
+    "clearReset": "Esto limpiará todo el lienzo. ¿Estás seguro?",
     "couldNotCreateShareableLink": "No se pudo crear la copia.",
     "couldNotCreateShareableLinkTooBig": "No se pudo crear la copia: la escena es demasiado grande",
     "couldNotLoadInvalidFile": "No se pudo cargar el archivo no válido",
     "importBackendFailed": "La importación falló.",
-    "cannotExportEmptyCanvas": "No se puede exportar un lienzo vació",
+    "cannotExportEmptyCanvas": "No se puede exportar un lienzo vacío",
     "couldNotCopyToClipboard": "No se pudo copiar al portapapeles.",
     "decryptFailed": "No se pudieron descifrar los datos.",
     "uploadedSecurly": "La carga ha sido asegurada con cifrado de principio a fin, lo que significa que el servidor de Excalidraw y terceros no pueden leer el contenido.",
@@ -282,7 +282,7 @@
     "removeItemsFromsLibrary": "¿Eliminar {{count}} elemento(s) de la biblioteca?",
     "invalidEncryptionKey": "La clave de cifrado debe tener 22 caracteres. La colaboración en vivo está deshabilitada.",
     "collabOfflineWarning": "No hay conexión a internet disponible.\n¡No se guardarán los cambios!",
-    "localStorageQuotaExceeded": "No se pudo guardar porque el almacenamiento del navegador esta lleno."
+    "localStorageQuotaExceeded": "No se pudo guardar porque el almacenamiento del navegador está lleno."
   },
   "errors": {
     "unsupportedFileType": "Tipo de archivo no admitido.",
@@ -589,7 +589,7 @@
       "center_heading_line2": "dibujar y colaborar",
       "center_heading_line3": "en tiempo real",
       "center_heading_plus": "¿Quieres ir a Excalidraw+?",
-      "menuHint": "Exportar, preferencias y mas..."
+      "menuHint": "Exportar, preferencias y más..."
     },
     "defaults": {
       "menuHint": "Exportar, preferencias y más...",
@@ -612,7 +612,7 @@
       "exportToImage": {
         "title": "Exportar como imagen",
         "button": "Exportar como imagen",
-        "description": "Exporta los datos de la escena como una imagen desde el cual podrás importarlo más tarde."
+        "description": "Exporta los datos de la escena como una imagen desde la cual podrás importarla más tarde."
       },
       "saveToDisk": {
         "title": "Guardar en el disco",
@@ -645,14 +645,14 @@
     "syntax": "Sintaxis Mermaid",
     "preview": "Vista previa",
     "label": "Diagrama Mermaid",
-    "inputPlaceholder": "Escribe aqui tu codigo Mermaid...",
-    "autoFixAvailable": "Hay una correccion automatica disponible"
+    "inputPlaceholder": "Escribe aquí tu código Mermaid...",
+    "autoFixAvailable": "Hay una corrección automática disponible"
   },
   "ttd": {
     "error": "No se pudo generar el diagrama."
   },
   "chat": {
-    "inputPlaceholder": "Empieza a describir tu diagrama aqui... ({{shortcut}} para nueva linea)",
+    "inputPlaceholder": "Empieza a describir tu diagrama aquí... ({{shortcut}} para nueva línea)",
     "inputPlaceholderWithMessages": "Sigue afinando tu diagrama...",
     "generating": "Generando...",
     "rateLimitRemaining": "Quedan {{count}} solicitudes hoy",
@@ -669,28 +669,28 @@
     "deleteMessage": "Eliminar mensaje",
     "viewAsMermaid": "Ver como Mermaid",
     "placeholder": {
-      "title": "Disenemos tu diagrama",
+      "title": "Diseñemos tu diagrama",
       "description": "Describe el diagrama que quieres crear y lo generaremos para ti.",
-      "hint": "Por ahora conocemos diagramas de flujo, secuencia, clase, estado y relacion entre entidades."
+      "hint": "Por ahora conocemos diagramas de flujo, secuencia, clase, estado y relación entre entidades."
     },
     "preview": "Vista previa",
     "insert": "Insertar",
     "retry": "Reintentar",
     "errors": {
-      "promptTooShort": "La descripcion es demasiado corta (minimo {{min}} caracteres)",
-      "promptTooLong": "La descripcion es demasiado larga (maximo {{max}} caracteres)",
-      "generationFailed": "La generacion fallo",
-      "invalidDiagram": "Se genero un diagrama invalido. Puedes editarlo a mano, reintentar con correccion automatica o probar otro texto.",
+      "promptTooShort": "La descripción es demasiado corta (mínimo {{min}} caracteres)",
+      "promptTooLong": "La descripción es demasiado larga (máximo {{max}} caracteres)",
+      "generationFailed": "La generación falló",
+      "invalidDiagram": "Se generó un diagrama inválido. Puedes editarlo a mano, reintentar con corrección automática o probar otro texto.",
       "fixInMermaid": "Editar Mermaid manualmente ->",
-      "aiRepair": "Regenerar (correccion automatica) ->",
+      "aiRepair": "Regenerar (corrección automática) ->",
       "requestAborted": "Solicitud cancelada",
       "requestFailed": "La solicitud fallo",
       "mermaidParseError": "Error de sintaxis en Mermaid"
     },
     "rateLimit": {
-      "messageLimit": "Has alcanzado el limite de IA del plan gratuito. Prueba Excalidraw+ para mas capacidad o vuelve manana.",
-      "generalRateLimit": "Vas demasiado rapido. Espera un momento antes de intentarlo de nuevo.",
-      "messageLimitInputPlaceholder": "Has alcanzado tu limite de mensajes"
+      "messageLimit": "Has alcanzado el límite de IA del plan gratuito. Prueba Excalidraw+ para más capacidad o vuelve mañana.",
+      "generalRateLimit": "Vas demasiado rápido. Espera un momento antes de intentarlo de nuevo.",
+      "messageLimitInputPlaceholder": "Has alcanzado tu límite de mensajes"
     },
     "upsellBtnLabel": "Mejorar a Plus"
   },
@@ -741,7 +741,7 @@
     "shift": "Shift",
     "spacebar": "Espacio",
     "delete": "Supr",
-    "mmb": "Rueda del raton"
+    "mmb": "Rueda del ratón"
   },
   "progressDialog": {
     "title": "Guardando",
@@ -849,60 +849,60 @@
     "title": {
       "login": "Bienvenido de vuelta",
       "register": "Crear cuenta",
-      "forgot": "Recuperar contrase?a",
-      "reset": "Nueva contrase?a"
+      "forgot": "Recuperar contraseña",
+      "reset": "Nueva contraseña"
     },
     "subtitle": {
-      "login": "Inicia sesi?n para continuar",
-      "register": "Reg?strate para empezar a dibujar",
+      "login": "Inicia sesión para continuar",
+      "register": "Regístrate para empezar a dibujar",
       "forgot": "Te enviaremos un enlace a tu correo",
       "reset": "Escribe los nuevos datos de acceso"
     },
     "fields": {
       "username": "Nombre de usuario",
-      "email": "Correo electr?nico",
-      "password": "Contrase?a",
-      "newPassword": "Nueva contrase?a",
-      "confirmPassword": "Confirmar contrase?a"
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "newPassword": "Nueva contraseña",
+      "confirmPassword": "Confirmar contraseña"
     },
     "placeholders": {
       "username": "Tu nombre",
       "email": "correo@ejemplo.com",
-      "password": "Tu contrase?a",
-      "newPassword": "m?nimo 6 caracteres",
-      "confirmPassword": "Repite la contrase?a"
+      "password": "Tu contraseña",
+      "newPassword": "mínimo 6 caracteres",
+      "confirmPassword": "Repite la contraseña"
     },
     "actions": {
       "loading": "Cargando...",
-      "login": "Iniciar sesi?n",
+      "login": "Iniciar sesión",
       "register": "Crear cuenta",
       "sendEmail": "Enviar correo",
-      "savePassword": "Guardar contrase?a",
-      "forgotPassword": "Olvid? mi contrase?a",
-      "registerLink": "Reg?strate",
-      "loginLink": "Inicia sesi?n",
-      "backToLogin": "Volver al inicio de sesi?n",
-      "noAccount": "?No tienes cuenta?",
-      "hasAccount": "?Ya tienes cuenta?"
+      "savePassword": "Guardar contraseña",
+      "forgotPassword": "Olvidé mi contraseña",
+      "registerLink": "Regístrate",
+      "loginLink": "Inicia sesión",
+      "backToLogin": "Volver al inicio de sesión",
+      "noAccount": "¿No tienes cuenta?",
+      "hasAccount": "¿Ya tienes cuenta?"
     },
     "messages": {
-      "enterNewPassword": "Ingresa tu nueva contrase?a.",
-      "resetEmailSent": "Te enviamos un correo con el enlace para recuperar tu contrase?a."
+      "enterNewPassword": "Ingresa tu nueva contraseña.",
+      "resetEmailSent": "Te enviamos un correo con el enlace para recuperar tu contraseña."
     },
     "errors": {
-      "openRecoveryLinkFailed": "No se pudo abrir el enlace de recuperaci?n.",
+      "openRecoveryLinkFailed": "No se pudo abrir el enlace de recuperación.",
       "usernameMinLength": "El nombre de usuario debe tener al menos 2 caracteres.",
-      "passwordMinLength": "La contrase?a debe tener al menos 6 caracteres.",
-      "passwordsDoNotMatch": "Las contrase?as no coinciden.",
-      "unexpected": "Ocurri? un error inesperado.",
-      "emailAlreadyRegistered": "Ya existe una cuenta con ese correo electr?nico.",
-      "createAccountFailed": "No se pudo crear la cuenta. Revisa la configuraci?n de Supabase.",
-      "createdButLoginFailed": "Cuenta creada, pero no se pudo iniciar sesi?n.",
-      "invalidCredentials": "Correo o contrase?a incorrectos.",
-      "loginFailed": "No se pudo iniciar sesi?n.",
-      "emailRequired": "Ingresa tu correo electr?nico.",
-      "invalidRecoveryLink": "El enlace de recuperaci?n no es v?lido o expir?.",
-      "passwordUpdatedButLoginFailed": "Contrase?a actualizada, pero no se pudo iniciar sesi?n."
+      "passwordMinLength": "La contraseña debe tener al menos 6 caracteres.",
+      "passwordsDoNotMatch": "Las contraseñas no coinciden.",
+      "unexpected": "Ocurrió un error inesperado.",
+      "emailAlreadyRegistered": "Ya existe una cuenta con ese correo electrónico.",
+      "createAccountFailed": "No se pudo crear la cuenta. Revisa la configuración de Supabase.",
+      "createdButLoginFailed": "Cuenta creada, pero no se pudo iniciar sesión.",
+      "invalidCredentials": "Correo o contraseña incorrectos.",
+      "loginFailed": "No se pudo iniciar sesión.",
+      "emailRequired": "Ingresa tu correo electrónico.",
+      "invalidRecoveryLink": "El enlace de recuperación no es válido o expiró.",
+      "passwordUpdatedButLoginFailed": "Contraseña actualizada, pero no se pudo iniciar sesión."
     }
   }
 }
