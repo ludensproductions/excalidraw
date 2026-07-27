@@ -410,10 +410,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
     const isOwner = board.createdBy === user.id;
     const choice = await appDialog.choose({
       title: isOwner ? t("app.deleteSharedBoard") : t("app.leaveSharedBoard"),
-      text: "Quieres guardar este tablero compartido como borrador antes de salir?",
-      confirmButtonText: "Guardar borrador",
-      denyButtonText: isOwner ? "Cerrar sin guardar" : "Salir sin guardar",
-      cancelButtonText: "Cancelar",
+      text: t("app.leaveSharedSaveDraftText"),
+      confirmButtonText: t("app.saveDraft"),
+      denyButtonText: isOwner
+        ? t("app.closeWithoutSaving")
+        : t("app.leaveWithoutSaving"),
+      cancelButtonText: t("app.cancel"),
       icon: "question",
       danger: true,
     });
@@ -468,7 +470,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         if (!isOwner) {
           const draftBoard = await DrawingsStore.save({
-            name: `${board.name} (borrador)`,
+            name: `${board.name} (${t("app.draft")})`,
             elements: draftElements,
             appState: { viewBackgroundColor: "#ffffff" },
             thumbnail: null,
@@ -528,8 +530,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
     if (!stillExists) {
       setSharedBoards((prev) => prev.filter((item) => item.id !== board.id));
       await appDialog.alert({
-        title: "Colaboración cerrada",
-        text: "Esta colaboración ya no existe o ya fue cerrada por el propietario.",
+        title: t("app.collaborationClosedTitle"),
+        text: t("app.collaborationClosedText"),
         icon: "warning",
       });
       return;

@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
-
 import { THEME } from "@excalidraw/excalidraw";
-
+import { t } from "@excalidraw/excalidraw/i18n";
 import { useHandleAppTheme } from "../useHandleAppTheme";
-
 import {
   beginPasswordRecoveryFromUrl,
   loginUser,
@@ -11,21 +9,15 @@ import {
   requestPasswordReset,
   updatePassword,
 } from "./authStore";
-
 import "./AuthPage.scss";
-
 import type { AuthUser } from "./authStore";
-
 interface Props {
   onAuthenticated: (user: AuthUser) => void;
 }
-
 type Mode = "login" | "register" | "forgot" | "reset";
-
 export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
   const { editorTheme, setAppTheme } = useHandleAppTheme();
   const isDark = editorTheme === THEME.DARK;
-
   useEffect(() => {
     if (isDark) {
       document.documentElement.classList.add("dark");
@@ -33,7 +25,6 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
       document.documentElement.classList.remove("dark");
     }
   }, [isDark]);
-
   const [mode, setMode] = useState<Mode>("login");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -42,15 +33,13 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
   useEffect(() => {
     let cancelled = false;
-
     beginPasswordRecoveryFromUrl()
       .then((isRecovery) => {
         if (!cancelled && isRecovery) {
           setMode("reset");
-          setMessage("Ingresa tu nueva contraseña.");
+          setMessage(t("auth.messages.enterNewPassword"));
         }
       })
       .catch((err: unknown) => {
@@ -59,37 +48,30 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
           setError(
             err instanceof Error
               ? err.message
-              : "No se pudo abrir el enlace de recuperacion.",
+              : t("auth.errors.openRecoveryLinkFailed"),
           );
         }
       });
-
     return () => {
       cancelled = true;
     };
-  }, []);
-
+  }, [t]);
   const resetFeedback = () => {
     setError(null);
     setMessage(null);
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     resetFeedback();
     setLoading(true);
-
     try {
       if (mode === "register") {
         if (username.trim().length < 2) {
-          throw new Error(
-            "El nombre de usuario debe tener al menos 2 caracteres.",
-          );
+          throw new Error(t("auth.errors.usernameMinLength"));
         }
         if (password.length < 6) {
-          throw new Error("La contrasena debe tener al menos 6 caracteres.");
+          throw new Error(t("auth.errors.passwordMinLength"));
         }
-
         const user = await registerUser(
           username.trim(),
           email.trim(),
@@ -98,91 +80,77 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
         onAuthenticated(user);
         return;
       }
-
       if (mode === "forgot") {
         await requestPasswordReset(email);
-        setMessage(
-          "Te enviamos un correo con el enlace para recuperar tu contrasena.",
-        );
+        setMessage(t("auth.messages.resetEmailSent"));
         return;
       }
-
       if (mode === "reset") {
         if (password !== confirmPassword) {
-          throw new Error("Las contrasenas no coinciden.");
+          throw new Error(t("auth.errors.passwordsDoNotMatch"));
         }
-
         const user = await updatePassword(password);
         onAuthenticated(user);
         return;
       }
-
       const user = await loginUser(email.trim(), password);
       onAuthenticated(user);
     } catch (err: unknown) {
       setError(
-        err instanceof Error ? err.message : "Ocurrio un error inesperado.",
+        err instanceof Error ? err.message : t("auth.errors.unexpected"),
       );
     } finally {
       setLoading(false);
     }
   };
-
   const clearInputs = () => {
     setUsername("");
     setEmail("");
     setPassword("");
     setConfirmPassword("");
   };
-
   const switchMode = () => {
     setMode((m) => (m === "login" ? "register" : "login"));
     resetFeedback();
     clearInputs();
   };
-
   const goToForgotPassword = () => {
     setMode("forgot");
     resetFeedback();
     setPassword("");
     setConfirmPassword("");
   };
-
   const goToLogin = () => {
     setMode("login");
     resetFeedback();
     setPassword("");
     setConfirmPassword("");
   };
-
   const title =
     mode === "login"
-      ? "Bienvenido de vuelta"
+      ? t("auth.title.login")
       : mode === "register"
-        ? "Crear cuenta"
+        ? t("auth.title.register")
         : mode === "forgot"
-          ? "Recuperar contraseña"
-          : "Nueva contraseña";
-
+          ? t("auth.title.forgot")
+          : t("auth.title.reset");
   const subtitle =
     mode === "login"
-      ? "Inicia sesión para continuar"
+      ? t("auth.subtitle.login")
       : mode === "register"
-        ? "Regístrate para empezar a dibujar"
+        ? t("auth.subtitle.register")
         : mode === "forgot"
-          ? "Te enviaremos un enlace a tu correo"
-          : "Escribe los nuevos datos de acceso";
-
+          ? t("auth.subtitle.forgot")
+          : t("auth.subtitle.reset");
   const submitLabel = loading
-    ? "Cargando..."
+    ? t("auth.actions.loading")
     : mode === "login"
-      ? "Iniciar sesión"
+      ? t("auth.actions.login")
       : mode === "register"
-        ? "Crear cuenta"
+        ? t("auth.actions.register")
         : mode === "forgot"
-          ? "Enviar correo"
-          : "Guardar contraseña";
-
+          ? t("auth.actions.sendEmail")
+          : t("auth.actions.savePassword");
   return (
     <div className={`auth-page${isDark ? " auth-page--dark" : ""}`}>
       <div className="auth-page__card">
@@ -213,11 +181,10 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
           </svg>
           <span>Excalidraw</span>
         </div>
-
         <button
           className="auth-page__theme-toggle"
           onClick={() => setAppTheme(isDark ? THEME.LIGHT : THEME.DARK)}
-          title={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+          title={isDark ? t("app.switchToLight") : t("app.switchToDark")}
         >
           {isDark ? (
             <svg
@@ -251,18 +218,16 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
             </svg>
           )}
         </button>
-
         <h1 className="auth-page__title">{title}</h1>
         <p className="auth-page__subtitle">{subtitle}</p>
-
         <form className="auth-page__form" onSubmit={handleSubmit} noValidate>
           {mode === "register" && (
             <div className="auth-page__field">
-              <label htmlFor="auth-username">Nombre de usuario</label>
+              <label htmlFor="auth-username">{t("auth.fields.username")}</label>
               <input
                 id="auth-username"
                 type="text"
-                placeholder="Tu nombre"
+                placeholder={t("auth.placeholders.username")}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -271,14 +236,13 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
               />
             </div>
           )}
-
           {mode !== "reset" && (
             <div className="auth-page__field">
-              <label htmlFor="auth-email">Correo electronico</label>
+              <label htmlFor="auth-email">{t("auth.fields.email")}</label>
               <input
                 id="auth-email"
                 type="email"
-                placeholder="correo@ejemplo.com"
+                placeholder={t("auth.placeholders.email")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -287,17 +251,20 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
               />
             </div>
           )}
-
           {mode !== "forgot" && (
             <div className="auth-page__field">
               <label htmlFor="auth-password">
-                {mode === "reset" ? "Nueva contraseña" : "Contraseña"}
+                {mode === "reset"
+                  ? t("auth.fields.newPassword")
+                  : t("auth.fields.password")}
               </label>
               <input
                 id="auth-password"
                 type="password"
                 placeholder={
-                  mode === "login" ? "Tu contraseña" : "mínimo 6 caracteres"
+                  mode === "login"
+                    ? t("auth.placeholders.password")
+                    : t("auth.placeholders.newPassword")
                 }
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -309,16 +276,15 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
               />
             </div>
           )}
-
           {mode === "reset" && (
             <div className="auth-page__field">
               <label htmlFor="auth-confirm-password">
-                Confirmar contraseña
+                {t("auth.fields.confirmPassword")}
               </label>
               <input
                 id="auth-confirm-password"
                 type="password"
-                placeholder="Repite la contraseña"
+                placeholder={t("auth.placeholders.confirmPassword")}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
@@ -326,14 +292,12 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
               />
             </div>
           )}
-
           {error && (
             <div className="auth-page__error" role="alert">
               {error}
             </div>
           )}
           {message && <div className="auth-page__message">{message}</div>}
-
           <button
             type="submit"
             className="auth-page__submit"
@@ -342,29 +306,28 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
             {submitLabel}
           </button>
         </form>
-
         <div className="auth-page__toggle">
           {mode === "login" ? (
             <>
               <button type="button" onClick={goToForgotPassword}>
-                Olvidé mi contraseña
+                {t("auth.actions.forgotPassword")}
               </button>
               <span className="auth-page__toggle-separator">|</span>
-              No tienes cuenta?{" "}
+              {t("auth.actions.noAccount")} {" "}
               <button type="button" onClick={switchMode}>
-                Registrate
+                {t("auth.actions.registerLink")}
               </button>
             </>
           ) : mode === "register" ? (
             <>
-              Ya tienes cuenta?{" "}
+              {t("auth.actions.hasAccount")} {" "}
               <button type="button" onClick={switchMode}>
-                Inicia sesión
+                {t("auth.actions.loginLink")}
               </button>
             </>
           ) : (
             <button type="button" onClick={goToLogin}>
-              Volver al inicio de sesión
+              {t("auth.actions.backToLogin")}
             </button>
           )}
         </div>

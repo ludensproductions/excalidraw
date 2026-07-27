@@ -832,10 +832,77 @@
     "generationFailedInvalid": "Generación fallida (respuesta inválida)",
     "notAPretzel": "¡No soy un pretzel!",
     "duplicateName": "Ya existe un tablero con ese nombre. Elige otro.",
+    "leaveSharedSaveDraftText": "\u00bfQuieres guardar este tablero compartido como borrador antes de salir?",
+    "saveDraft": "Guardar borrador",
+    "closeWithoutSaving": "Cerrar sin guardar",
+    "leaveWithoutSaving": "Salir sin guardar",
+    "draft": "borrador",
+    "collaborationClosedTitle": "Colaboraci\u00f3n cerrada",
+    "collaborationClosedText": "Esta colaboraci\u00f3n ya no existe o ya fue cerrada por el propietario.",
     "createBoard": "Crear tablero",
     "boardName": "Nombre del tablero",
     "boardNamePlaceholder": "Ej. Mapa de flujo de ventas",
     "createBoardConfirm": "Crear tablero",
     "enterBoardNameCreate": "Ponle un nombre al tablero para poder crearlo."
+  },
+  "auth": {
+    "title": {
+      "login": "Bienvenido de vuelta",
+      "register": "Crear cuenta",
+      "forgot": "Recuperar contrase?a",
+      "reset": "Nueva contrase?a"
+    },
+    "subtitle": {
+      "login": "Inicia sesi?n para continuar",
+      "register": "Reg?strate para empezar a dibujar",
+      "forgot": "Te enviaremos un enlace a tu correo",
+      "reset": "Escribe los nuevos datos de acceso"
+    },
+    "fields": {
+      "username": "Nombre de usuario",
+      "email": "Correo electr?nico",
+      "password": "Contrase?a",
+      "newPassword": "Nueva contrase?a",
+      "confirmPassword": "Confirmar contrase?a"
+    },
+    "placeholders": {
+      "username": "Tu nombre",
+      "email": "correo@ejemplo.com",
+      "password": "Tu contrase?a",
+      "newPassword": "m?nimo 6 caracteres",
+      "confirmPassword": "Repite la contrase?a"
+    },
+    "actions": {
+      "loading": "Cargando...",
+      "login": "Iniciar sesi?n",
+      "register": "Crear cuenta",
+      "sendEmail": "Enviar correo",
+      "savePassword": "Guardar contrase?a",
+      "forgotPassword": "Olvid? mi contrase?a",
+      "registerLink": "Reg?strate",
+      "loginLink": "Inicia sesi?n",
+      "backToLogin": "Volver al inicio de sesi?n",
+      "noAccount": "?No tienes cuenta?",
+      "hasAccount": "?Ya tienes cuenta?"
+    },
+    "messages": {
+      "enterNewPassword": "Ingresa tu nueva contrase?a.",
+      "resetEmailSent": "Te enviamos un correo con el enlace para recuperar tu contrase?a."
+    },
+    "errors": {
+      "openRecoveryLinkFailed": "No se pudo abrir el enlace de recuperaci?n.",
+      "usernameMinLength": "El nombre de usuario debe tener al menos 2 caracteres.",
+      "passwordMinLength": "La contrase?a debe tener al menos 6 caracteres.",
+      "passwordsDoNotMatch": "Las contrase?as no coinciden.",
+      "unexpected": "Ocurri? un error inesperado.",
+      "emailAlreadyRegistered": "Ya existe una cuenta con ese correo electr?nico.",
+      "createAccountFailed": "No se pudo crear la cuenta. Revisa la configuraci?n de Supabase.",
+      "createdButLoginFailed": "Cuenta creada, pero no se pudo iniciar sesi?n.",
+      "invalidCredentials": "Correo o contrase?a incorrectos.",
+      "loginFailed": "No se pudo iniciar sesi?n.",
+      "emailRequired": "Ingresa tu correo electr?nico.",
+      "invalidRecoveryLink": "El enlace de recuperaci?n no es v?lido o expir?.",
+      "passwordUpdatedButLoginFailed": "Contrase?a actualizada, pero no se pudo iniciar sesi?n."
+    }
   }
 }

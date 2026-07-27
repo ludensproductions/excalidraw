@@ -395,7 +395,7 @@ const initializeScene = async (opts: {
       return {
         scene: {
           appState: {
-            errorMessage: "Esta colaboración ya no existe o ya fue cerrada por el propietario.",
+            errorMessage: t("app.collaborationClosedText"),
           },
         },
         isExternalScene: true,

@@ -58,19 +58,23 @@ const AppRoot: React.FC = () => {
 
   useEffect(() => {
     let cancelled = false;
-    waitForAuthHydration().then(() => {
-      if (cancelled) {
-        return;
-      }
-      const u = getCurrentUser();
-      setUser(u);
-      setAuthReady(true);
-      if (u && hasExternalLinkInUrl()) {
-        setView({ type: "editor", boardId: null, key: Date.now() });
-      } else {
-        setView(u ? { type: "dashboard" } : { type: "auth" });
-      }
-    });
+    waitForAuthHydration()
+      .catch((error) => {
+        console.error("Initial auth hydration failed:", error);
+      })
+      .finally(() => {
+        if (cancelled) {
+          return;
+        }
+        const u = getCurrentUser();
+        setUser(u);
+        setAuthReady(true);
+        if (u && hasExternalLinkInUrl()) {
+          setView({ type: "editor", boardId: null, key: Date.now() });
+        } else {
+          setView(u ? { type: "dashboard" } : { type: "auth" });
+        }
+      });
     const unsub = subscribeToAuth((u) => {
       setUser(u);
       if (!u) {

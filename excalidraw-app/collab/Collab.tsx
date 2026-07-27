@@ -556,8 +556,8 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     window.history.replaceState({}, APP_NAME, window.location.origin);
     this.destroySocketClient();
     await appDialog.alert({
-      title: "Colaboración cerrada",
-      text: "Esta colaboración ya no existe o ya fue cerrada por el propietario.",
+      title: t("app.collaborationClosedTitle"),
+      text: t("app.collaborationClosedText"),
       icon: "warning",
     });
     await dashboardState.flushAutoSave();

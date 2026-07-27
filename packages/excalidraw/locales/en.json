@@ -832,10 +832,77 @@
     "generationFailedInvalid": "Generation failed (invalid response)",
     "notAPretzel": "I'm not a pretzel!",
     "duplicateName": "A board with this name already exists. Please choose another.",
+    "leaveSharedSaveDraftText": "Do you want to save this shared board as a draft before leaving?",
+    "saveDraft": "Save draft",
+    "closeWithoutSaving": "Close without saving",
+    "leaveWithoutSaving": "Leave without saving",
+    "draft": "draft",
+    "collaborationClosedTitle": "Collaboration closed",
+    "collaborationClosedText": "This collaboration no longer exists or was already closed by the owner.",
     "createBoard": "Create board",
     "boardName": "Board name",
     "boardNamePlaceholder": "Eg. Sales flow map",
     "createBoardConfirm": "Create board",
     "enterBoardNameCreate": "Give the board a name to create it."
+  },
+  "auth": {
+    "title": {
+      "login": "Welcome back",
+      "register": "Create account",
+      "forgot": "Reset password",
+      "reset": "New password"
+    },
+    "subtitle": {
+      "login": "Sign in to continue",
+      "register": "Sign up to start drawing",
+      "forgot": "We will send you a recovery link by email",
+      "reset": "Enter your new credentials"
+    },
+    "fields": {
+      "username": "Username",
+      "email": "Email",
+      "password": "Password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password"
+    },
+    "placeholders": {
+      "username": "Your name",
+      "email": "email@example.com",
+      "password": "Your password",
+      "newPassword": "minimum 6 characters",
+      "confirmPassword": "Repeat your password"
+    },
+    "actions": {
+      "loading": "Loading...",
+      "login": "Sign in",
+      "register": "Create account",
+      "sendEmail": "Send email",
+      "savePassword": "Save password",
+      "forgotPassword": "Forgot my password",
+      "registerLink": "Sign up",
+      "loginLink": "Sign in",
+      "backToLogin": "Back to sign in",
+      "noAccount": "Don't have an account?",
+      "hasAccount": "Already have an account?"
+    },
+    "messages": {
+      "enterNewPassword": "Enter your new password.",
+      "resetEmailSent": "We sent you an email with a link to reset your password."
+    },
+    "errors": {
+      "openRecoveryLinkFailed": "Could not open the recovery link.",
+      "usernameMinLength": "Username must be at least 2 characters long.",
+      "passwordMinLength": "Password must be at least 6 characters long.",
+      "passwordsDoNotMatch": "Passwords do not match.",
+      "unexpected": "An unexpected error occurred.",
+      "emailAlreadyRegistered": "An account with that email already exists.",
+      "createAccountFailed": "Could not create the account. Check the Supabase configuration.",
+      "createdButLoginFailed": "The account was created, but sign in failed.",
+      "invalidCredentials": "Incorrect email or password.",
+      "loginFailed": "Could not sign in.",
+      "emailRequired": "Enter your email address.",
+      "invalidRecoveryLink": "The recovery link is invalid or expired.",
+      "passwordUpdatedButLoginFailed": "Password updated, but sign in failed."
+    }
   }
 }
