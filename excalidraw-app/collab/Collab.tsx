@@ -1354,6 +1354,8 @@ class Collab extends PureComponent<CollabProps, CollabState> {
         console.error("Failed to leave shared board on guest leave:", error);
       });
     }
+
+    return true;
   };
 
   setActiveRoomLink = (activeRoomLink: string | null) => {
