@@ -8,7 +8,7 @@ import { appDialog } from "../appDialog";
 import { getCollaborationLinkData } from "../data";
 import { DrawingsStore } from "../data/DrawingsStore";
 import { SharedBoardsStore } from "../data/SharedBoardsStore";
-import { loadFromFirebase } from "../data/firebase";
+import { destroyCollabRoomInFirebase, loadFromFirebase } from "../data/firebase";
 import { useHandleAppTheme } from "../useHandleAppTheme";
 
 import "./Dashboard.scss";
@@ -285,13 +285,13 @@ const SharedBoardCard: React.FC<SharedBoardCardProps> = ({
         </button>
         <button
           className="dashboard__shared-card-leave"
-          title={t("app.leaveSharedBoard")}
+          title={board.createdBy === currentUserId ? t("app.finalizeSession") : t("app.leaveSharedBoard")}
           onClick={(e) => {
             e.stopPropagation();
             onLeave(board);
           }}
         >
-          {t("app.leave")}
+          {board.createdBy === currentUserId ? t("app.finalizeSession") : t("app.leave")}
         </button>
       </div>
     </div>
@@ -413,11 +413,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
       text: t("app.leaveSharedSaveDraftText"),
       confirmButtonText: t("app.saveDraft"),
       denyButtonText: isOwner
-        ? t("app.closeWithoutSaving")
+        ? t("app.finalizeWithoutSaving")
         : t("app.leaveWithoutSaving"),
       cancelButtonText: t("app.cancel"),
       icon: "question",
-      danger: true,
+      confirmButtonVariant: "primary",
+      denyButtonVariant: isOwner ? "danger" : "default",
     });
     if (choice === "cancel") {
       return;
@@ -487,7 +488,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
       }
     }
 
-    await SharedBoardsStore.leave(board.id, isOwner);
+    if (isOwner) {
+      await Promise.all([
+        SharedBoardsStore.leaveByRoom(board.roomId, board.roomKey),
+        destroyCollabRoomInFirebase(board.roomId),
+      ]);
+    } else {
+      await SharedBoardsStore.leaveByRoom(board.roomId, board.roomKey);
+    }
     if (isOwner) {
       if (shouldSaveDraft) {
         await Promise.all(

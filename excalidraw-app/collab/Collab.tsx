@@ -82,6 +82,7 @@ import {
 import { FileStatusStore } from "../data/fileStatusStore";
 import { LocalData } from "../data/LocalData";
 import {
+  CollaborationClosedError,
   isSavedToFirebase,
   loadFilesFromFirebase,
   loadFromFirebase,
@@ -372,6 +373,11 @@ class Collab extends PureComponent<CollabProps, CollabState> {
         this.handleRemoteSceneUpdate(this._reconcileElements(storedElements));
       }
     } catch (error: any) {
+      if (error instanceof CollaborationClosedError) {
+        await this.handleClosedCollaboration();
+        return;
+      }
+
       const errorMessage = /is longer than.*?bytes/.test(error.message)
         ? t("errors.collabSaveFailed_sizeExceeded")
         : t("errors.collabSaveFailed");
@@ -701,6 +707,37 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     this.setIsCollaborating(true);
     LocalData.pauseSave("collaboration");
 
+    const activeBoard = appJotaiStore.get(activeBoardAtom);
+    const username = this.getUsername() || "Usuario";
+
+    // Publish/join the shared-board record before any first save or room
+    // initialization check runs, so a newly-created room isn't mistaken for a
+    // previously-closed one while backend records are still being created.
+    if (existingRoomLinkData) {
+      await SharedBoardsStore.joinExisting({
+        roomId,
+        roomKey,
+        username,
+        readOnly: this.isReadOnly,
+        fallbackName: activeBoard?.name ?? undefined,
+      });
+    } else {
+      await SharedBoardsStore.joinOrCreate({
+        roomId,
+        roomKey,
+        name: activeBoard?.name || "Tablero compartido",
+        username,
+      });
+      if (activeBoard?.id) {
+        DrawingsStore.setCollabLink(
+          activeBoard.id,
+          getCollaborationLink({ roomId, roomKey }),
+        ).catch((error) => {
+          console.error("Failed to persist collaboration link:", error);
+        });
+      }
+    }
+
     const { default: socketIOClient } = await import(
       /* webpackChunkName: "socketIoClient" */ "socket.io-client"
     );
@@ -925,41 +962,6 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       });
     }
 
-    const activeBoard = appJotaiStore.get(activeBoardAtom);
-    const username = this.getUsername() || "Usuario";
-    if (existingRoomLinkData) {
-      // Joining an arbitrary live room should not publish a new shared board.
-      // Only attach this user if the owner already published the board.
-      // If the room came from a dashboard card, we have a stable board name and
-      // can safely fallback to publishing to avoid "vanishing" entries.
-      // Read-only guests are registered with read_only=true so the board appears
-      // in their Compartidos, but the dashboard opens it with the ",ro" URL suffix.
-      await SharedBoardsStore.joinExisting({
-        roomId,
-        roomKey,
-        username,
-        readOnly: this.isReadOnly,
-        fallbackName: activeBoard?.name ?? undefined,
-      });
-    } else {
-      // Publish every newly-created live room so invitees can see it in their
-      // shared dashboard after joining, even if the owner started from a
-      // not-yet-saved board.
-      await SharedBoardsStore.joinOrCreate({
-        roomId,
-        roomKey,
-        name: activeBoard?.name || "Tablero compartido",
-        username,
-      });
-      if (activeBoard?.id) {
-        DrawingsStore.setCollabLink(
-          activeBoard.id,
-          getCollaborationLink({ roomId, roomKey }),
-        ).catch((error) => {
-          console.error("Failed to persist collaboration link:", error);
-        });
-      }
-    }
 
     return scenePromise;
   };

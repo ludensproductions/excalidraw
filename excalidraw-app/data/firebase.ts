@@ -21,7 +21,7 @@ import type {
   DataURL,
 } from "@excalidraw/excalidraw/types";
 
-import { FILE_CACHE_MAX_AGE_SEC } from "../app_constants";
+import { FILE_CACHE_MAX_AGE_SEC, FIREBASE_STORAGE_PREFIXES } from "../app_constants";
 
 import { getSyncableElements } from ".";
 import { supabase } from "./supabase";
@@ -139,6 +139,75 @@ export const saveFilesToFirebase = async ({
   return { savedFiles, erroredFiles };
 };
 
+export class CollaborationClosedError extends Error {
+  constructor() {
+    super("Collaboration closed");
+    this.name = "CollaborationClosedError";
+  }
+}
+
+const ensureCollaborationRoomActive = async (
+  roomId: string,
+  roomKey: string,
+): Promise<void> => {
+  const { data, error } = await supabase
+    .from("shared_boards")
+    .select("id")
+    .eq("room_id", roomId)
+    .eq("room_key", roomKey)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data?.id) {
+    throw new CollaborationClosedError();
+  }
+};
+
+export const destroyCollabRoomInFirebase = async (
+  roomId: string,
+): Promise<void> => {
+  const { error } = await supabase
+    .from("collab_rooms")
+    .delete()
+    .eq("room_id", roomId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const prefix = `${FIREBASE_STORAGE_PREFIXES.collabFiles}/${roomId}`.replace(
+    /^\//,
+    "",
+  );
+  const { data: files, error: listError } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .list(prefix, { limit: 1000 });
+
+  if (listError) {
+    console.warn("destroyCollabRoomInFirebase list error:", listError);
+    return;
+  }
+
+  const paths = (files ?? [])
+    .filter((file) => !!file.name)
+    .map((file) => `${prefix}/${file.name}`);
+
+  if (!paths.length) {
+    return;
+  }
+
+  const { error: removeError } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .remove(paths);
+
+  if (removeError) {
+    console.warn("destroyCollabRoomInFirebase remove error:", removeError);
+  }
+};
+
 export const saveToFirebase = async (
   portal: Portal,
   elements: readonly SyncableExcalidrawElement[],
@@ -154,6 +223,8 @@ export const saveToFirebase = async (
   ) {
     return null;
   }
+
+  await ensureCollaborationRoomActive(roomId, roomKey);
 
   // Read the current scene for client-side reconciliation
   const { data: existing } = await supabase

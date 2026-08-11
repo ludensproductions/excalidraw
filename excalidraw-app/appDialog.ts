@@ -85,7 +85,12 @@ export const appDialog = {
     cancelButtonText?: string;
     icon?: DialogIcon;
     danger?: boolean;
+    confirmButtonVariant?: "primary" | "danger";
+    denyButtonVariant?: "default" | "primary" | "danger";
   }): Promise<"confirm" | "deny" | "cancel"> {
+    const confirmButtonVariant =
+      options.confirmButtonVariant ?? (options.danger ? "danger" : "primary");
+    const denyButtonVariant = options.denyButtonVariant ?? "default";
     const result = await Swal.fire({
       ...baseOptions(),
       title: options.title,
@@ -99,11 +104,17 @@ export const appDialog = {
       customClass: {
         ...baseOptions().customClass,
         confirmButton: `app-swal__button ${
-          options.danger
+          confirmButtonVariant === "danger"
             ? "app-swal__button--danger"
             : "app-swal__button--primary"
         }`,
-        denyButton: "app-swal__button",
+        denyButton: `app-swal__button ${
+          denyButtonVariant === "danger"
+            ? "app-swal__button--danger"
+            : denyButtonVariant === "primary"
+              ? "app-swal__button--primary"
+              : ""
+        }`.trim(),
       },
     });
 
@@ -115,7 +126,6 @@ export const appDialog = {
     }
     return "cancel";
   },
-
   async promptText(options: {
     title: string;
     label?: string;
