@@ -27,6 +27,9 @@
   },
   "dependencies": {
     "@excalidraw/random-username": "1.0.0",
+    "@fortawesome/fontawesome-svg-core": "^6.7.2",
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/react-fontawesome": "^0.2.2",
     "@sentry/browser": "9.0.1",
     "@supabase/supabase-js": "^2.45.0",
     "callsites": "4.2.0",
@@ -57,3 +60,4 @@
     "vite-plugin-sitemap": "0.7.1"
   }
 }
+

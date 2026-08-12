@@ -345,7 +345,7 @@
     }
   }
 
-  // ── Tab badge ──────────────────────────────────────────────
+  // â”€â”€ Tab badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   &__tab-badge {
     display: inline-flex;
     align-items: center;
@@ -363,7 +363,7 @@
     vertical-align: middle;
   }
 
-  // ── Shared boards grid ────────────────────────────────────
+  // â”€â”€ Shared boards grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   &__shared-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -503,9 +503,14 @@
     border-radius: 6px;
     color: #6b7280;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     font-size: 1rem;
     line-height: 1;
-    padding: 0.25rem 0.5rem;
+    min-height: 2.25rem;
+    min-width: 2.25rem;
+    padding: 0.25rem;
     transition: background 0.15s, color 0.15s;
 
     &:hover:not(:disabled) {
@@ -519,6 +524,14 @@
     }
   }
 
+  &__shared-refresh-icon {
+    font-size: 0.95rem;
+  }
+
+  &__shared-refresh-icon--spinning {
+    animation: dashboard-spin 0.95s linear infinite;
+  }
+
   &__shared-error {
     background: #fef2f2;
     border: 1px solid #fca5a5;
@@ -529,7 +542,7 @@
     padding: 0.75rem 1rem;
   }
 
-  // ── Theme toggle ───────────────────────────────────────────
+  // â”€â”€ Theme toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   &__theme-toggle {
     display: flex;
     align-items: center;
@@ -558,7 +571,7 @@
   }
 }
 
-// ── Dark mode ──────────────────────────────────────────────────────────────
+// â”€â”€ Dark mode â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 .dashboard--dark {
   background: #121212;
 
@@ -729,3 +742,4 @@
     color: #f87171;
   }
 }
+

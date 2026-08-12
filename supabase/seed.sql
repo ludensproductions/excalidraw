@@ -44,8 +44,8 @@ begin
   )
   on conflict (email) do nothing;
 
-  insert into public.profiles (id, username, email)
-  values (v_id, 'admin', 'admin@admin.com')
+  insert into public.profiles (id, username, email, role)
+  values (v_id, 'admin', 'admin@admin.com', 'admin')
   on conflict (id) do nothing;
 end;
 $$;

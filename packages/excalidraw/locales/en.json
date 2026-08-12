@@ -845,7 +845,34 @@
     "boardName": "Board name",
     "boardNamePlaceholder": "Eg. Sales flow map",
     "createBoardConfirm": "Create board",
-    "enterBoardNameCreate": "Give the board a name to create it."
+    "enterBoardNameCreate": "Give the board a name to create it.",
+    "userManagement": "User management",
+    "refreshUsers": "Refresh users",
+    "loadingUsers": "Loading users...",
+    "errorLoadingUsers": "Error loading users:",
+    "noUsers": "No users available.",
+    "editUsername": "Edit username",
+    "newUsername": "New username",
+    "userActionFailed": "Could not update the user.",
+    "makeAdmin": "Make admin",
+    "makeUser": "Make user",
+    "activateUser": "Activate user",
+    "disableUser": "Disable user",
+    "banUser": "Ban user",
+    "cannotManageCurrentUser": "Action not allowed",
+    "cannotManageCurrentUserText": "For safety, you cannot change your own role or status from this panel.",
+    "userId": "User ID",
+    "userEmail": "Email",
+    "userRole": "Role",
+    "userRoleAdmin": "Admin",
+    "userRoleUser": "User",
+    "userStatus": "Status",
+    "userStatusActive": "Active",
+    "userStatusDisabled": "Disabled",
+    "userStatusBanned": "Banned",
+    "userJoined": "Joined",
+    "userLastUpdate": "Last update",
+    "userEmailReadOnlyHint": "Email is shown for reference. Auth email changes should be handled from the account/auth flow."
   },
   "auth": {
     "title": {
@@ -904,7 +931,9 @@
       "loginFailed": "Could not sign in.",
       "emailRequired": "Enter your email address.",
       "invalidRecoveryLink": "The recovery link is invalid or expired.",
-      "passwordUpdatedButLoginFailed": "Password updated, but sign in failed."
+      "passwordUpdatedButLoginFailed": "Password updated, but sign in failed.",
+      "accountDisabled": "This account is disabled.",
+      "accountBanned": "This account has been banned."
     }
   }
 }

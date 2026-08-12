@@ -2,12 +2,28 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { THEME } from "@excalidraw/excalidraw";
 import { t } from "@excalidraw/excalidraw/i18n";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faArrowsRotate,
+  faBan,
+  faCheck,
+  faPenToSquare,
+  faUser,
+  faUserShield,
+  faUserSlash,
+} from "@fortawesome/free-solid-svg-icons";
 
 import { activeBoardAtom, appJotaiStore } from "../app-jotai";
 import { appDialog } from "../appDialog";
 import { getCollaborationLinkData } from "../data";
 import { DrawingsStore } from "../data/DrawingsStore";
 import { SharedBoardsStore } from "../data/SharedBoardsStore";
+import {
+  UserManagementStore,
+  type ManagedUserProfile,
+  type UserRole,
+  type UserStatus,
+} from "../data/UserManagementStore";
 import { destroyCollabRoomInFirebase, loadFromFirebase } from "../data/firebase";
 import { useHandleAppTheme } from "../useHandleAppTheme";
 
@@ -51,6 +67,109 @@ const PencilIcon = () => (
     <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
   </svg>
 );
+
+const getUserStatusLabel = (status: UserStatus): string => {
+  switch (status) {
+    case "active":
+      return t("app.userStatusActive");
+    case "disabled":
+      return t("app.userStatusDisabled");
+    case "banned":
+      return t("app.userStatusBanned");
+    default:
+      return status;
+  }
+};
+
+const getUserRoleLabel = (role: UserRole): string => {
+  return role === "admin" ? t("app.userRoleAdmin") : t("app.userRoleUser");
+};
+
+const getStatusPalette = (
+  status: UserStatus,
+  isDark: boolean,
+): { background: string; color: string; borderColor: string } => {
+  if (status === "active") {
+    return {
+      background: isDark ? "#143223" : "#dcfce7",
+      color: isDark ? "#86efac" : "#166534",
+      borderColor: isDark ? "#166534" : "#86efac",
+    };
+  }
+  if (status === "disabled") {
+    return {
+      background: isDark ? "#2e2e4a" : "#f3f4f6",
+      color: isDark ? "#d1d5db" : "#4b5563",
+      borderColor: isDark ? "#4b5563" : "#d1d5db",
+    };
+  }
+  return {
+    background: isDark ? "#321718" : "#fee2e2",
+    color: isDark ? "#fca5a5" : "#991b1b",
+    borderColor: isDark ? "#7f1d1d" : "#fca5a5",
+  };
+};
+
+const getRolePalette = (
+  role: UserRole,
+  isDark: boolean,
+): { background: string; color: string; borderColor: string } => {
+  if (role === "admin") {
+    return {
+      background: isDark ? "#1f2457" : "#e0e7ff",
+      color: isDark ? "#a5b4fc" : "#3730a3",
+      borderColor: isDark ? "#4338ca" : "#a5b4fc",
+    };
+  }
+  return {
+    background: isDark ? "#1f2937" : "#f8fafc",
+    color: isDark ? "#cbd5e1" : "#475569",
+    borderColor: isDark ? "#475569" : "#cbd5e1",
+  };
+};
+
+const getActionButtonStyle = (
+  tone: "primary" | "neutral" | "danger",
+  isDark: boolean,
+): React.CSSProperties => {
+  if (tone === "primary") {
+    return {
+      background: "#6965db",
+      color: "#ffffff",
+      border: "none",
+    };
+  }
+
+  if (tone === "danger") {
+    return {
+      background: isDark ? "#321718" : "#fff1f2",
+      color: isDark ? "#fca5a5" : "#b91c1c",
+      border: `1px solid ${isDark ? "#7f1d1d" : "#fecdd3"}`,
+    };
+  }
+
+  return {
+    background: "transparent",
+    color: isDark ? "#d1d5db" : "#374151",
+    border: `1px solid ${isDark ? "#4b5563" : "#d1d5db"}`,
+  };
+};
+
+const getActionIconButtonStyle = (
+  tone: "primary" | "neutral" | "danger",
+  isDark: boolean,
+): React.CSSProperties => ({
+  ...getActionButtonStyle(tone, isDark),
+  width: "2.5rem",
+  height: "2.5rem",
+  padding: 0,
+  borderRadius: "999px",
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: "1rem",
+});
 
 interface BoardCardProps {
   board: DrawingRecord;
@@ -182,9 +301,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
             {board.name}
           </span>
         )}
-        <span className="dashboard__card-date">
-          {formatDate(board.updatedAt)}
-        </span>
+        <span className="dashboard__card-date">{formatDate(board.updatedAt)}</span>
         {board.collabLink && (
           <div className="dashboard__card-collab-row">
             <button
@@ -199,7 +316,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
               title={t("app.deleteCollabLinkTitle")}
               onClick={clearCollabLink}
             >
-              ×
+              x
             </button>
           </div>
         )}
@@ -209,14 +326,14 @@ const BoardCard: React.FC<BoardCardProps> = ({
         title={t("app.renameBoard")}
         onClick={startRename}
       >
-        ✎
+        Edit
       </button>
       <button
         className="dashboard__card-delete"
         title={t("app.deleteBoard")}
         onClick={(e) => onDelete(board.id, e)}
       >
-        ×
+        x
       </button>
     </div>
   );
@@ -236,9 +353,9 @@ const SharedBoardCard: React.FC<SharedBoardCardProps> = ({
   onLeave,
 }) => {
   const isOwner = board.createdBy === currentUserId;
-  const MAX_AVATARS = 4;
-  const visibleMembers = board.members.slice(0, MAX_AVATARS);
-  const overflow = board.members.length - MAX_AVATARS;
+  const maxAvatars = 4;
+  const visibleMembers = board.members.slice(0, maxAvatars);
+  const overflow = board.members.length - maxAvatars;
 
   return (
     <div className="dashboard__shared-card" onClick={() => onJoin(board)}>
@@ -252,24 +369,22 @@ const SharedBoardCard: React.FC<SharedBoardCardProps> = ({
       </div>
 
       <div className="dashboard__shared-card-members">
-        {visibleMembers.map((m) => (
+        {visibleMembers.map((member) => (
           <span
-            key={m.userId}
+            key={member.userId}
             className={`dashboard__shared-card-avatar${
-              m.userId === currentUserId ? " current" : ""
+              member.userId === currentUserId ? " current" : ""
             }`}
-            title={m.username}
+            title={member.username}
           >
-            {m.username.charAt(0).toUpperCase()}
+            {member.username.charAt(0).toUpperCase()}
           </span>
         ))}
         {overflow > 0 && (
-          <span className="dashboard__shared-card-avatar overflow">
-            +{overflow}
-          </span>
+          <span className="dashboard__shared-card-avatar overflow">+{overflow}</span>
         )}
         <span className="dashboard__shared-card-member-names">
-          {board.members.map((m) => m.username).join(", ")}
+          {board.members.map((member) => member.username).join(", ")}
         </span>
       </div>
 
@@ -285,13 +400,13 @@ const SharedBoardCard: React.FC<SharedBoardCardProps> = ({
         </button>
         <button
           className="dashboard__shared-card-leave"
-          title={board.createdBy === currentUserId ? t("app.finalizeSession") : t("app.leaveSharedBoard")}
+          title={isOwner ? t("app.finalizeSession") : t("app.leaveSharedBoard")}
           onClick={(e) => {
             e.stopPropagation();
             onLeave(board);
           }}
         >
-          {board.createdBy === currentUserId ? t("app.finalizeSession") : t("app.leave")}
+          {isOwner ? t("app.finalizeSession") : t("app.leave")}
         </button>
       </div>
     </div>
@@ -306,7 +421,7 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-type Tab = "recent" | "all" | "shared";
+type Tab = "recent" | "all" | "shared" | "users";
 type RecentItem =
   | { type: "own"; board: DrawingRecord; updatedAt: number }
   | { type: "shared"; board: SharedBoard; updatedAt: number };
@@ -330,9 +445,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [loading, setLoading] = useState(true);
   const [sharedError, setSharedError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("recent");
+  const [managedUsers, setManagedUsers] = useState<ManagedUserProfile[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [usersError, setUsersError] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   const { editorTheme, setAppTheme } = useHandleAppTheme();
   const isDark = editorTheme === THEME.DARK;
+  const isAdmin = user.role === "admin";
 
   useEffect(() => {
     if (isDark) {
@@ -341,6 +461,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
       document.documentElement.classList.remove("dark");
     }
   }, [isDark]);
+
+  useEffect(() => {
+    if (!isAdmin && activeTab === "users") {
+      setActiveTab("recent");
+    }
+  }, [activeTab, isAdmin]);
 
   const fetchBoards = useCallback(async () => {
     setLoading(true);
@@ -358,9 +484,60 @@ export const Dashboard: React.FC<DashboardProps> = ({
     setLoading(false);
   }, [user.id]);
 
+  const fetchUsers = useCallback(async () => {
+    if (!isAdmin) {
+      return;
+    }
+    setUsersLoading(true);
+    setUsersError(null);
+    try {
+      const profiles = await UserManagementStore.getAll();
+      setManagedUsers(profiles);
+      setSelectedUserId((prev) => {
+        if (prev && profiles.some((profile) => profile.id === prev)) {
+          return prev;
+        }
+        return profiles[0]?.id ?? null;
+      });
+    } catch (error) {
+      setUsersError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setUsersLoading(false);
+    }
+  }, [isAdmin]);
+
   useEffect(() => {
-    fetchBoards();
+    void fetchBoards();
   }, [fetchBoards]);
+
+  useEffect(() => {
+    if (activeTab === "users" && isAdmin) {
+      void fetchUsers();
+    }
+  }, [activeTab, fetchUsers, isAdmin]);
+
+  const syncManagedUser = useCallback((updatedProfile: ManagedUserProfile) => {
+    setManagedUsers((prev) =>
+      prev.map((profile) =>
+        profile.id === updatedProfile.id ? updatedProfile : profile,
+      ),
+    );
+  }, []);
+
+  const ensureUserIsManageable = useCallback(
+    async (profile: ManagedUserProfile): Promise<boolean> => {
+      if (profile.id !== user.id) {
+        return true;
+      }
+      await appDialog.alert({
+        title: t("app.cannotManageCurrentUser"),
+        text: t("app.cannotManageCurrentUserText"),
+        icon: "warning",
+      });
+      return false;
+    },
+    [user.id],
+  );
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -374,7 +551,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       return;
     }
     await DrawingsStore.delete(id);
-    setBoards((prev) => prev.filter((b) => b.id !== id));
+    setBoards((prev) => prev.filter((board) => board.id !== id));
   };
 
   const handleRename = async (id: string, newName: string) => {
@@ -389,8 +566,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
     await DrawingsStore.rename(id, newName);
     const now = Date.now();
     setBoards((prev) =>
-      prev.map((b) =>
-        b.id === id ? { ...b, name: newName, updatedAt: now } : b,
+      prev.map((board) =>
+        board.id === id ? { ...board, name: newName, updatedAt: now } : board,
       ),
     );
     const active = appJotaiStore.get(activeBoardAtom);
@@ -402,7 +579,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const handleClearCollabLink = async (id: string) => {
     await DrawingsStore.setCollabLink(id, null);
     setBoards((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, collabLink: null } : b)),
+      prev.map((board) =>
+        board.id === id ? { ...board, collabLink: null } : board,
+      ),
     );
   };
 
@@ -496,6 +675,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     } else {
       await SharedBoardsStore.leaveByRoom(board.roomId, board.roomKey);
     }
+
     if (isOwner) {
       if (shouldSaveDraft) {
         await Promise.all(
@@ -522,7 +702,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
         );
       }
     }
-    setSharedBoards((prev) => prev.filter((b) => b.id !== board.id));
+
+    setSharedBoards((prev) => prev.filter((item) => item.id !== board.id));
   };
 
   const handleOpenBoard = async (board: DrawingRecord) => {
@@ -546,6 +727,114 @@ export const Dashboard: React.FC<DashboardProps> = ({
     }
 
     await onOpenSharedBoard(board);
+  };
+
+  const handleEditManagedUsername = async (profile: ManagedUserProfile) => {
+    if (!(await ensureUserIsManageable(profile))) {
+      return;
+    }
+
+    const nextUsername = await appDialog.promptText({
+      title: t("app.editUsername"),
+      label: t("app.newUsername"),
+      initialValue: profile.username,
+      confirmButtonText: t("app.save"),
+      requiredMessage: t("app.fieldRequired"),
+      maxLength: 60,
+    });
+
+    if (!nextUsername || nextUsername === profile.username) {
+      return;
+    }
+
+    if (nextUsername.trim().length < 2) {
+      await appDialog.alert({
+        title: t("auth.errors.usernameMinLength"),
+        icon: "warning",
+      });
+      return;
+    }
+
+    try {
+      const updated = await UserManagementStore.updateProfile(profile.id, {
+        username: nextUsername,
+      });
+      syncManagedUser(updated);
+    } catch (error) {
+      await appDialog.error(
+        t("app.userActionFailed"),
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+  };
+
+  const handleManagedRoleChange = async (
+    profile: ManagedUserProfile,
+    nextRole: UserRole,
+  ) => {
+    if (!(await ensureUserIsManageable(profile))) {
+      return;
+    }
+
+    const confirmed = await appDialog.confirm({
+      title: nextRole === "admin" ? t("app.makeAdmin") : t("app.makeUser"),
+      text: `${t("app.user")}: ${profile.username}`,
+      confirmButtonText: t("app.confirm"),
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const updated = await UserManagementStore.updateProfile(profile.id, {
+        role: nextRole,
+      });
+      syncManagedUser(updated);
+    } catch (error) {
+      await appDialog.error(
+        t("app.userActionFailed"),
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+  };
+
+  const handleManagedStatusChange = async (
+    profile: ManagedUserProfile,
+    nextStatus: UserStatus,
+  ) => {
+    if (!(await ensureUserIsManageable(profile))) {
+      return;
+    }
+
+    const titleByStatus: Record<UserStatus, string> = {
+      active: t("app.activateUser"),
+      disabled: t("app.disableUser"),
+      banned: t("app.banUser"),
+    };
+
+    const confirmed = await appDialog.confirm({
+      title: titleByStatus[nextStatus],
+      text: `${t("app.user")}: ${profile.username}`,
+      confirmButtonText: t("app.confirm"),
+      danger: nextStatus === "banned",
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const updated = await UserManagementStore.updateProfile(profile.id, {
+        status: nextStatus,
+      });
+      syncManagedUser(updated);
+    } catch (error) {
+      await appDialog.error(
+        t("app.userActionFailed"),
+        error instanceof Error ? error.message : String(error),
+      );
+    }
   };
 
   const sharedRoomIds = new Set(sharedBoards.map((board) => board.roomId));
@@ -577,7 +866,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
     .sort((a, b) => b.updatedAt - a.updatedAt)
     .slice(0, 6);
 
-  const displayedBoards = activeTab === "recent" ? [] : privateBoards;
+  const displayedBoards = activeTab === "all" ? privateBoards : [];
+  const selectedManagedUser =
+    managedUsers.find((profile) => profile.id === selectedUserId) ??
+    managedUsers[0] ??
+    null;
+
+  const panelBackground = isDark ? "#1e1e2e" : "#ffffff";
+  const panelBorder = isDark ? "#2e2e4a" : "#e5e7eb";
+  const secondaryBackground = isDark ? "#242436" : "#f8fafc";
+  const titleColor = isDark ? "#e1e1f0" : "#1a1a2e";
+  const mutedColor = isDark ? "#9ca3af" : "#6b7280";
 
   return (
     <div className={`dashboard${isDark ? " dashboard--dark" : ""}`}>
@@ -613,9 +912,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         <nav className="dashboard__tabs">
           <button
-            className={`dashboard__tab${
-              activeTab === "recent" ? " active" : ""
-            }`}
+            className={`dashboard__tab${activeTab === "recent" ? " active" : ""}`}
             onClick={() => setActiveTab("recent")}
           >
             {t("app.recent")}
@@ -627,18 +924,25 @@ export const Dashboard: React.FC<DashboardProps> = ({
             {t("app.myBoards")}
           </button>
           <button
-            className={`dashboard__tab${
-              activeTab === "shared" ? " active" : ""
-            }`}
+            className={`dashboard__tab${activeTab === "shared" ? " active" : ""}`}
             onClick={() => setActiveTab("shared")}
           >
             {t("app.shared")}
             {sharedBoards.length > 0 && (
-              <span className="dashboard__tab-badge">
-                {sharedBoards.length}
-              </span>
+              <span className="dashboard__tab-badge">{sharedBoards.length}</span>
             )}
           </button>
+          {isAdmin && (
+            <button
+              className={`dashboard__tab${activeTab === "users" ? " active" : ""}`}
+              onClick={() => setActiveTab("users")}
+            >
+              {t("app.userManagement")}
+              {managedUsers.length > 0 && (
+                <span className="dashboard__tab-badge">{managedUsers.length}</span>
+              )}
+            </button>
+          )}
         </nav>
 
         <div className="dashboard__user">
@@ -687,7 +991,400 @@ export const Dashboard: React.FC<DashboardProps> = ({
       </header>
 
       <main className="dashboard__main">
-        {activeTab === "shared" ? (
+        {activeTab === "users" ? (
+          <>
+            <div className="dashboard__section-header">
+              <h2>
+                {t("app.userManagement")}
+                {!usersLoading && managedUsers.length > 0 && (
+                  <span
+                    style={{
+                      fontSize: "0.875rem",
+                      fontWeight: 400,
+                      color: mutedColor,
+                      marginLeft: "0.5rem",
+                    }}
+                  >
+                    ({managedUsers.length})
+                  </span>
+                )}
+              </h2>
+              <button
+                className="dashboard__shared-refresh"
+                onClick={() => {
+                  void fetchUsers();
+                }}
+                disabled={usersLoading}
+                title={t("app.refreshUsers")}
+                aria-label={t("app.refreshUsers")}
+              >
+                <FontAwesomeIcon
+                  icon={faArrowsRotate}
+                  className={`dashboard__shared-refresh-icon${
+                    usersLoading ? " dashboard__shared-refresh-icon--spinning" : ""
+                  }`}
+                />
+              </button>
+            </div>
+            {usersError && (
+              <div className="dashboard__shared-error">
+                <strong>{t("app.errorLoadingUsers")}</strong> {usersError}
+              </div>
+            )}
+            {usersLoading ? (
+              <div className="dashboard__loading">
+                <p>{t("app.loadingUsers")}</p>
+              </div>
+            ) : managedUsers.length === 0 ? (
+              <div className="dashboard__empty">
+                <p>{t("app.noUsers")}</p>
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                  gap: "1.25rem",
+                  alignItems: "start",
+                }}
+              >
+                <div
+                  style={{
+                    background: panelBackground,
+                    border: `1.5px solid ${panelBorder}`,
+                    borderRadius: "12px",
+                    padding: "0.75rem",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.5rem",
+                  }}
+                >
+                  {managedUsers.map((profile) => {
+                    const selected = profile.id === selectedManagedUser?.id;
+                    const rolePalette = getRolePalette(profile.role, isDark);
+                    const statusPalette = getStatusPalette(profile.status, isDark);
+                    return (
+                      <button
+                        key={profile.id}
+                        type="button"
+                        onClick={() => setSelectedUserId(profile.id)}
+                        style={{
+                          textAlign: "left",
+                          width: "100%",
+                          padding: "0.85rem",
+                          borderRadius: "10px",
+                          border: `1.5px solid ${selected ? "#6965db" : panelBorder}`,
+                          background: selected
+                            ? isDark
+                              ? "#1e1e4a"
+                              : "#f5f3ff"
+                            : secondaryBackground,
+                          color: titleColor,
+                          cursor: "pointer",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "0.55rem",
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>
+                            {profile.username}
+                          </div>
+                          <div
+                            style={{
+                              color: mutedColor,
+                              fontSize: "0.8rem",
+                              marginTop: "0.2rem",
+                              wordBreak: "break-word",
+                            }}
+                          >
+                            {profile.email}
+                          </div>
+                        </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "0.45rem",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <span
+                            style={{
+                              ...rolePalette,
+                              borderWidth: "1px",
+                              borderStyle: "solid",
+                              borderRadius: "999px",
+                              padding: "0.18rem 0.55rem",
+                              fontSize: "0.72rem",
+                              fontWeight: 700,
+                            }}
+                          >
+                            {getUserRoleLabel(profile.role)}
+                          </span>
+                          <span
+                            style={{
+                              ...statusPalette,
+                              borderWidth: "1px",
+                              borderStyle: "solid",
+                              borderRadius: "999px",
+                              padding: "0.18rem 0.55rem",
+                              fontSize: "0.72rem",
+                              fontWeight: 700,
+                            }}
+                          >
+                            {getUserStatusLabel(profile.status)}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {selectedManagedUser && (
+                  <div
+                    style={{
+                      background: panelBackground,
+                      border: `1.5px solid ${panelBorder}`,
+                      borderRadius: "12px",
+                      padding: "1rem",
+                      color: titleColor,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: "1rem",
+                        alignItems: "flex-start",
+                        flexWrap: "wrap",
+                        marginBottom: "1rem",
+                      }}
+                    >
+                      <div>
+                        <h3
+                          style={{
+                            margin: 0,
+                            fontSize: "1.1rem",
+                            fontWeight: 700,
+                          }}
+                        >
+                          {selectedManagedUser.username}
+                        </h3>
+                        <p
+                          style={{
+                            margin: "0.35rem 0 0",
+                            color: mutedColor,
+                            fontSize: "0.9rem",
+                            wordBreak: "break-word",
+                          }}
+                        >
+                          {selectedManagedUser.email}
+                        </p>
+                      </div>
+                      <div style={{ display: "flex", gap: "0.45rem", flexWrap: "wrap" }}>
+                        <span
+                          style={{
+                            ...getRolePalette(selectedManagedUser.role, isDark),
+                            borderWidth: "1px",
+                            borderStyle: "solid",
+                            borderRadius: "999px",
+                            padding: "0.18rem 0.55rem",
+                            fontSize: "0.72rem",
+                            fontWeight: 700,
+                          }}
+                        >
+                          {getUserRoleLabel(selectedManagedUser.role)}
+                        </span>
+                        <span
+                          style={{
+                            ...getStatusPalette(selectedManagedUser.status, isDark),
+                            borderWidth: "1px",
+                            borderStyle: "solid",
+                            borderRadius: "999px",
+                            padding: "0.18rem 0.55rem",
+                            fontSize: "0.72rem",
+                            fontWeight: 700,
+                          }}
+                        >
+                          {getUserStatusLabel(selectedManagedUser.status)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                        gap: "0.85rem",
+                      }}
+                    >
+                      {[
+                        [t("auth.fields.username"), selectedManagedUser.username],
+                        [t("app.userEmail"), selectedManagedUser.email],
+                        [t("app.userRole"), getUserRoleLabel(selectedManagedUser.role)],
+                        [t("app.userStatus"), getUserStatusLabel(selectedManagedUser.status)],
+                        [t("app.userJoined"), formatDate(selectedManagedUser.createdAt)],
+                        [t("app.userLastUpdate"), formatDate(selectedManagedUser.updatedAt)],
+                      ].map(([label, value]) => (
+                        <div
+                          key={String(label)}
+                          style={{
+                            background: secondaryBackground,
+                            border: `1px solid ${panelBorder}`,
+                            borderRadius: "10px",
+                            padding: "0.75rem",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: "0.75rem",
+                              color: mutedColor,
+                              marginBottom: "0.35rem",
+                            }}
+                          >
+                            {label}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "0.9rem",
+                              fontWeight: 600,
+                              wordBreak: "break-word",
+                            }}
+                          >
+                            {value}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <p
+                      style={{
+                        margin: "1rem 0 0",
+                        fontSize: "0.85rem",
+                        color: mutedColor,
+                      }}
+                    >
+                      {t("app.userEmailReadOnlyHint")}
+                    </p>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: "0.65rem",
+                        marginTop: "1rem",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void handleEditManagedUsername(selectedManagedUser);
+                        }}
+                        title={t("app.editUsername")}
+                        aria-label={t("app.editUsername")}
+                        style={{
+                          ...getActionIconButtonStyle("primary", isDark),
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faPenToSquare} />
+                      </button>
+
+                      {selectedManagedUser.role === "admin" ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void handleManagedRoleChange(selectedManagedUser, "user");
+                          }}
+                          title={t("app.makeUser")}
+                          aria-label={t("app.makeUser")}
+                          style={{
+                            ...getActionIconButtonStyle("neutral", isDark),
+                          }}
+                        >
+                          <FontAwesomeIcon icon={faUser} />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void handleManagedRoleChange(selectedManagedUser, "admin");
+                          }}
+                          title={t("app.makeAdmin")}
+                          aria-label={t("app.makeAdmin")}
+                          style={{
+                            ...getActionIconButtonStyle("neutral", isDark),
+                          }}
+                        >
+                          <FontAwesomeIcon icon={faUserShield} />
+                        </button>
+                      )}
+
+                      {selectedManagedUser.status !== "active" && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void handleManagedStatusChange(selectedManagedUser, "active");
+                          }}
+                          title={t("app.activateUser")}
+                          aria-label={t("app.activateUser")}
+                          style={{
+                            ...getActionIconButtonStyle("neutral", isDark),
+                          }}
+                        >
+                          <FontAwesomeIcon icon={faCheck} />
+                        </button>
+                      )}
+
+                      {selectedManagedUser.status !== "disabled" && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void handleManagedStatusChange(selectedManagedUser, "disabled");
+                          }}
+                          title={t("app.disableUser")}
+                          aria-label={t("app.disableUser")}
+                          style={{
+                            ...getActionIconButtonStyle("neutral", isDark),
+                          }}
+                        >
+                          <FontAwesomeIcon icon={faUserSlash} />
+                        </button>
+                      )}
+
+                      {selectedManagedUser.status !== "banned" && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void handleManagedStatusChange(selectedManagedUser, "banned");
+                          }}
+                          title={t("app.banUser")}
+                          aria-label={t("app.banUser")}
+                          style={{
+                            ...getActionIconButtonStyle("danger", isDark),
+                          }}
+                        >
+                          <FontAwesomeIcon icon={faBan} />
+                        </button>
+                      )}
+                    </div>
+
+                    {selectedManagedUser.id === user.id && (
+                      <p
+                        style={{
+                          margin: "0.9rem 0 0",
+                          color: mutedColor,
+                          fontSize: "0.85rem",
+                        }}
+                      >
+                        {t("app.cannotManageCurrentUserText")}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        ) : activeTab === "shared" ? (
           <>
             <div className="dashboard__section-header">
               <h2>
@@ -697,7 +1394,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     style={{
                       fontSize: "0.875rem",
                       fontWeight: 400,
-                      color: "#9ca3af",
+                      color: mutedColor,
                       marginLeft: "0.5rem",
                     }}
                   >
@@ -707,17 +1404,24 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </h2>
               <button
                 className="dashboard__shared-refresh"
-                onClick={fetchBoards}
+                onClick={() => {
+                  void fetchBoards();
+                }}
                 disabled={loading}
                 title={t("app.refreshSharedBoards")}
+                aria-label={t("app.refreshSharedBoards")}
               >
-                ↻
+                <FontAwesomeIcon
+                  icon={faArrowsRotate}
+                  className={`dashboard__shared-refresh-icon${
+                    loading ? " dashboard__shared-refresh-icon--spinning" : ""
+                  }`}
+                />
               </button>
             </div>
             {sharedError && (
               <div className="dashboard__shared-error">
-                <strong>{t("app.errorLoadingSharedBoards")}</strong>{" "}
-                {sharedError}
+                <strong>{t("app.errorLoadingSharedBoards")}</strong> {sharedError}
               </div>
             )}
             {loading ? (
@@ -727,7 +1431,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             ) : sharedBoards.length === 0 ? (
               <div className="dashboard__empty">
                 <p>{t("app.noSharedBoards")}</p>
-                <p style={{ fontSize: "0.875rem", color: "#9ca3af" }}>
+                <p style={{ fontSize: "0.875rem", color: mutedColor }}>
                   {t("app.sharedBoardsHint")}
                 </p>
               </div>
@@ -758,7 +1462,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       style={{
                         fontSize: "0.875rem",
                         fontWeight: 400,
-                        color: "#9ca3af",
+                        color: mutedColor,
                         marginLeft: "0.5rem",
                       }}
                     >
@@ -836,3 +1540,5 @@ export const Dashboard: React.FC<DashboardProps> = ({
     </div>
   );
 };
+
+
