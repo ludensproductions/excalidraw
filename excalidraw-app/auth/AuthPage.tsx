@@ -9,12 +9,77 @@ import {
   requestPasswordReset,
   updatePassword,
 } from "./authStore";
+import {
+  AUTH_FIELD_LIMITS,
+  USERNAME_ALLOWED_CHARS_PATTERN,
+  normalizeEmail,
+  normalizeUsername,
+  sanitizeEmailInput,
+  sanitizePasswordInput,
+  sanitizeUsernameInput,
+  validatePassword,
+  validateRegistrationFields,
+} from "./authValidation";
 import "./AuthPage.scss";
 import type { AuthUser } from "./authStore";
 interface Props {
   onAuthenticated: (user: AuthUser) => void;
 }
 type Mode = "login" | "register" | "forgot" | "reset";
+
+type InputSanitizer = (value: string) => string;
+type InputValueSetter = (value: string) => void;
+
+const getValueWithInsertedText = (input: HTMLInputElement, text: string) => {
+  const start = input.selectionStart ?? input.value.length;
+  const end = input.selectionEnd ?? start;
+
+  return `${input.value.slice(0, start)}${text}${input.value.slice(end)}`;
+};
+
+const preventUnsanitizedInput =
+  (sanitize: InputSanitizer) => (event: React.FormEvent<HTMLInputElement>) => {
+    const nativeEvent = event.nativeEvent as InputEvent;
+
+    if (nativeEvent.isComposing || !nativeEvent.data) {
+      return;
+    }
+
+    const nextValue = getValueWithInsertedText(
+      event.currentTarget,
+      nativeEvent.data,
+    );
+
+    if (sanitize(nextValue) !== nextValue) {
+      event.preventDefault();
+    }
+  };
+
+const pasteSanitizedInput =
+  (setValue: InputValueSetter, sanitize: InputSanitizer) =>
+  (event: React.ClipboardEvent<HTMLInputElement>) => {
+    const pastedText = event.clipboardData.getData("text");
+
+    if (!pastedText) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const input = event.currentTarget;
+    const selectionStart = input.selectionStart ?? input.value.length;
+    const nextValue = getValueWithInsertedText(input, pastedText);
+    const cursorPosition = sanitize(
+      `${input.value.slice(0, selectionStart)}${pastedText}`,
+    ).length;
+
+    setValue(sanitize(nextValue));
+
+    window.requestAnimationFrame(() => {
+      input.setSelectionRange(cursorPosition, cursorPosition);
+    });
+  };
+
 export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
   const { editorTheme, setAppTheme } = useHandleAppTheme();
   const isDark = editorTheme === THEME.DARK;
@@ -66,15 +131,17 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
     setLoading(true);
     try {
       if (mode === "register") {
-        if (username.trim().length < 2) {
-          throw new Error(t("auth.errors.usernameMinLength"));
-        }
-        if (password.length < 6) {
-          throw new Error(t("auth.errors.passwordMinLength"));
+        const validationError = validateRegistrationFields({
+          username,
+          email,
+          password,
+        });
+        if (validationError) {
+          throw new Error(t(validationError));
         }
         const user = await registerUser(
-          username.trim(),
-          email.trim(),
+          normalizeUsername(username),
+          normalizeEmail(email),
           password,
         );
         onAuthenticated(user);
@@ -89,11 +156,15 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
         if (password !== confirmPassword) {
           throw new Error(t("auth.errors.passwordsDoNotMatch"));
         }
+        const validationError = validatePassword(password);
+        if (validationError) {
+          throw new Error(t(validationError));
+        }
         const user = await updatePassword(password);
         onAuthenticated(user);
         return;
       }
-      const user = await loginUser(email.trim(), password);
+      const user = await loginUser(normalizeEmail(email), password);
       onAuthenticated(user);
     } catch (err: unknown) {
       setError(
@@ -130,27 +201,28 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
     mode === "login"
       ? t("auth.title.login")
       : mode === "register"
-        ? t("auth.title.register")
-        : mode === "forgot"
-          ? t("auth.title.forgot")
-          : t("auth.title.reset");
+      ? t("auth.title.register")
+      : mode === "forgot"
+      ? t("auth.title.forgot")
+      : t("auth.title.reset");
   const subtitle =
     mode === "login"
       ? t("auth.subtitle.login")
       : mode === "register"
-        ? t("auth.subtitle.register")
-        : mode === "forgot"
-          ? t("auth.subtitle.forgot")
-          : t("auth.subtitle.reset");
+      ? t("auth.subtitle.register")
+      : mode === "forgot"
+      ? t("auth.subtitle.forgot")
+      : t("auth.subtitle.reset");
   const submitLabel = loading
     ? t("auth.actions.loading")
     : mode === "login"
-      ? t("auth.actions.login")
-      : mode === "register"
-        ? t("auth.actions.register")
-        : mode === "forgot"
-          ? t("auth.actions.sendEmail")
-          : t("auth.actions.savePassword");
+    ? t("auth.actions.login")
+    : mode === "register"
+    ? t("auth.actions.register")
+    : mode === "forgot"
+    ? t("auth.actions.sendEmail")
+    : t("auth.actions.savePassword");
+  const shouldConstrainPassword = mode !== "login";
   return (
     <div className={`auth-page${isDark ? " auth-page--dark" : ""}`}>
       <div className="auth-page__card">
@@ -229,9 +301,20 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
                 type="text"
                 placeholder={t("auth.placeholders.username")}
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) =>
+                  setUsername(sanitizeUsernameInput(e.target.value))
+                }
+                onBeforeInput={preventUnsanitizedInput(sanitizeUsernameInput)}
+                onPaste={pasteSanitizedInput(
+                  setUsername,
+                  sanitizeUsernameInput,
+                )}
                 required
+                minLength={AUTH_FIELD_LIMITS.username.min}
+                maxLength={AUTH_FIELD_LIMITS.username.max}
+                pattern={USERNAME_ALLOWED_CHARS_PATTERN}
                 autoComplete="username"
+                autoCapitalize="none"
                 autoFocus
               />
             </div>
@@ -244,9 +327,15 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
                 type="email"
                 placeholder={t("auth.placeholders.email")}
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail(sanitizeEmailInput(e.target.value))}
+                onBeforeInput={preventUnsanitizedInput(sanitizeEmailInput)}
+                onPaste={pasteSanitizedInput(setEmail, sanitizeEmailInput)}
                 required
+                minLength={AUTH_FIELD_LIMITS.email.min}
+                maxLength={AUTH_FIELD_LIMITS.email.max}
                 autoComplete="email"
+                autoCapitalize="none"
+                inputMode="email"
                 autoFocus={mode === "login" || mode === "forgot"}
               />
             </div>
@@ -267,8 +356,34 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
                     : t("auth.placeholders.newPassword")
                 }
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) =>
+                  setPassword(
+                    shouldConstrainPassword
+                      ? sanitizePasswordInput(e.target.value)
+                      : e.target.value,
+                  )
+                }
+                onBeforeInput={
+                  shouldConstrainPassword
+                    ? preventUnsanitizedInput(sanitizePasswordInput)
+                    : undefined
+                }
+                onPaste={
+                  shouldConstrainPassword
+                    ? pasteSanitizedInput(setPassword, sanitizePasswordInput)
+                    : undefined
+                }
                 required
+                minLength={
+                  shouldConstrainPassword
+                    ? AUTH_FIELD_LIMITS.password.min
+                    : undefined
+                }
+                maxLength={
+                  shouldConstrainPassword
+                    ? AUTH_FIELD_LIMITS.password.max
+                    : undefined
+                }
                 autoComplete={
                   mode === "login" ? "current-password" : "new-password"
                 }
@@ -286,8 +401,17 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
                 type="password"
                 placeholder={t("auth.placeholders.confirmPassword")}
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) =>
+                  setConfirmPassword(sanitizePasswordInput(e.target.value))
+                }
+                onBeforeInput={preventUnsanitizedInput(sanitizePasswordInput)}
+                onPaste={pasteSanitizedInput(
+                  setConfirmPassword,
+                  sanitizePasswordInput,
+                )}
                 required
+                minLength={AUTH_FIELD_LIMITS.password.min}
+                maxLength={AUTH_FIELD_LIMITS.password.max}
                 autoComplete="new-password"
               />
             </div>
@@ -313,14 +437,14 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
                 {t("auth.actions.forgotPassword")}
               </button>
               <span className="auth-page__toggle-separator">|</span>
-              {t("auth.actions.noAccount")} {" "}
+              {t("auth.actions.noAccount")}{" "}
               <button type="button" onClick={switchMode}>
                 {t("auth.actions.registerLink")}
               </button>
             </>
           ) : mode === "register" ? (
             <>
-              {t("auth.actions.hasAccount")} {" "}
+              {t("auth.actions.hasAccount")}{" "}
               <button type="button" onClick={switchMode}>
                 {t("auth.actions.loginLink")}
               </button>

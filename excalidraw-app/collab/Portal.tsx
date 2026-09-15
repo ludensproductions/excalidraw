@@ -102,6 +102,18 @@ class Portal {
     }
   }
 
+  broadcastCollaborationClosed = async () => {
+    const data: SocketUpdateDataSource["COLLABORATION_CLOSED"] = {
+      type: WS_SUBTYPES.COLLABORATION_CLOSED,
+    };
+
+    await this._broadcastSocketData(data as SocketUpdateData);
+
+    // Give socket.io a macrotask to enqueue the final room message before the
+    // owner tears the connection down.
+    await new Promise((resolve) => window.setTimeout(resolve, 150));
+  };
+
   uploadFiles = async (
     elements: readonly OrderedExcalidrawElement[],
     files: BinaryFiles,

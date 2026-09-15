@@ -97,6 +97,9 @@ export type SocketUpdateDataSource = {
       elements: readonly OrderedExcalidrawElement[];
     };
   };
+  COLLABORATION_CLOSED: {
+    type: WS_SUBTYPES.COLLABORATION_CLOSED;
+  };
   MOUSE_LOCATION: {
     type: WS_SUBTYPES.MOUSE_LOCATION;
     payload: {

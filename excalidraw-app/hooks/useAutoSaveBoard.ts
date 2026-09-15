@@ -1,9 +1,19 @@
 import { exportToBlob, useExcalidrawAPI } from "@excalidraw/excalidraw";
 import { useCallback, useEffect, useRef } from "react";
 
-import { activeBoardAtom, appJotaiStore, useAtomValue } from "../app-jotai";
+import {
+  activeBoardAtom,
+  appJotaiStore,
+  isReadOnlySessionAtom,
+  useAtomValue,
+} from "../app-jotai";
 import { getCurrentUser } from "../auth/authStore";
-import { activeRoomLinkAtom, isCollaboratingAtom } from "../collab/Collab";
+import {
+  activeRoomLinkAtom,
+  isCollaboratingAtom,
+  isOwnerAtom,
+} from "../collab/Collab";
+import { dashboardState } from "../dashboardState";
 import { DrawingsStore } from "../data/DrawingsStore";
 
 const AUTO_SAVE_DELAY = 3000; // ms after last change
@@ -13,12 +23,16 @@ export const useAutoSaveBoard = () => {
   const excalidrawAPI = useExcalidrawAPI();
   const activeBoard = useAtomValue(activeBoardAtom);
   const isCollaborating = useAtomValue(isCollaboratingAtom);
+  const isCollaborationOwner = useAtomValue(isOwnerAtom);
+  const isReadOnlySession = useAtomValue(isReadOnlySessionAtom);
   const activeRoomLink = useAtomValue(activeRoomLinkAtom);
 
   // Refs so the debounced async callback always sees latest values
   const activeBoardRef = useRef(activeBoard);
   const ensuredBoardIdRef = useRef<string | null>(activeBoard.id);
   const isCollaboratingRef = useRef(isCollaborating);
+  const isCollaborationOwnerRef = useRef(isCollaborationOwner);
+  const isReadOnlySessionRef = useRef(isReadOnlySession);
   const activeRoomLinkRef = useRef(activeRoomLink);
   const excalidrawAPIRef = useRef(excalidrawAPI);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -39,6 +53,12 @@ export const useAutoSaveBoard = () => {
     isCollaboratingRef.current = isCollaborating;
   }, [isCollaborating]);
   useEffect(() => {
+    isCollaborationOwnerRef.current = isCollaborationOwner;
+  }, [isCollaborationOwner]);
+  useEffect(() => {
+    isReadOnlySessionRef.current = isReadOnlySession;
+  }, [isReadOnlySession]);
+  useEffect(() => {
     activeRoomLinkRef.current = activeRoomLink;
   }, [activeRoomLink]);
   useEffect(() => {
@@ -46,6 +66,10 @@ export const useAutoSaveBoard = () => {
   }, [excalidrawAPI]);
 
   const runSave = useCallback(async () => {
+    if (dashboardState.isAutoSaveSuppressed()) {
+      return;
+    }
+
     const board = activeBoardRef.current;
     const storeBoard = appJotaiStore.get(activeBoardAtom);
     const api = excalidrawAPIRef.current;
@@ -62,9 +86,12 @@ export const useAutoSaveBoard = () => {
       return;
     }
 
-    // A collaboration room opened from "Compartidos" doesn't represent a
-    // private board record. Persist the room through the collab pipeline only.
-    if (!board.id && isCollaboratingRef.current) {
+    // A collaboration room opened by a non-owner doesn't represent a private
+    // board record. Persist it through the collab pipeline only.
+    if (
+      isCollaboratingRef.current &&
+      (!isCollaborationOwnerRef.current || isReadOnlySessionRef.current)
+    ) {
       return;
     }
 

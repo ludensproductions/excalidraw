@@ -1,5 +1,13 @@
 ﻿import { t } from "@excalidraw/excalidraw/i18n";
 import { supabase } from "../data/supabase";
+import {
+  normalizeEmail,
+  normalizeUsername,
+  validateEmail,
+  validatePassword,
+  validateUsername,
+  validateRegistrationFields,
+} from "./authValidation";
 import type { UserRole, UserStatus } from "../data/UserManagementStore";
 import type { Session } from "@supabase/supabase-js";
 
@@ -137,13 +145,72 @@ export function subscribeToAuth(listener: Listener): () => void {
   };
 }
 
+export async function updateCurrentUsername(
+  username: string,
+): Promise<AuthUser> {
+  await ensureHydrated();
+
+  if (!currentUser) {
+    throw new Error(t("auth.errors.loginFailed"));
+  }
+
+  const validationError = validateUsername(username);
+  if (validationError) {
+    throw new Error(t(validationError));
+  }
+
+  const normalizedUsername = normalizeUsername(username);
+  if (normalizedUsername === currentUser.username) {
+    return currentUser;
+  }
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({ username: normalizedUsername })
+    .eq("id", currentUser.id)
+    .select("id, username, email, created_at, updated_at, role, status")
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  currentUser = {
+    id: data.id,
+    username: data.username,
+    email: data.email,
+    createdAt: new Date(data.created_at).getTime(),
+    updatedAt: new Date(data.updated_at).getTime(),
+    role: data.role,
+    status: data.status,
+  };
+  emit();
+
+  void supabase.auth
+    .updateUser({ data: { username: normalizedUsername } })
+    .catch((error) => {
+      console.warn("Failed to sync auth metadata username:", error.message);
+    });
+
+  return currentUser;
+}
+
 export async function registerUser(
   username: string,
   email: string,
   password: string,
 ): Promise<AuthUser> {
-  const trimmedUsername = username.trim();
-  const trimmedEmail = email.trim();
+  const validationError = validateRegistrationFields({
+    username,
+    email,
+    password,
+  });
+  if (validationError) {
+    throw new Error(t(validationError));
+  }
+
+  const trimmedUsername = normalizeUsername(username);
+  const trimmedEmail = normalizeEmail(email);
   const { data, error } = await supabase.auth.signUp({
     email: trimmedEmail,
     password,
@@ -209,11 +276,12 @@ export async function loginUser(
 }
 
 export async function requestPasswordReset(email: string): Promise<void> {
-  const trimmedEmail = email.trim();
-  if (!trimmedEmail) {
-    throw new Error(t("auth.errors.emailRequired"));
+  const validationError = validateEmail(email);
+  if (validationError) {
+    throw new Error(t(validationError));
   }
 
+  const trimmedEmail = normalizeEmail(email);
   const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
     redirectTo: `${window.location.origin}${window.location.pathname}`,
   });
@@ -259,8 +327,9 @@ export async function beginPasswordRecoveryFromUrl(): Promise<boolean> {
 }
 
 export async function updatePassword(password: string): Promise<AuthUser> {
-  if (password.length < 6) {
-    throw new Error(t("auth.errors.passwordMinLength"));
+  const validationError = validatePassword(password);
+  if (validationError) {
+    throw new Error(t(validationError));
   }
 
   const { error } = await supabase.auth.updateUser({ password });

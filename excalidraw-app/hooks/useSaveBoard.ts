@@ -1,36 +1,57 @@
 import { exportToBlob, useExcalidrawAPI } from "@excalidraw/excalidraw";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 
-import { activeBoardAtom, useAtom, useAtomValue } from "../app-jotai";
+import {
+  activeBoardAtom,
+  boardSaveStatusAtom,
+  isReadOnlySessionAtom,
+  useAtom,
+  useAtomValue,
+} from "../app-jotai";
 import { appDialog } from "../appDialog";
 import { getCurrentUser } from "../auth/authStore";
-import { activeRoomLinkAtom, isCollaboratingAtom } from "../collab/Collab";
+import {
+  activeRoomLinkAtom,
+  isCollaboratingAtom,
+  isOwnerAtom,
+} from "../collab/Collab";
 import { DrawingsStore } from "../data/DrawingsStore";
 
-export type SaveStatus = "idle" | "saving" | "saved";
+import type { DrawingRecord } from "../data/DrawingsStore";
+import type { BoardSaveStatus } from "../app-jotai";
+
+export type SaveStatus = BoardSaveStatus;
+export type SaveBoardOptions = {
+  name?: string;
+};
 
 export const useSaveBoard = () => {
   const excalidrawAPI = useExcalidrawAPI();
   const [activeBoard, setActiveBoard] = useAtom(activeBoardAtom);
   const isCollaborating = useAtomValue(isCollaboratingAtom);
+  const isCollaborationOwner = useAtomValue(isOwnerAtom);
+  const isReadOnlySession = useAtomValue(isReadOnlySessionAtom);
   const activeRoomLink = useAtomValue(activeRoomLinkAtom);
-  const [status, setStatus] = useState<SaveStatus>("idle");
+  const [status, setStatus] = useAtom(boardSaveStatusAtom);
 
-  const save = useCallback(async () => {
+  const save = useCallback(async (options?: SaveBoardOptions) => {
     if (!excalidrawAPI || status === "saving") {
-      return;
+      return null;
     }
 
-    if (isCollaborating && !activeBoard.id) {
+    if (
+      isCollaborating &&
+      (!isCollaborationOwner || isReadOnlySession)
+    ) {
       await appDialog.alert({
-        title: "Tablero compartido",
-        text: "Este tablero se guarda en la sesion colaborativa, no en tus tableros privados.",
+        title: "Solo el dueño puede guardar",
+        text: "Este tablero compartido pertenece a otro usuario. Tus cambios se sincronizan en la colaboracion; para guardarlo en tus tableros, exporta una copia o pide al dueño que finalice la sesion.",
         icon: "info",
       });
-      return;
+      return null;
     }
 
-    let name = activeBoard.name;
+    let name = options?.name?.trim() || activeBoard.name;
     if (!name) {
       const input = await appDialog.promptText({
         title: "Guardar tablero",
@@ -40,7 +61,7 @@ export const useSaveBoard = () => {
         requiredMessage: "Escribe un nombre para guardar el tablero.",
       });
       if (!input) {
-        return;
+        return null;
       }
       name = input;
     }
@@ -71,7 +92,7 @@ export const useSaveBoard = () => {
         }
       }
 
-      const record = await DrawingsStore.save(
+      const record: DrawingRecord = await DrawingsStore.save(
         {
           name,
           elements,
@@ -86,13 +107,17 @@ export const useSaveBoard = () => {
       setActiveBoard({ id: record.id, name: record.name });
       setStatus("saved");
       setTimeout(() => setStatus("idle"), 2000);
+      return record;
     } catch {
       setStatus("idle");
+      return null;
     }
   }, [
     excalidrawAPI,
     activeBoard,
     isCollaborating,
+    isCollaborationOwner,
+    isReadOnlySession,
     activeRoomLink,
     setActiveBoard,
     status,

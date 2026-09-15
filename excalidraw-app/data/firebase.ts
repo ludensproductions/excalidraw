@@ -287,6 +287,8 @@ export const loadFromFirebase = async (
   roomKey: string,
   socket: Socket | null,
 ): Promise<readonly SyncableExcalidrawElement[] | null> => {
+  await ensureCollaborationRoomActive(roomId, roomKey);
+
   const { data, error } = await supabase
     .from("collab_rooms")
     .select("scene_version, iv, ciphertext")

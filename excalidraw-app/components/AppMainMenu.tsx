@@ -4,12 +4,22 @@ import React from "react";
 
 import type { Theme } from "@excalidraw/element/types";
 
-import { activeBoardAtom, appJotaiStore, useAtom } from "../app-jotai";
+import {
+  activeBoardAtom,
+  appJotaiStore,
+  isReadOnlySessionAtom,
+  useAtom,
+  useAtomValue,
+} from "../app-jotai";
 import { appDialog } from "../appDialog";
 import { getCurrentUser, logoutUser } from "../auth/authStore";
+import { activeRoomLinkAtom, isOwnerAtom } from "../collab/Collab";
+import { getCollaborationLinkData } from "../data";
 import { DrawingsStore } from "../data/DrawingsStore";
+import { SharedBoardsStore } from "../data/SharedBoardsStore";
 import { dashboardState } from "../dashboardState";
 import { useSaveBoard } from "../hooks/useSaveBoard";
+import { getBoardMenuPermissions } from "../permissions/boardMenuPermissions";
 
 const homeIcon = (
   <svg
@@ -40,22 +50,51 @@ export const AppMainMenu: React.FC<{
   const currentUser = getCurrentUser();
   const { save: saveBoard, status: saveBoardStatus } = useSaveBoard();
   const [activeBoard, setActiveBoard] = useAtom(activeBoardAtom);
+  const activeRoomLink = useAtomValue(activeRoomLinkAtom);
+  const isCollaborationOwner = useAtomValue(isOwnerAtom);
+  const isReadOnlySession = useAtomValue(isReadOnlySessionAtom);
   const { t } = useI18n();
+  const permissions = getBoardMenuPermissions({
+    isAuthenticated: !!currentUser,
+    hasHomeNavigation: !!dashboardState.getOnBack(),
+    isCollabEnabled: props.isCollabEnabled,
+    isCollaborating: props.isCollaborating,
+    isCollaborationOwner,
+    isReadOnlySession,
+  });
 
   const handleLogout = () => {
     logoutUser();
     window.location.reload();
   };
 
+  const renameSharedBoardIfNeeded = async (name: string) => {
+    if (!props.isCollaborating || !isCollaborationOwner || !activeRoomLink) {
+      return;
+    }
+
+    const linkData = getCollaborationLinkData(activeRoomLink);
+    if (!linkData) {
+      return;
+    }
+
+    await SharedBoardsStore.renameByRoom(
+      linkData.roomId,
+      linkData.roomKey,
+      name,
+    );
+  };
+
   const handleRenameBoard = async () => {
-    if (!activeBoard.id) {
+    if (!permissions.renameBoard) {
       await appDialog.alert({
-        title: t("app.saveBoardFirst"),
-        text: t("app.saveBoardFirstText"),
+        title: "Solo el dueño puede renombrar",
+        text: "Este tablero compartido pertenece a otro usuario. Solo el dueño puede renombrar el tablero guardado.",
         icon: "info",
       });
       return;
     }
+
     const trimmed = await appDialog.promptText({
       title: t("app.renameBoard"),
       label: t("app.newName"),
@@ -66,7 +105,10 @@ export const AppMainMenu: React.FC<{
     if (!trimmed || trimmed === activeBoard.name) {
       return;
     }
-    const isTaken = await DrawingsStore.isNameTaken(trimmed, activeBoard.id);
+    const isTaken = await DrawingsStore.isNameTaken(
+      trimmed,
+      activeBoard.id ?? undefined,
+    );
     if (isTaken) {
       await appDialog.alert({
         title: t("app.duplicateName"),
@@ -74,9 +116,19 @@ export const AppMainMenu: React.FC<{
       });
       return;
     }
-    await DrawingsStore.rename(activeBoard.id, trimmed);
-    setActiveBoard({ id: activeBoard.id, name: trimmed });
-    appJotaiStore.set(activeBoardAtom, { id: activeBoard.id, name: trimmed });
+
+    if (activeBoard.id) {
+      await DrawingsStore.rename(activeBoard.id, trimmed);
+      await renameSharedBoardIfNeeded(trimmed);
+      setActiveBoard({ id: activeBoard.id, name: trimmed });
+      appJotaiStore.set(activeBoardAtom, { id: activeBoard.id, name: trimmed });
+      return;
+    }
+
+    const record = await saveBoard({ name: trimmed });
+    if (record) {
+      await renameSharedBoardIfNeeded(trimmed);
+    }
   };
 
   const saveBoardIcon = (
@@ -112,7 +164,7 @@ export const AppMainMenu: React.FC<{
 
   return (
     <MainMenu>
-      {dashboardState.getOnBack() && (
+      {permissions.home && (
         <MainMenu.Item
           icon={homeIcon}
           onSelect={async () => {
@@ -123,43 +175,53 @@ export const AppMainMenu: React.FC<{
           {t("app.home")}
         </MainMenu.Item>
       )}
-      <MainMenu.Item icon={saveBoardIcon} onSelect={saveBoard}>
-        {saveBoardStatus === "saving"
-          ? t("app.saving")
-          : saveBoardStatus === "saved"
-            ? t("app.saved")
-            : t("app.saveBoard")}
-      </MainMenu.Item>
-      <MainMenu.Item icon={renameIcon} onSelect={handleRenameBoard}>
-        {t("app.renameBoard")}
-      </MainMenu.Item>
-      <MainMenu.DefaultItems.LoadScene />
-      <MainMenu.DefaultItems.SaveToActiveFile />
-      <MainMenu.DefaultItems.Export />
-      <MainMenu.DefaultItems.SaveAsImage />
-      {props.isCollabEnabled && (
+      {permissions.saveBoard && (
+        <MainMenu.Item icon={saveBoardIcon} onSelect={() => saveBoard()}>
+          {saveBoardStatus === "saving"
+            ? t("app.saving")
+            : saveBoardStatus === "saved"
+              ? t("app.saved")
+              : t("app.saveBoard")}
+        </MainMenu.Item>
+      )}
+      {permissions.renameBoard && (
+        <MainMenu.Item icon={renameIcon} onSelect={handleRenameBoard}>
+          {t("app.renameBoard")}
+        </MainMenu.Item>
+      )}
+      {permissions.loadScene && <MainMenu.DefaultItems.LoadScene />}
+      {permissions.saveToActiveFile && <MainMenu.DefaultItems.SaveToActiveFile />}
+      {permissions.export && <MainMenu.DefaultItems.Export />}
+      {permissions.saveAsImage && <MainMenu.DefaultItems.SaveAsImage />}
+      {permissions.liveCollaboration && (
         <MainMenu.DefaultItems.LiveCollaborationTrigger
           isCollaborating={props.isCollaborating}
           onSelect={() => props.onCollabDialogOpen()}
         />
       )}
-      <MainMenu.DefaultItems.CommandPalette className="highlighted" />
-      <MainMenu.DefaultItems.Help />
-      <MainMenu.DefaultItems.ClearCanvas />
+      {permissions.commandPalette && (
+        <MainMenu.DefaultItems.CommandPalette className="highlighted" />
+      )}
+      {permissions.help && <MainMenu.DefaultItems.Help />}
+      {permissions.clearCanvas && <MainMenu.DefaultItems.ClearCanvas />}
       <MainMenu.Separator />
-      {currentUser && (
+      {permissions.logout && currentUser && (
         <MainMenu.Item icon={usersIcon} onSelect={handleLogout}>
           {currentUser.username} - {t("app.logOut")}
         </MainMenu.Item>
       )}
       <MainMenu.Separator />
-      <MainMenu.DefaultItems.Preferences />
-      <MainMenu.DefaultItems.ToggleTheme
-        allowSystemTheme
-        theme={props.theme}
-        onSelect={props.setTheme}
-      />
-      <MainMenu.DefaultItems.ChangeCanvasBackground />
+      {permissions.preferences && <MainMenu.DefaultItems.Preferences />}
+      {permissions.toggleTheme && (
+        <MainMenu.DefaultItems.ToggleTheme
+          allowSystemTheme
+          theme={props.theme}
+          onSelect={props.setTheme}
+        />
+      )}
+      {permissions.changeCanvasBackground && (
+        <MainMenu.DefaultItems.ChangeCanvasBackground />
+      )}
     </MainMenu>
   );
 });

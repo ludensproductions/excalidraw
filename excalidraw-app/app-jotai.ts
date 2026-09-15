@@ -21,6 +21,10 @@ export const activeBoardAtom = atom<{ id: string | null; name: string | null }>(
   },
 );
 
+export type BoardSaveStatus = "idle" | "saving" | "saved";
+
+export const boardSaveStatusAtom = atom<BoardSaveStatus>("idle");
+
 /** True while the user is in the editor having come from the dashboard. */
 export const hasDashboardBackAtom = atom(false);
 

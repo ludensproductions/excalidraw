@@ -85,6 +85,7 @@ import {
   useAtomWithInitialValue,
   appJotaiStore,
   activeBoardAtom,
+  boardSaveStatusAtom,
   hasDashboardBackAtom,
   isReadOnlySessionAtom,
 } from "./app-jotai";
@@ -483,6 +484,7 @@ const ExcalidrawWrapper = () => {
   const [, setShareDialogState] = useAtom(shareDialogStateAtom);
   const [collabAPI] = useAtom(collabAPIAtom);
   const activeBoard = useAtomValue(activeBoardAtom);
+  const boardSaveStatus = useAtomValue(boardSaveStatusAtom);
   const [isCollaborating] = useAtomWithInitialValue(isCollaboratingAtom, () => {
     return isCollaborationLink(window.location.href);
   });
@@ -970,15 +972,26 @@ const ExcalidrawWrapper = () => {
             return null;
           }
           return (
-            <button
-              className="dashboard-back-btn"
-              onClick={() => {
-                void navigateBackToDashboard();
-              }}
-              title={t("app.backToHome")}
-            >
-              {t("app.back")}
-            </button>
+            <div className="dashboard-back-row">
+              <button
+                className="dashboard-back-btn"
+                onClick={() => {
+                  void navigateBackToDashboard();
+                }}
+                title={t("app.backToHome")}
+              >
+                {t("app.back")}
+              </button>
+              {boardSaveStatus === "saved" && (
+                <span
+                  className="board-save-success-badge"
+                  role="status"
+                  aria-live="polite"
+                >
+                  {t("app.boardSavedSuccessfully")}
+                </span>
+              )}
+            </div>
           );
         }}
         renderTopRightUI={(isMobile) => {

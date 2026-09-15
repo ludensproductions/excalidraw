@@ -182,6 +182,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
   private collaborators = new Map<SocketId, Collaborator>();
   private isReadOnly = false;
   private isOwnerSession = false;
+  private isHandlingClosedCollaboration = false;
 
   constructor(props: CollabProps) {
     super(props);
@@ -374,7 +375,9 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       }
     } catch (error: any) {
       if (error instanceof CollaborationClosedError) {
-        await this.handleClosedCollaboration();
+        if (this.isCollaborating()) {
+          await this.handleClosedCollaboration();
+        }
         return;
       }
 
@@ -403,7 +406,9 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     }
   };
 
-  private saveCurrentSceneAsDraft = async (preferredBoardId?: string | null) => {
+  private saveCurrentSceneAsDraft = async (
+    preferredBoardId?: string | null,
+  ) => {
     const activeBoard = appJotaiStore.get(activeBoardAtom);
     const appState = this.excalidrawAPI.getAppState();
     const record = await DrawingsStore.save(
@@ -428,22 +433,58 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     return record;
   };
 
+  private notifyCollaboratorsCollaborationClosed = async () => {
+    if (!this.isOwnerSession || !this.portal.roomId || !this.portal.roomKey) {
+      return;
+    }
+
+    try {
+      await this.portal.broadcastCollaborationClosed();
+    } catch (error) {
+      console.error("Failed to notify collaborators about closed room:", error);
+    }
+  };
+
   stopCollaboration = async (keepRemoteState = true, saveDraft = false) => {
     const roomId = this.portal.roomId;
     const roomKey = this.portal.roomKey;
     const activeBoard = appJotaiStore.get(activeBoardAtom);
+    const wasOwnerSession = this.isOwnerSession;
     let didStop = false;
+    let didCloseSharedBoard = false;
 
     this.queueBroadcastAllElements.cancel();
     this.queueSaveToFirebase.cancel();
     this.loadImageFiles.cancel();
     this.resetErrorIndicator(true);
 
-    this.saveCollabRoomToFirebase(
-      getSyncableElements(
-        this.excalidrawAPI.getSceneElementsIncludingDeleted(),
-      ),
-    );
+    const saveRemoteStateBeforeStop = async (): Promise<boolean> => {
+      await this.saveCollabRoomToFirebase(
+        getSyncableElements(
+          this.excalidrawAPI.getSceneElementsIncludingDeleted(),
+        ),
+      );
+      return !this.isHandlingClosedCollaboration;
+    };
+
+    const closeSharedBoardBeforeStop = async (): Promise<boolean> => {
+      if (!wasOwnerSession || !roomId || !roomKey || didCloseSharedBoard) {
+        return true;
+      }
+
+      try {
+        await SharedBoardsStore.closeByRoom(roomId, roomKey);
+        removeOwnedRoom(roomId);
+        didCloseSharedBoard = true;
+        return true;
+      } catch (error) {
+        console.error("Failed to close shared board on stop:", error);
+        this.setErrorDialog(
+          error instanceof Error ? error.message : t("errors.collabSaveFailed"),
+        );
+        return false;
+      }
+    };
 
     if (this.portal.socket && this.fallbackInitializationHandler) {
       this.portal.socket.off(
@@ -453,7 +494,17 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     }
 
     if (!keepRemoteState) {
+      if (!(await saveRemoteStateBeforeStop())) {
+        return true;
+      }
+      if (!(await closeSharedBoardBeforeStop())) {
+        return false;
+      }
+      if (!this.isOwnerSession && !saveDraft) {
+        dashboardState.setAutoSaveSuppressed(true);
+      }
       LocalData.fileStorage.reset();
+      await this.notifyCollaboratorsCollaborationClosed();
       this.destroySocketClient();
       didStop = true;
     } else if (
@@ -468,7 +519,17 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       // that could have been saved in other tabs while we were collaborating
       resetBrowserStateVersions();
 
+      if (!this.isOwnerSession && !saveDraft) {
+        dashboardState.setAutoSaveSuppressed(true);
+      }
+      if (!(await saveRemoteStateBeforeStop())) {
+        return true;
+      }
+      if (!(await closeSharedBoardBeforeStop())) {
+        return false;
+      }
       window.history.pushState({}, APP_NAME, window.location.origin);
+      await this.notifyCollaboratorsCollaborationClosed();
       this.destroySocketClient();
 
       LocalData.fileStorage.reset();
@@ -509,10 +570,17 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     // - remove membership/publication from shared boards
     // - clear persisted collaboration link from the private board record
     if (didStop && roomId && roomKey) {
-      removeOwnedRoom(roomId);
-      SharedBoardsStore.leaveByRoom(roomId, roomKey).catch((error) => {
-        console.error("Failed to leave shared board on stop:", error);
-      });
+      try {
+        if (wasOwnerSession && !didCloseSharedBoard) {
+          await SharedBoardsStore.closeByRoom(roomId, roomKey);
+          removeOwnedRoom(roomId);
+        } else if (!wasOwnerSession) {
+          await SharedBoardsStore.leaveByRoom(roomId, roomKey);
+          removeOwnedRoom(roomId);
+        }
+      } catch (error) {
+        console.error("Failed to close shared board on stop:", error);
+      }
     }
     if (didStop && saveDraft && roomId) {
       DrawingsStore.normalizeAfterStoppingRoom(
@@ -559,14 +627,58 @@ class Collab extends PureComponent<CollabProps, CollabState> {
   };
 
   private handleClosedCollaboration = async () => {
+    if (this.isHandlingClosedCollaboration) {
+      return;
+    }
+
+    this.isHandlingClosedCollaboration = true;
+    const roomId = this.portal.roomId;
+    const roomKey = this.portal.roomKey;
+
+    dashboardState.setAutoSaveSuppressed(true);
+    this.queueBroadcastAllElements.cancel();
+    this.queueSaveToFirebase.cancel();
+    this.loadImageFiles.cancel();
+    this.resetErrorIndicator(true);
+
+    const leaveClosedBoardPromise =
+      roomId && roomKey
+        ? SharedBoardsStore.leaveByRoom(roomId, roomKey).catch((error) => {
+            console.error("Failed to leave closed shared board:", error);
+          })
+        : Promise.resolve();
+
+    resetBrowserStateVersions();
     window.history.replaceState({}, APP_NAME, window.location.origin);
+    LocalData.fileStorage.reset();
     this.destroySocketClient();
+    appJotaiStore.set(activeBoardAtom, { id: null, name: null });
     await appDialog.alert({
       title: t("app.collaborationClosedTitle"),
       text: t("app.collaborationClosedText"),
       icon: "warning",
     });
-    await dashboardState.flushAutoSave();
+    await leaveClosedBoardPromise;
+    dashboardState.getOnBack()?.();
+  };
+
+  private handleUnavailableCollaborationLink = async () => {
+    if (this.isHandlingClosedCollaboration) {
+      return;
+    }
+
+    this.isHandlingClosedCollaboration = true;
+    dashboardState.setAutoSaveSuppressed(true);
+    resetBrowserStateVersions();
+    window.history.replaceState({}, APP_NAME, window.location.origin);
+    LocalData.fileStorage.reset();
+    this.destroySocketClient();
+    appJotaiStore.set(activeBoardAtom, { id: null, name: null });
+    await appDialog.alert({
+      title: t("app.collaborationClosedTitle"),
+      text: t("app.collaborationClosedText"),
+      icon: "warning",
+    });
     dashboardState.getOnBack()?.();
   };
 
@@ -714,13 +826,16 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     // initialization check runs, so a newly-created room isn't mistaken for a
     // previously-closed one while backend records are still being created.
     if (existingRoomLinkData) {
-      await SharedBoardsStore.joinExisting({
+      const joined = await SharedBoardsStore.joinExisting({
         roomId,
         roomKey,
         username,
         readOnly: this.isReadOnly,
-        fallbackName: activeBoard?.name ?? undefined,
       });
+      if (!joined) {
+        await this.handleUnavailableCollaborationLink();
+        return null;
+      }
     } else {
       await SharedBoardsStore.joinOrCreate({
         roomId,
@@ -839,6 +954,9 @@ class Collab extends PureComponent<CollabProps, CollabState> {
                 ),
               ),
             );
+            break;
+          case WS_SUBTYPES.COLLABORATION_CLOSED:
+            await this.handleClosedCollaboration();
             break;
           case WS_SUBTYPES.MOUSE_LOCATION: {
             const { id, pointer, button, username, selectedElementIds } =
@@ -962,7 +1080,6 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       });
     }
 
-
     return scenePromise;
   };
 
@@ -1010,6 +1127,10 @@ class Collab extends PureComponent<CollabProps, CollabState> {
           await this.handleClosedCollaboration();
         }
       } catch (error: any) {
+        if (error instanceof CollaborationClosedError) {
+          await this.handleClosedCollaboration();
+          return null;
+        }
         // log the error and move on. other peers will sync us the scene.
         console.error(error);
       } finally {
@@ -1331,6 +1452,10 @@ class Collab extends PureComponent<CollabProps, CollabState> {
   leaveCollaboration = async (saveDraft = false): Promise<boolean> => {
     const roomId = this.portal.roomId;
     const roomKey = this.portal.roomKey;
+
+    if (!saveDraft) {
+      dashboardState.setAutoSaveSuppressed(true);
+    }
 
     this.queueBroadcastAllElements.cancel();
     this.queueSaveToFirebase.cancel();

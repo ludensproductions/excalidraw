@@ -3,6 +3,7 @@ import type { DrawingRecord } from "./data/DrawingsStore";
 let _onBack: (() => void) | null = null;
 let _pendingBoard: DrawingRecord | null = null;
 let _flushAutoSave: (() => Promise<void>) | null = null;
+let _autoSaveSuppressed = false;
 
 export const dashboardState = {
   setOnBack(cb: (() => void) | null): void {
@@ -15,6 +16,9 @@ export const dashboardState = {
     _flushAutoSave = fn;
   },
   async flushAutoSave(): Promise<void> {
+    if (_autoSaveSuppressed) {
+      return;
+    }
     if (_flushAutoSave) {
       try {
         await _flushAutoSave();
@@ -22,6 +26,12 @@ export const dashboardState = {
         // best effort
       }
     }
+  },
+  setAutoSaveSuppressed(suppressed: boolean): void {
+    _autoSaveSuppressed = suppressed;
+  },
+  isAutoSaveSuppressed(): boolean {
+    return _autoSaveSuppressed;
   },
   setPendingBoard(r: DrawingRecord | null): void {
     _pendingBoard = r;

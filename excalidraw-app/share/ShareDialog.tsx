@@ -7,6 +7,7 @@ import {
   copyIcon,
   eyeIcon,
   LinkIcon,
+  pencilIcon,
   playerPlayIcon,
   playerStopFilledIcon,
   share,
@@ -16,10 +17,21 @@ import {
 import { useUIAppState } from "@excalidraw/excalidraw/context/ui-appState";
 import { useCopyStatus } from "@excalidraw/excalidraw/hooks/useCopiedIndicator";
 import { useI18n } from "@excalidraw/excalidraw/i18n";
-import { KEYS, getFrame } from "@excalidraw/common";
+import { getFrame } from "@excalidraw/common";
 import { useEffect, useRef, useState } from "react";
 
 import { atom, useAtom, useAtomValue } from "../app-jotai";
+import { appDialog } from "../appDialog";
+import {
+  AUTH_FIELD_LIMITS,
+  normalizeUsername,
+  validateUsername,
+} from "../auth/authValidation";
+import {
+  getCurrentUser,
+  updateCurrentUsername,
+  waitForAuthHydration,
+} from "../auth/authStore";
 import { activeRoomLinkAtom, isOwnerAtom } from "../collab/Collab";
 import {
   getCollaborationLinkData,
@@ -80,11 +92,18 @@ const ActiveRoomDialog = ({
   const { onCopy: onCopyReadOnly, copyStatus: copyStatusReadOnly } =
     useCopyStatus();
   const isOwner = useAtomValue(isOwnerAtom);
+  const [displayUsername, setDisplayUsername] = useState(() =>
+    collabAPI.getUsername(),
+  );
 
   const linkData = getCollaborationLinkData(activeRoomLink);
   const readOnlyLink = linkData
     ? getReadOnlyCollaborationLink(linkData)
     : activeRoomLink;
+
+  useEffect(() => {
+    setDisplayUsername(collabAPI.getUsername());
+  }, [collabAPI]);
 
   const copyRoomLink = async () => {
     try {
@@ -115,6 +134,55 @@ const ActiveRoomDialog = ({
     readOnlyRef.current?.select();
   };
 
+  const editUsername = async () => {
+    const currentUsername = displayUsername || collabAPI.getUsername();
+    const nextUsername = await appDialog.promptText({
+      title: t("app.editUsername"),
+      label: t("app.newUsername"),
+      initialValue: currentUsername,
+      confirmButtonText: t("app.save"),
+      requiredMessage: t("app.fieldRequired"),
+      maxLength: AUTH_FIELD_LIMITS.username.max,
+    });
+
+    if (!nextUsername) {
+      return;
+    }
+
+    const normalizedUsername = normalizeUsername(nextUsername);
+    if (normalizedUsername === currentUsername) {
+      return;
+    }
+
+    const validationError = validateUsername(normalizedUsername);
+    if (validationError) {
+      await appDialog.alert({
+        title: t(validationError),
+        icon: "warning",
+      });
+      return;
+    }
+
+    try {
+      await waitForAuthHydration();
+
+      const currentUser = getCurrentUser();
+      if (currentUser) {
+        const updatedUser = await updateCurrentUsername(normalizedUsername);
+        collabAPI.setUsername(updatedUser.username);
+        setDisplayUsername(updatedUser.username);
+        return;
+      }
+
+      collabAPI.setUsername(normalizedUsername);
+      setDisplayUsername(normalizedUsername);
+    } catch (error) {
+      await appDialog.error(
+        t("app.userActionFailed"),
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+  };
 
   const shareRoomLink = async () => {
     try {
@@ -133,13 +201,23 @@ const ActiveRoomDialog = ({
       <h3 className="ShareDialog__active__header">
         {t("labels.liveCollaboration").replace(/\./g, "")}
       </h3>
-      <TextField
-        defaultValue={collabAPI.getUsername()}
-        placeholder={t("labels.yourName")}
-        label={t("labels.yourName")}
-        onChange={collabAPI.setUsername}
-        onKeyDown={(event) => event.key === KEYS.ENTER && handleClose()}
-      />
+      <div className="ShareDialog__active__nameRow">
+        <TextField
+          value={displayUsername}
+          placeholder={t("labels.yourName")}
+          label={t("labels.yourName")}
+          readonly
+          fullWidth
+        />
+        <FilledButton
+          size="large"
+          variant="icon"
+          label={t("app.editUsername")}
+          icon={pencilIcon}
+          className="ShareDialog__active__editName"
+          onClick={editUsername}
+        />
+      </div>
       {isOwner && (
         <>
           <div className="ShareDialog__active__linkRow">

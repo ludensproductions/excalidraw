@@ -73,12 +73,19 @@
     gap: 0.75rem;
     flex-shrink: 0;
     margin-left: auto;
+    max-width: min(28rem, 45vw);
+    min-width: 0;
   }
 
   &__username {
+    display: block;
     font-size: 0.875rem;
     font-weight: 600;
     color: #374151;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &__logout-btn {

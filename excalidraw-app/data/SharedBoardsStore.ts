@@ -126,7 +126,6 @@ export const SharedBoardsStore = {
     roomKey: string;
     username: string;
     readOnly?: boolean;
-    fallbackName?: string | null;
   }): Promise<boolean> {
     const { error } = await supabase.rpc("join_existing_shared_board", {
       p_room_id: params.roomId,
@@ -141,16 +140,6 @@ export const SharedBoardsStore = {
         "\nHint: verify that the join_existing_shared_board RPC exists in your Supabase project.",
         error,
       );
-      // Backward compatibility: if the "join_existing_shared_board" RPC is
-      // not deployed yet, fallback to the idempotent joinOrCreate RPC.
-      if (error.code === "42883" || error.code === "PGRST202") {
-        return this.joinOrCreate({
-          roomId: params.roomId,
-          roomKey: params.roomKey,
-          name: params.fallbackName || "Tablero compartido",
-          username: params.username,
-        });
-      }
       return false;
     }
 
@@ -159,16 +148,18 @@ export const SharedBoardsStore = {
       return true;
     }
 
-    if (params.fallbackName) {
-      return this.joinOrCreate({
-        roomId: params.roomId,
-        roomKey: params.roomKey,
-        name: params.fallbackName,
-        username: params.username,
-      });
-    }
-
     return false;
+  },
+
+  async closeByRoom(roomId: string, roomKey: string): Promise<void> {
+    const { error } = await supabase.rpc("close_shared_board", {
+      p_room_id: roomId,
+      p_room_key: roomKey,
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
   },
 
   async rename(id: string, name: string): Promise<void> {
@@ -176,6 +167,21 @@ export const SharedBoardsStore = {
       .from("shared_boards")
       .update({ name })
       .eq("id", id);
+    if (error) {
+      throw new Error(error.message);
+    }
+  },
+
+  async renameByRoom(
+    roomId: string,
+    roomKey: string,
+    name: string,
+  ): Promise<void> {
+    const { error } = await supabase
+      .from("shared_boards")
+      .update({ name })
+      .eq("room_id", roomId)
+      .eq("room_key", roomKey);
     if (error) {
       throw new Error(error.message);
     }

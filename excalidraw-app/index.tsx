@@ -57,6 +57,12 @@ const AppRoot: React.FC = () => {
   const [isCreatingBoard, setIsCreatingBoard] = useState(false);
 
   useEffect(() => {
+    if (view.type === "dashboard") {
+      dashboardState.setAutoSaveSuppressed(false);
+    }
+  }, [view.type]);
+
+  useEffect(() => {
     let cancelled = false;
     waitForAuthHydration()
       .catch((error) => {
@@ -112,23 +118,30 @@ const AppRoot: React.FC = () => {
     }
 
     // Restaurar tablero si la URL contiene /board/{id}
-    const boardMatch = window.location.pathname.match(/^\/board\/([a-zA-Z0-9_-]+)$/);
+    const boardMatch = window.location.pathname.match(
+      /^\/board\/([a-zA-Z0-9_-]+)$/,
+    );
     if (boardMatch) {
       const boardId = boardMatch[1];
-      DrawingsStore.get(boardId).then((record) => {
-        if (record) {
-          appJotaiStore.set(hasDashboardBackAtom, true);
-          appJotaiStore.set(activeBoardAtom, { id: record.id, name: record.name });
-          dashboardState.setPendingBoard(record);
-          setView({ type: "editor", boardId: record.id, key: Date.now() });
-        } else {
+      DrawingsStore.get(boardId)
+        .then((record) => {
+          if (record) {
+            appJotaiStore.set(hasDashboardBackAtom, true);
+            appJotaiStore.set(activeBoardAtom, {
+              id: record.id,
+              name: record.name,
+            });
+            dashboardState.setPendingBoard(record);
+            setView({ type: "editor", boardId: record.id, key: Date.now() });
+          } else {
+            window.history.replaceState({}, "", "/");
+            setView({ type: "dashboard" });
+          }
+        })
+        .catch(() => {
           window.history.replaceState({}, "", "/");
           setView({ type: "dashboard" });
-        }
-      }).catch(() => {
-        window.history.replaceState({}, "", "/");
-        setView({ type: "dashboard" });
-      });
+        });
       return;
     }
 
@@ -143,6 +156,7 @@ const AppRoot: React.FC = () => {
   };
 
   const openBoard = async (record: DrawingRecord) => {
+    dashboardState.setAutoSaveSuppressed(false);
     const latestRecord = (await DrawingsStore.get(record.id)) ?? record;
 
     appJotaiStore.set(hasDashboardBackAtom, true);
@@ -156,6 +170,8 @@ const AppRoot: React.FC = () => {
   };
 
   const newBoard = async () => {
+    dashboardState.setAutoSaveSuppressed(false);
+
     if (isCreatingBoard) {
       return;
     }
@@ -210,6 +226,7 @@ const AppRoot: React.FC = () => {
   };
 
   const openSharedBoard = (board: SharedBoard) => {
+    dashboardState.setAutoSaveSuppressed(false);
     appJotaiStore.set(hasDashboardBackAtom, true);
     appJotaiStore.set(activeBoardAtom, { id: null, name: board.name });
     // Restore the read-only suffix if this user only has read-only access.

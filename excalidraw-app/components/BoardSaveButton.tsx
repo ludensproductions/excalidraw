@@ -37,7 +37,9 @@ export const BoardSaveButton: React.FC = () => {
       className={`board-save-btn${
         status === "saved" ? " board-save-btn--saved" : ""
       }`}
-      onClick={save}
+      onClick={() => {
+        void save();
+      }}
       disabled={status === "saving"}
       title={
         activeBoard.name

@@ -133,6 +133,21 @@
         margin: 0;
       }
 
+      &__nameRow {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-end;
+        gap: 0.75rem;
+      }
+
+      &__nameRow .ExcTextField {
+        min-width: 0;
+      }
+
+      &__editName {
+        flex: 0 0 auto;
+      }
+
       &__linkRow {
         display: flex;
         flex-direction: row;
@@ -185,6 +200,16 @@
       &__actions {
         display: flex;
         justify-content: center;
+      }
+
+      @include isMobile {
+        &__nameRow {
+          align-items: stretch;
+        }
+
+        &__editName {
+          align-self: flex-end;
+        }
       }
     }
   }

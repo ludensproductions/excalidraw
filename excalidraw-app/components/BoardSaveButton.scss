@@ -1,3 +1,9 @@
+.dashboard-back-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .dashboard-back-btn {
   display: inline-flex;
   align-items: center;
@@ -19,6 +25,21 @@
     border-color: var(--color-primary, #6965db);
     color: var(--color-primary, #6965db);
   }
+}
+
+.board-save-success-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  padding: 0.1875rem 0.55rem;
+  border-radius: 999px;
+  background: #059669;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: 0 0.25rem 0.75rem rgba(5, 150, 105, 0.22);
 }
 
 .board-save-btn {

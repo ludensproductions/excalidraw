@@ -15,6 +15,11 @@ import {
 
 import { activeBoardAtom, appJotaiStore } from "../app-jotai";
 import { appDialog } from "../appDialog";
+import {
+  AUTH_FIELD_LIMITS,
+  normalizeUsername,
+  validateUsername,
+} from "../auth/authValidation";
 import { getCollaborationLinkData } from "../data";
 import { DrawingsStore } from "../data/DrawingsStore";
 import { SharedBoardsStore } from "../data/SharedBoardsStore";
@@ -24,7 +29,7 @@ import {
   type UserRole,
   type UserStatus,
 } from "../data/UserManagementStore";
-import { destroyCollabRoomInFirebase, loadFromFirebase } from "../data/firebase";
+import { loadFromFirebase } from "../data/firebase";
 import { useHandleAppTheme } from "../useHandleAppTheme";
 
 import "./Dashboard.scss";
@@ -668,10 +673,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     }
 
     if (isOwner) {
-      await Promise.all([
-        SharedBoardsStore.leaveByRoom(board.roomId, board.roomKey),
-        destroyCollabRoomInFirebase(board.roomId),
-      ]);
+      await SharedBoardsStore.closeByRoom(board.roomId, board.roomKey);
     } else {
       await SharedBoardsStore.leaveByRoom(board.roomId, board.roomKey);
     }
@@ -740,16 +742,22 @@ export const Dashboard: React.FC<DashboardProps> = ({
       initialValue: profile.username,
       confirmButtonText: t("app.save"),
       requiredMessage: t("app.fieldRequired"),
-      maxLength: 60,
+      maxLength: AUTH_FIELD_LIMITS.username.max,
     });
 
-    if (!nextUsername || nextUsername === profile.username) {
+    if (!nextUsername) {
       return;
     }
 
-    if (nextUsername.trim().length < 2) {
+    const normalizedUsername = normalizeUsername(nextUsername);
+    if (normalizedUsername === profile.username) {
+      return;
+    }
+
+    const validationError = validateUsername(normalizedUsername);
+    if (validationError) {
       await appDialog.alert({
-        title: t("auth.errors.usernameMinLength"),
+        title: t(validationError),
         icon: "warning",
       });
       return;
@@ -757,7 +765,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
     try {
       const updated = await UserManagementStore.updateProfile(profile.id, {
-        username: nextUsername,
+        username: normalizedUsername,
       });
       syncManagedUser(updated);
     } catch (error) {
@@ -1540,5 +1548,4 @@ export const Dashboard: React.FC<DashboardProps> = ({
     </div>
   );
 };
-
 
