@@ -30,6 +30,7 @@ import {
   type UserStatus,
 } from "../data/UserManagementStore";
 import { loadFromFirebase } from "../data/firebase";
+import { getErrorMessage } from "../errorMessages";
 import { useHandleAppTheme } from "../useHandleAppTheme";
 
 import "./Dashboard.scss";
@@ -486,8 +487,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     const [all, shared] = await Promise.all([
       DrawingsStore.getAllForUser(user.id),
       SharedBoardsStore.getAll().catch((err: unknown) => {
-        const msg = err instanceof Error ? err.message : String(err);
-        setSharedError(msg);
+        setSharedError(getErrorMessage(err));
         return [] as SharedBoard[];
       }),
     ]);
@@ -512,7 +512,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         return profiles[0]?.id ?? null;
       });
     } catch (error) {
-      setUsersError(error instanceof Error ? error.message : String(error));
+      setUsersError(getErrorMessage(error));
     } finally {
       setUsersLoading(false);
     }
@@ -787,10 +787,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       syncManagedUser(updated);
       void appDialog.toast({ title: t("app.userUpdatedSuccessfully") });
     } catch (error) {
-      await appDialog.error(
-        t("app.userActionFailed"),
-        error instanceof Error ? error.message : String(error),
-      );
+      await appDialog.error(t("app.userActionFailed"), getErrorMessage(error));
     }
   };
 
@@ -819,10 +816,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       syncManagedUser(updated);
       void appDialog.toast({ title: t("app.userUpdatedSuccessfully") });
     } catch (error) {
-      await appDialog.error(
-        t("app.userActionFailed"),
-        error instanceof Error ? error.message : String(error),
-      );
+      await appDialog.error(t("app.userActionFailed"), getErrorMessage(error));
     }
   };
 
@@ -858,10 +852,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       syncManagedUser(updated);
       void appDialog.toast({ title: t("app.userUpdatedSuccessfully") });
     } catch (error) {
-      await appDialog.error(
-        t("app.userActionFailed"),
-        error instanceof Error ? error.message : String(error),
-      );
+      await appDialog.error(t("app.userActionFailed"), getErrorMessage(error));
     }
   };
 

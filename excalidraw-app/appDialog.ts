@@ -3,6 +3,7 @@ import "sweetalert2/dist/sweetalert2.min.css";
 
 import { t } from "@excalidraw/excalidraw/i18n";
 
+import { translateErrorMessage } from "./errorMessages";
 import "./appDialog.scss";
 
 type DialogIcon = "success" | "error" | "warning" | "info" | "question";
@@ -72,7 +73,11 @@ export const appDialog = {
   },
 
   async error(title: string, text?: string): Promise<void> {
-    await this.alert({ title, text, icon: "error" });
+    await this.alert({
+      title,
+      text: text ? translateErrorMessage(text) : undefined,
+      icon: "error",
+    });
   },
 
   async confirm(options: {

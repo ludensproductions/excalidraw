@@ -10,6 +10,7 @@ import type { AppState, BinaryFileData } from "@excalidraw/excalidraw/types";
 
 import { STORAGE_KEYS } from "./app_constants";
 import { LocalData } from "./data/LocalData";
+import { getErrorMessage } from "./errorMessages";
 
 const EVENT_REQUEST_SCENE = "REQUEST_SCENE";
 
@@ -146,7 +147,9 @@ const verifyJWT = async ({
     }
   } catch (error) {
     console.error("Failed to verify JWT:", error);
-    throw new Error(error instanceof Error ? error.message : "Invalid JWT");
+    throw new Error(
+      getErrorMessage(error, "No se pudo validar la autorización."),
+    );
   }
 };
 
@@ -192,8 +195,8 @@ export const ExcalidrawPlusIframeExport = () => {
             type: "ERROR",
             message:
               error instanceof ExcalidrawError
-                ? error.message
-                : "Failed to export scene data",
+                ? getErrorMessage(error)
+                : "No se pudo exportar la escena.",
           };
           event.source!.postMessage(responseData, {
             targetOrigin: EXCALIDRAW_PLUS_ORIGIN,

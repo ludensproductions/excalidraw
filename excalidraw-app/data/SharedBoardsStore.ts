@@ -1,3 +1,5 @@
+import { translateErrorMessage } from "../errorMessages";
+
 import { supabase } from "./supabase";
 
 export interface SharedBoardMember {
@@ -17,6 +19,10 @@ export interface SharedBoard {
   updatedAt: number;
   members: SharedBoardMember[];
 }
+
+const throwStoreError = (message: string): never => {
+  throw new Error(translateErrorMessage(message));
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function rowToBoard(row: any): SharedBoard {
@@ -158,7 +164,7 @@ export const SharedBoardsStore = {
     });
 
     if (error) {
-      throw new Error(error.message);
+      throwStoreError(error.message);
     }
   },
 
@@ -168,7 +174,7 @@ export const SharedBoardsStore = {
       .update({ name })
       .eq("id", id);
     if (error) {
-      throw new Error(error.message);
+      throwStoreError(error.message);
     }
   },
 
@@ -183,7 +189,7 @@ export const SharedBoardsStore = {
       .eq("room_id", roomId)
       .eq("room_key", roomKey);
     if (error) {
-      throw new Error(error.message);
+      throwStoreError(error.message);
     }
   },
 
@@ -200,7 +206,7 @@ export const SharedBoardsStore = {
         .delete()
         .eq("id", boardId);
       if (error) {
-        throw new Error(error.message);
+        throwStoreError(error.message);
       }
       return;
     }
@@ -210,7 +216,7 @@ export const SharedBoardsStore = {
       .eq("board_id", boardId)
       .eq("user_id", user.id);
     if (error) {
-      throw new Error(error.message);
+      throwStoreError(error.message);
     }
   },
 
@@ -244,7 +250,7 @@ export const SharedBoardsStore = {
         .delete()
         .eq("id", board.id);
       if (error) {
-        throw new Error(error.message);
+        throwStoreError(error.message);
       }
       return;
     }
@@ -255,7 +261,7 @@ export const SharedBoardsStore = {
       .eq("board_id", board.id)
       .eq("user_id", user.id);
     if (error) {
-      throw new Error(error.message);
+      throwStoreError(error.message);
     }
   },
 

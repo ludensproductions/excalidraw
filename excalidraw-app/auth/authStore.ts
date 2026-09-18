@@ -1,6 +1,7 @@
 import { t } from "@excalidraw/excalidraw/i18n";
 
 import { supabase } from "../data/supabase";
+import { translateErrorMessage } from "../errorMessages";
 
 import {
   normalizeEmail,
@@ -179,7 +180,7 @@ export async function updateCurrentUsername(
     .single();
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(translateErrorMessage(error.message));
   }
 
   currentUser = {
@@ -228,7 +229,7 @@ export async function registerUser(
     if (/registered|exists|duplicate/i.test(error.message)) {
       throw new Error(t("auth.errors.emailAlreadyRegistered"));
     }
-    throw new Error(error.message);
+    throw new Error(translateErrorMessage(error.message));
   }
 
   if (!data.user) {
@@ -271,7 +272,7 @@ export async function loginUser(
     if (/invalid login|invalid credentials/i.test(error.message)) {
       throw new Error(t("auth.errors.invalidCredentials"));
     }
-    throw new Error(error.message);
+    throw new Error(translateErrorMessage(error.message));
   }
 
   await applySession(data.session);
@@ -325,12 +326,12 @@ export async function beginPasswordRecoveryFromUrl(): Promise<boolean> {
       refresh_token: refreshToken,
     });
     if (error) {
-      throw new Error(error.message);
+      throw new Error(translateErrorMessage(error.message));
     }
   } else if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {
-      throw new Error(error.message);
+      throw new Error(translateErrorMessage(error.message));
     }
   } else {
     throw new Error(t("auth.errors.invalidRecoveryLink"));
@@ -348,7 +349,7 @@ export async function updatePassword(password: string): Promise<AuthUser> {
 
   const { error } = await supabase.auth.updateUser({ password });
   if (error) {
-    throw new Error(error.message);
+    throw new Error(translateErrorMessage(error.message));
   }
 
   const { data } = await supabase.auth.getSession();

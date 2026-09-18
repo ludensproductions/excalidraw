@@ -35,6 +35,7 @@ import {
   ROOM_ID_BYTES,
 } from "../app_constants";
 import { appDialog } from "../appDialog";
+import { translateErrorMessage } from "../errorMessages";
 
 import { encodeFilesForUpload } from "./FileManager";
 import {
@@ -315,7 +316,9 @@ export const exportToBackend = async (
       return {
         url: null,
         errorMessage: result.message
-          ? `${t("alerts.couldNotCreateShareableLink")} (${result.message})`
+          ? `${t(
+              "alerts.couldNotCreateShareableLink",
+            )} (${translateErrorMessage(result.message)})`
           : t("alerts.couldNotCreateShareableLink"),
       };
     }

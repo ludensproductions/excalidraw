@@ -1,3 +1,5 @@
+import { translateErrorMessage } from "../errorMessages";
+
 import { supabase } from "./supabase";
 
 export type CommentTarget =
@@ -24,7 +26,10 @@ export interface BoardComment {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const rowToComment = (row: any, threadType: CommentTarget["kind"]): BoardComment => ({
+const rowToComment = (
+  row: any,
+  threadType: CommentTarget["kind"],
+): BoardComment => ({
   id: row.id as string,
   threadId:
     threadType === "shared"
@@ -46,6 +51,10 @@ const getColumnForTarget = (target: CommentTarget) => {
   return target.kind === "shared" ? "shared_board_id" : "board_id";
 };
 
+const throwStoreError = (message: string): never => {
+  throw new Error(translateErrorMessage(message));
+};
+
 export const CommentsStore = {
   async getAll(target: CommentTarget): Promise<BoardComment[]> {
     const { data, error } = await supabase
@@ -54,7 +63,7 @@ export const CommentsStore = {
       .eq(getColumnForTarget(target), target.id)
       .order("created_at", { ascending: true });
     if (error) {
-      throw new Error(error.message);
+      throwStoreError(error.message);
     }
     return (data ?? []).map((row) => rowToComment(row, target.kind));
   },
@@ -84,7 +93,7 @@ export const CommentsStore = {
       .select()
       .single();
     if (error) {
-      throw new Error(error.message);
+      throwStoreError(error.message);
     }
     return rowToComment(data, params.target.kind);
   },
@@ -101,7 +110,7 @@ export const CommentsStore = {
       .select()
       .single();
     if (error) {
-      throw new Error(error.message);
+      throwStoreError(error.message);
     }
     return rowToComment(data, target.kind);
   },
@@ -112,7 +121,7 @@ export const CommentsStore = {
       .delete()
       .eq("id", id);
     if (error) {
-      throw new Error(error.message);
+      throwStoreError(error.message);
     }
   },
 };

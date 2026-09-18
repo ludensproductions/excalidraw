@@ -14,6 +14,7 @@ import type {
 
 import { WS_EVENTS, FILE_UPLOAD_TIMEOUT, WS_SUBTYPES } from "../app_constants";
 import { getSyncableElements, isSyncableElement } from "../data";
+import { getErrorMessage } from "../errorMessages";
 
 import type {
   SocketUpdateData,
@@ -127,7 +128,7 @@ class Portal {
       if (error.name !== "AbortError") {
         this.collab.excalidrawAPI.updateScene({
           appState: {
-            errorMessage: error.message,
+            errorMessage: getErrorMessage(error),
           },
         });
       }

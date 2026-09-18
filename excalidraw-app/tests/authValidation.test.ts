@@ -40,6 +40,7 @@ describe("auth validation", () => {
     expect(validateEmail("person.example.com")).toBe(
       "auth.errors.emailInvalid",
     );
+    expect(validateEmail("erwer")).toBe("auth.errors.emailInvalid");
     expect(validateEmail("")).toBe("auth.errors.emailRequired");
     expect(validateEmail("person\u{1f642}@example.com")).toBe(
       "auth.errors.emailInvalidCharacters",

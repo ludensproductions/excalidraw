@@ -1,3 +1,5 @@
+import { translateErrorMessage } from "../errorMessages";
+
 import { supabase } from "./supabase";
 
 export type UserRole = "admin" | "user";
@@ -36,6 +38,10 @@ const mapRow = (row: ProfileRow): ManagedUserProfile => ({
   updatedAt: new Date(row.updated_at).getTime(),
 });
 
+const throwStoreError = (message: string): never => {
+  throw new Error(translateErrorMessage(message));
+};
+
 export const UserManagementStore = {
   async getAll(): Promise<ManagedUserProfile[]> {
     const { data, error } = await supabase
@@ -44,7 +50,7 @@ export const UserManagementStore = {
       .order("created_at", { ascending: false });
 
     if (error) {
-      throw new Error(error.message);
+      throwStoreError(error.message);
     }
 
     return ((data ?? []) as ProfileRow[]).map(mapRow);
@@ -78,7 +84,7 @@ export const UserManagementStore = {
       .single();
 
     if (error) {
-      throw new Error(error.message);
+      throwStoreError(error.message);
     }
 
     return mapRow(data as ProfileRow);

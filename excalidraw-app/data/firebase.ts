@@ -21,10 +21,15 @@ import type {
   DataURL,
 } from "@excalidraw/excalidraw/types";
 
-import { FILE_CACHE_MAX_AGE_SEC, FIREBASE_STORAGE_PREFIXES } from "../app_constants";
+import {
+  FILE_CACHE_MAX_AGE_SEC,
+  FIREBASE_STORAGE_PREFIXES,
+} from "../app_constants";
+import { translateErrorMessage } from "../errorMessages";
+
+import { supabase } from "./supabase";
 
 import { getSyncableElements } from ".";
-import { supabase } from "./supabase";
 
 import type { SyncableExcalidrawElement } from ".";
 import type Portal from "../collab/Portal";
@@ -71,9 +76,7 @@ const decryptElements = async (
   const iv = base64ToUint8(data.iv) as Uint8Array<ArrayBuffer>;
   const ciphertext = base64ToUint8(data.ciphertext) as Uint8Array<ArrayBuffer>;
   const decrypted = await decryptData(iv, ciphertext, roomKey);
-  return JSON.parse(
-    new TextDecoder("utf-8").decode(new Uint8Array(decrypted)),
-  );
+  return JSON.parse(new TextDecoder("utf-8").decode(new Uint8Array(decrypted)));
 };
 
 class SceneVersionCache {
@@ -119,7 +122,7 @@ export const saveFilesToFirebase = async ({
   await Promise.all(
     files.map(async ({ id, buffer }) => {
       try {
-        const path = prefix.replace(/^\//, "") + "/" + id;
+        const path = `${prefix.replace(/^\//, "")}/${id}`;
         const { error } = await supabase.storage
           .from(STORAGE_BUCKET)
           .upload(path, buffer, {
@@ -175,7 +178,7 @@ export const destroyCollabRoomInFirebase = async (
     .eq("room_id", roomId);
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(translateErrorMessage(error.message));
   }
 
   const prefix = `${FIREBASE_STORAGE_PREFIXES.collabFiles}/${roomId}`.replace(
@@ -328,7 +331,7 @@ export const loadFilesFromFirebase = async (
   await Promise.all(
     [...new Set(filesIds)].map(async (id) => {
       try {
-        const path = prefix.replace(/^\//, "") + "/" + id;
+        const path = `${prefix.replace(/^\//, "")}/${id}`;
         const { data, error } = await supabase.storage
           .from(STORAGE_BUCKET)
           .download(path);
@@ -384,9 +387,7 @@ const generateShareLinkId = (): string => {
 export const saveShareLinkToFirebase = async (
   payload: Uint8Array,
 ): Promise<
-  | { id: string }
-  | { error: "TOO_BIG" }
-  | { error: "FAILED"; message?: string }
+  { id: string } | { error: "TOO_BIG" } | { error: "FAILED"; message?: string }
 > => {
   if (payload.byteLength > 25_000_000) {
     return { error: "TOO_BIG" };
@@ -407,7 +408,10 @@ export const saveShareLinkToFirebase = async (
     return { id };
   } catch (error: any) {
     console.error("saveShareLinkToFirebase failed", error);
-    return { error: "FAILED", message: error?.message ?? String(error) };
+    return {
+      error: "FAILED",
+      message: translateErrorMessage(error?.message ?? String(error)),
+    };
   }
 };
 
@@ -426,13 +430,11 @@ export const loadShareLinkFromFirebase = async (
     }
 
     const bytes = base64ToUint8(data.payload as string);
-    const buf = bytes.buffer instanceof ArrayBuffer
-      ? bytes.buffer
-      : (bytes.buffer as unknown as ArrayBuffer);
-    return buf.slice(
-      bytes.byteOffset,
-      bytes.byteOffset + bytes.byteLength,
-    );
+    const buf =
+      bytes.buffer instanceof ArrayBuffer
+        ? bytes.buffer
+        : (bytes.buffer as unknown as ArrayBuffer);
+    return buf.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
   } catch (error: any) {
     console.error("loadShareLinkFromFirebase failed", error);
     return null;

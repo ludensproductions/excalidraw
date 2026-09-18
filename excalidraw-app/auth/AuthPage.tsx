@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { THEME } from "@excalidraw/excalidraw";
 import { t } from "@excalidraw/excalidraw/i18n";
+
 import { useHandleAppTheme } from "../useHandleAppTheme";
+import { getErrorMessage } from "../errorMessages";
+
 import {
   beginPasswordRecoveryFromUrl,
   loginUser,
@@ -21,6 +24,7 @@ import {
   validateRegistrationFields,
 } from "./authValidation";
 import "./AuthPage.scss";
+
 import type { AuthUser } from "./authStore";
 interface Props {
   onAuthenticated: (user: AuthUser) => void;
@@ -111,16 +115,14 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
         if (!cancelled) {
           setMode("forgot");
           setError(
-            err instanceof Error
-              ? err.message
-              : t("auth.errors.openRecoveryLinkFailed"),
+            getErrorMessage(err, t("auth.errors.openRecoveryLinkFailed")),
           );
         }
       });
     return () => {
       cancelled = true;
     };
-  }, [t]);
+  }, []);
   const resetFeedback = () => {
     setError(null);
     setMessage(null);
@@ -167,9 +169,7 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
       const user = await loginUser(normalizeEmail(email), password);
       onAuthenticated(user);
     } catch (err: unknown) {
-      setError(
-        err instanceof Error ? err.message : t("auth.errors.unexpected"),
-      );
+      setError(getErrorMessage(err, t("auth.errors.unexpected")));
     } finally {
       setLoading(false);
     }

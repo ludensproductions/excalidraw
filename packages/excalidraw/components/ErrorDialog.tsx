@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 
+import { translateErrorMessage } from "../errors";
 import { t } from "../i18n";
 
 import { useExcalidrawContainer } from "./App";
@@ -14,6 +15,8 @@ export const ErrorDialog = ({
 }) => {
   const [modalIsShown, setModalIsShown] = useState(!!children);
   const { container: excalidrawContainer } = useExcalidrawContainer();
+  const dialogContent =
+    typeof children === "string" ? translateErrorMessage(children) : children;
 
   const handleClose = React.useCallback(() => {
     setModalIsShown(false);
@@ -33,7 +36,7 @@ export const ErrorDialog = ({
           onCloseRequest={handleClose}
           title={t("errorDialog.title")}
         >
-          <div style={{ whiteSpace: "pre-wrap" }}>{children}</div>
+          <div style={{ whiteSpace: "pre-wrap" }}>{dialogContent}</div>
         </Dialog>
       )}
     </>

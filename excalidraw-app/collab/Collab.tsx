@@ -98,6 +98,7 @@ import { SharedBoardsStore } from "../data/SharedBoardsStore";
 import { getCurrentUser } from "../auth/authStore";
 import { DrawingsStore } from "../data/DrawingsStore";
 import { dashboardState } from "../dashboardState";
+import { getErrorMessage } from "../errorMessages";
 
 import { collabErrorIndicatorAtom } from "./CollabError";
 import Portal from "./Portal";
@@ -485,7 +486,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       } catch (error) {
         console.error("Failed to close shared board on stop:", error);
         this.setErrorDialog(
-          error instanceof Error ? error.message : t("errors.collabSaveFailed"),
+          getErrorMessage(error, t("errors.collabSaveFailed")),
         );
         return false;
       }
@@ -884,7 +885,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       this.portal.socket.once("connect_error", fallbackInitializationHandler);
     } catch (error: any) {
       console.error(error);
-      this.setErrorDialog(error.message);
+      this.setErrorDialog(getErrorMessage(error));
       return null;
     }
 

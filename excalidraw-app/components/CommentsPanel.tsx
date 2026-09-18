@@ -8,6 +8,7 @@ import { activeRoomLinkAtom } from "../collab/Collab";
 import { CommentsStore } from "../data/CommentsStore";
 import { SharedBoardsStore } from "../data/SharedBoardsStore";
 import { getCollaborationLinkData } from "../data";
+import { getErrorMessage } from "../errorMessages";
 
 import "./CommentsPanel.scss";
 
@@ -124,9 +125,7 @@ export const CommentsPanel: React.FC = () => {
           areCommentsEqual(prev, nextComments) ? prev : nextComments,
         );
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : t("app.couldNotLoadComments"),
-        );
+        setError(getErrorMessage(err, t("app.couldNotLoadComments")));
       } finally {
         if (!opts?.silent) {
           setIsLoading(false);
@@ -172,7 +171,7 @@ export const CommentsPanel: React.FC = () => {
       setBody("");
       inputRef.current?.focus();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("app.couldNotComment"));
+      setError(getErrorMessage(err, t("app.couldNotComment")));
     } finally {
       setIsSaving(false);
     }
@@ -202,9 +201,7 @@ export const CommentsPanel: React.FC = () => {
       );
       cancelEdit();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : t("app.couldNotEditComment"),
-      );
+      setError(getErrorMessage(err, t("app.couldNotEditComment")));
     }
   };
 
@@ -228,9 +225,7 @@ export const CommentsPanel: React.FC = () => {
       setComments((prev) => prev.filter((comment) => comment.id !== id));
       void appDialog.toast({ title: t("app.commentDeletedSuccessfully") });
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : t("app.couldNotDeleteComment"),
-      );
+      setError(getErrorMessage(err, t("app.couldNotDeleteComment")));
     }
   };
 

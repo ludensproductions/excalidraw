@@ -94,6 +94,7 @@ import {
   SYNC_BROWSER_TABS_TIMEOUT,
 } from "./app_constants";
 import { appDialog } from "./appDialog";
+import { getErrorMessage } from "./errorMessages";
 import Collab, {
   collabAPIAtom,
   isCollaboratingAtom,
@@ -830,7 +831,7 @@ const ExcalidrawWrapper = () => {
           height,
           devicePixelRatio: window.devicePixelRatio,
         });
-        throw new Error(error.message);
+        throw new Error(getErrorMessage(error));
       }
     }
   };
@@ -1083,7 +1084,7 @@ const ExcalidrawWrapper = () => {
                   excalidrawAPI.getFiles(),
                 );
               } catch (error: any) {
-                setErrorMessage(error.message);
+                setErrorMessage(getErrorMessage(error));
               }
             }
           }}

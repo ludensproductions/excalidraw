@@ -1,10 +1,16 @@
 import type { ExcalidrawElement } from "@excalidraw/element/types";
 
+import { translateErrorMessage } from "../errorMessages";
+
 import { supabase } from "./supabase";
 
 const INSERT_DEDUP_WINDOW_MS = 10_000;
 const pendingInsertByKey = new Map<string, Promise<DrawingRecord>>();
 const recentInsertByKey = new Map<string, { id: string; ts: number }>();
+
+const throwStoreError = (message: string): never => {
+  throw new Error(translateErrorMessage(message));
+};
 
 export interface DrawingRecord {
   id: string;
@@ -63,7 +69,7 @@ export const DrawingsStore = {
       .select("*")
       .order("updated_at", { ascending: false });
     if (error) {
-      throw new Error(error.message);
+      throwStoreError(error.message);
     }
     return (data ?? []).map(rowToRecord);
   },
@@ -75,7 +81,7 @@ export const DrawingsStore = {
       .select("*")
       .order("updated_at", { ascending: false });
     if (error) {
-      throw new Error(error.message);
+      throwStoreError(error.message);
     }
     return (data ?? []).map(rowToRecord);
   },
@@ -87,7 +93,7 @@ export const DrawingsStore = {
       .eq("id", id)
       .maybeSingle();
     if (error) {
-      throw new Error(error.message);
+      throwStoreError(error.message);
     }
     return data ? rowToRecord(data) : undefined;
   },
@@ -124,7 +130,7 @@ export const DrawingsStore = {
         .select()
         .maybeSingle();
       if (updateError) {
-        throw new Error(updateError.message);
+        throwStoreError(updateError.message);
       }
       if (updatedRow) {
         return rowToRecord(updatedRow);
@@ -155,11 +161,11 @@ export const DrawingsStore = {
             .select()
             .single();
           if (retryError) {
-            throw new Error(retryError.message);
+            throwStoreError(retryError.message);
           }
           return rowToRecord(retryRow);
         }
-        throw new Error(insertError.message);
+        throwStoreError(insertError.message);
       }
       if (!insertedRow) {
         throw new Error("No se pudo guardar el tablero");
@@ -203,7 +209,7 @@ export const DrawingsStore = {
       .update({ collab_link: link })
       .eq("id", id);
     if (error) {
-      throw new Error(error.message);
+      throwStoreError(error.message);
     }
   },
 
@@ -217,7 +223,7 @@ export const DrawingsStore = {
       .like("collab_link", `%#room=${roomId},%`)
       .order("updated_at", { ascending: false });
     if (error) {
-      throw new Error(error.message);
+      throwStoreError(error.message);
     }
 
     const rows = (data ?? []) as Array<{ id: string; updated_at: string }>;
@@ -240,7 +246,7 @@ export const DrawingsStore = {
         .delete()
         .in("id", duplicateIds);
       if (deleteError) {
-        throw new Error(deleteError.message);
+        throwStoreError(deleteError.message);
       }
     }
 
@@ -249,7 +255,7 @@ export const DrawingsStore = {
       .update({ collab_link: null })
       .eq("id", keepId);
     if (clearError) {
-      throw new Error(clearError.message);
+      throwStoreError(clearError.message);
     }
 
     return keepId;
@@ -258,7 +264,7 @@ export const DrawingsStore = {
   async delete(id: string): Promise<void> {
     const { error } = await supabase.from("boards").delete().eq("id", id);
     if (error) {
-      throw new Error(error.message);
+      throwStoreError(error.message);
     }
   },
 
@@ -268,7 +274,7 @@ export const DrawingsStore = {
       .update({ name })
       .eq("id", id);
     if (error) {
-      throw new Error(error.message);
+      throwStoreError(error.message);
     }
   },
 
@@ -288,7 +294,7 @@ export const DrawingsStore = {
       .limit(1);
 
     if (error) {
-      throw new Error(error.message);
+      throwStoreError(error.message);
     }
 
     if (!data || data.length === 0) {

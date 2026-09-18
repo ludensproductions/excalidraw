@@ -38,6 +38,7 @@ import {
 } from "../data";
 
 import { dashboardState } from "../dashboardState";
+import { getErrorMessage } from "../errorMessages";
 
 import "./ShareDialog.scss";
 import { QRCode } from "./QRCode";
@@ -178,10 +179,7 @@ const ActiveRoomDialog = ({
       setDisplayUsername(normalizedUsername);
       void appDialog.toast({ title: t("app.userUpdatedSuccessfully") });
     } catch (error) {
-      await appDialog.error(
-        t("app.userActionFailed"),
-        error instanceof Error ? error.message : String(error),
-      );
+      await appDialog.error(t("app.userActionFailed"), getErrorMessage(error));
     }
   };
 
