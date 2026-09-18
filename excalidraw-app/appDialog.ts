@@ -21,6 +21,7 @@ const baseOptions = () => ({
     popup: "app-swal",
     title: "app-swal__title",
     htmlContainer: "app-swal__content",
+    actions: "app-swal__actions",
     input: "app-swal__input",
     confirmButton: "app-swal__button app-swal__button--primary",
     cancelButton: "app-swal__button",

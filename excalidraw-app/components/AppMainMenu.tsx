@@ -224,7 +224,6 @@ export const AppMainMenu: React.FC<{
       {permissions.commandPalette && (
         <MainMenu.DefaultItems.CommandPalette className="highlighted" />
       )}
-      {permissions.help && <MainMenu.DefaultItems.Help />}
       {permissions.clearCanvas && <MainMenu.DefaultItems.ClearCanvas />}
       <MainMenu.Separator />
       {permissions.preferences && <MainMenu.DefaultItems.Preferences />}

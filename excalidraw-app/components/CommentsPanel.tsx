@@ -8,7 +8,6 @@ import { activeRoomLinkAtom } from "../collab/Collab";
 import { CommentsStore } from "../data/CommentsStore";
 import { SharedBoardsStore } from "../data/SharedBoardsStore";
 import { getCollaborationLinkData } from "../data";
-import { getErrorMessage } from "../errorMessages";
 
 import "./CommentsPanel.scss";
 
@@ -53,7 +52,6 @@ export const CommentsPanel: React.FC = () => {
   const [body, setBody] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingBody, setEditingBody] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -109,7 +107,7 @@ export const CommentsPanel: React.FC = () => {
   }, [activeBoard.id, activeBoard.name, activeRoomLink]);
 
   const refresh = useCallback(
-    async (opts?: { silent?: boolean }) => {
+    async (opts?: { silent?: boolean; notifyOnError?: boolean }) => {
       if (!target) {
         setComments([]);
         return;
@@ -118,14 +116,21 @@ export const CommentsPanel: React.FC = () => {
       if (!opts?.silent) {
         setIsLoading(true);
       }
-      setError(null);
       try {
         const nextComments = await CommentsStore.getAll(target);
         setComments((prev) =>
           areCommentsEqual(prev, nextComments) ? prev : nextComments,
         );
       } catch (err) {
-        setError(getErrorMessage(err, t("app.couldNotLoadComments")));
+        if (!opts?.silent) {
+          console.error("Failed to load comments:", err);
+        }
+        if (opts?.notifyOnError) {
+          void appDialog.toast({
+            title: t("app.couldNotLoadComments"),
+            icon: "error",
+          });
+        }
       } finally {
         if (!opts?.silent) {
           setIsLoading(false);
@@ -160,7 +165,6 @@ export const CommentsPanel: React.FC = () => {
     }
 
     setIsSaving(true);
-    setError(null);
     try {
       const comment = await CommentsStore.add({
         target,
@@ -171,7 +175,11 @@ export const CommentsPanel: React.FC = () => {
       setBody("");
       inputRef.current?.focus();
     } catch (err) {
-      setError(getErrorMessage(err, t("app.couldNotComment")));
+      console.error("Failed to add comment:", err);
+      void appDialog.toast({
+        title: t("app.couldNotComment"),
+        icon: "error",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -193,7 +201,6 @@ export const CommentsPanel: React.FC = () => {
       return;
     }
 
-    setError(null);
     try {
       const updated = await CommentsStore.update(target, editingId, trimmed);
       setComments((prev) =>
@@ -201,7 +208,11 @@ export const CommentsPanel: React.FC = () => {
       );
       cancelEdit();
     } catch (err) {
-      setError(getErrorMessage(err, t("app.couldNotEditComment")));
+      console.error("Failed to edit comment:", err);
+      void appDialog.toast({
+        title: t("app.couldNotEditComment"),
+        icon: "error",
+      });
     }
   };
 
@@ -219,13 +230,16 @@ export const CommentsPanel: React.FC = () => {
     if (!confirmed) {
       return;
     }
-    setError(null);
     try {
       await CommentsStore.delete(target, id);
       setComments((prev) => prev.filter((comment) => comment.id !== id));
       void appDialog.toast({ title: t("app.commentDeletedSuccessfully") });
     } catch (err) {
-      setError(getErrorMessage(err, t("app.couldNotDeleteComment")));
+      console.error("Failed to delete comment:", err);
+      void appDialog.toast({
+        title: t("app.couldNotDeleteComment"),
+        icon: "error",
+      });
     }
   };
 
@@ -258,7 +272,7 @@ export const CommentsPanel: React.FC = () => {
         </div>
         <button
           className="comments-panel__refresh"
-          onClick={() => void refresh()}
+          onClick={() => void refresh({ notifyOnError: true })}
         >
           {t("app.refresh")}
         </button>
@@ -286,8 +300,6 @@ export const CommentsPanel: React.FC = () => {
           {isSaving ? t("app.sending") : t("app.comment")}
         </button>
       </div>
-
-      {error && <div className="comments-panel__error">{error}</div>}
 
       <div className="comments-panel__list">
         {isLoading ? (

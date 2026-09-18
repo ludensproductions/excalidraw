@@ -159,7 +159,7 @@
     "textToDiagram": "Texto a diagrama",
     "prompt": "Prompt",
     "followUs": "Síguenos",
-    "discordChat": "Chat de Discord",
+    "discordChat": "Chat interno",
     "zoomToFitViewport": "Zoom para encajar en la ventana",
     "zoomToFitSelection": "Zoom para ajustar la selección",
     "zoomToFit": "Zoom para mostrar todos los elementos",
@@ -269,9 +269,9 @@
     "cannotExportEmptyCanvas": "No se puede exportar un lienzo vacío",
     "couldNotCopyToClipboard": "No se pudo copiar al portapapeles.",
     "decryptFailed": "No se pudieron descifrar los datos.",
-    "uploadedSecurly": "La carga ha sido asegurada con cifrado de principio a fin, lo que significa que el servidor de Excalidraw y terceros no pueden leer el contenido.",
+    "uploadedSecurly": "La carga ha sido asegurada con cifrado de principio a fin.",
     "loadSceneOverridePrompt": "Si carga este dibujo externo, reemplazará el que tiene. ¿Desea continuar?",
-    "collabStopOverridePrompt": "Detener la sesión sobrescribirá su dibujo anterior almacenado localmente. ¿Está seguro?\n\n(Si desea mantener su dibujo local, simplemente cierre la pestaña del navegador.)",
+    "collabStopOverridePrompt": "Detener la sesión sobrescribirá su dibujo anterior almacenado localmente. ¿Está seguro?",
     "errorAddingToLibrary": "No se pudo agregar el elemento a la biblioteca",
     "errorRemovingFromLibrary": "No se pudo quitar el elemento de la biblioteca",
     "confirmAddLibrary": "Esto añadirá {{numShapes}} forma(s) a tu biblioteca. ¿Estás seguro?",
@@ -299,8 +299,8 @@
     "brave_measure_text_error": {
       "line1": "Parece que estás usando el navegador Brave con el ajuste <bold>Forzar el bloqueo de huellas digitales</bold> habilitado.",
       "line2": "Esto podría resultar en errores en los <bold>Elementos de Texto</bold> en tus dibujos.",
-      "line3": "Recomendamos fuertemente deshabilitar esta configuración. Puedes seguir <link>estos pasos</link> sobre cómo hacerlo.",
-      "line4": "Si deshabilitar esta opción no arregla la visualización de elementos conformados por texto, por favor abre un <issueLink>problema</issueLink> en nuestro GitHub o escríbanos en <discordLink>Discord</discordLink>"
+      "line3": "Recomendamos deshabilitar esta configuración desde las opciones de privacidad de Brave.",
+      "line4": "Si deshabilitar esta opción no corrige la visualización de los elementos de texto, contacta al soporte interno."
     },
     "libraryElementTypeError": {
       "embeddable": "Los elementos incrustables no pueden ser añadidos a la biblioteca.",
@@ -399,7 +399,7 @@
     "clearCanvasMessage": "Si la recarga no funciona, intente <button>limpiando el lienzo.</button>",
     "clearCanvasCaveat": " Esto provocará la pérdida de su trabajo ",
     "trackedToSentry": "El error con el identificador {{eventId}} fue rastreado en nuestro sistema.",
-    "openIssueMessage": "Fuimos muy cautelosos de no incluir la información de tu escena en el error. Si tu escena no es privada, por favor considera seguir nuestro <button>rastreador de errores.</button> Por favor, incluya la siguiente información copiándola y pegándola en el issue de GitHub.",
+    "openIssueMessage": "Fuimos cuidadosos de no incluir la información de tu escena en el error. Copia la información siguiente y compártela por el canal de soporte interno.",
     "sceneContent": "Contenido de la escena:"
   },
   "shareDialog": {
@@ -426,15 +426,18 @@
     "disk_title": "Guardar en disco",
     "disk_details": "Exportar los datos de la escena a un archivo desde el cual pueda importar más tarde.",
     "disk_button": "Guardar en archivo",
-    "link_title": "Copia",
+    "link_title": "Compartir enlace",
+    "send_copy_title": "Enviar copia",
+    "share_link_title": "Compartir enlace",
+    "link_field_label": "Enlace",
     "link_details": "Crear un enlace para que otra persona duplique este tablero en su cuenta.",
-    "link_button": "Crear copia",
+    "link_button": "Crear enlace",
     "excalidrawplus_description": "Guarde la escena en su espacio de trabajo de Excalidraw+.",
     "excalidrawplus_button": "Exportar",
     "excalidrawplus_exportError": "No se pudo exportar a Excalidraw+ en este momento..."
   },
   "helpDialog": {
-    "blog": "Lea nuestro blog",
+    "blog": "Novedades internas",
     "click": "clic",
     "deepSelect": "Selección profunda",
     "deepBoxSelect": "Seleccione en profundidad dentro de la caja, y evite arrastrar",
@@ -442,13 +445,13 @@
     "navigateFlowchart": "Navegar un diagrama de flujo",
     "curvedArrow": "Flecha curva",
     "curvedLine": "Línea curva",
-    "documentation": "Documentación",
+    "documentation": "Documentación interna",
     "doubleClick": "doble clic",
     "drag": "arrastrar",
     "editor": "Editor",
     "editLineArrowPoints": "Editar puntos de línea/flecha",
     "editText": "Editar texto / añadir etiqueta",
-    "github": "¿Ha encontrado un problema? Envíelo",
+    "github": "Reportar internamente",
     "howto": "Siga nuestras guías",
     "or": "o",
     "preventBinding": "Evitar enlace de flechas",
@@ -473,7 +476,7 @@
     "title": "Publicar biblioteca",
     "itemName": "Nombre del artículo",
     "authorName": "Nombre del autor",
-    "githubUsername": "Nombre de usuario de GitHub",
+    "githubUsername": "Usuario de contacto",
     "twitterUsername": "Nombre de usuario de Twitter",
     "libraryName": "Nombre de la biblioteca",
     "libraryDesc": "Descripción de la biblioteca",
@@ -482,7 +485,7 @@
       "authorName": "Nombre o nombre de usuario",
       "libraryName": "Nombre de tu biblioteca",
       "libraryDesc": "Descripción de su biblioteca para ayudar a la gente a entender su uso",
-      "githubHandle": "Nombre de usuario de GitHub (opcional), así podrá editar la biblioteca una vez enviada para su revisión",
+      "githubHandle": "Usuario de contacto (opcional), para dar seguimiento a la biblioteca una vez enviada a revisión",
       "twitterHandle": "Nombre de usuario de Twitter (opcional), así sabemos a quién acreditar cuando se promociona en Twitter",
       "website": "Enlace a su sitio web personal o en cualquier otro lugar (opcional)"
     },
@@ -490,9 +493,9 @@
       "required": "Requerido",
       "website": "Introduce una URL válida"
     },
-    "noteDescription": "Envía tu biblioteca para ser incluida en el <link>repositorio de librería pública</link>para que otras personas utilicen en sus dibujos.",
-    "noteGuidelines": "La biblioteca debe ser aprobada manualmente primero. Por favor, lea la <link>pautas</link> antes de enviar. Necesitará una cuenta de GitHub para comunicarse y hacer cambios si se solicita, pero no es estrictamente necesario.",
-    "noteLicense": "Al enviar, usted acepta que la biblioteca se publicará bajo el <link>Licencia MIT </link>que en breve significa que cualquiera puede utilizarlos sin restricciones.",
+    "noteDescription": "Envía tu biblioteca para revisión interna antes de que otras personas puedan usarla en sus dibujos.",
+    "noteGuidelines": "La biblioteca debe aprobarse manualmente. Consulta las pautas internas antes de enviarla.",
+    "noteLicense": "Al enviarla, aceptas que la biblioteca pueda compartirse internamente según las políticas de la organización.",
     "noteItems": "Cada elemento de la biblioteca debe tener su propio nombre para que sea filtrable. Los siguientes elementos de la biblioteca serán incluidos:",
     "atleastOneLibItem": "Por favor, seleccione al menos un elemento de la biblioteca para empezar",
     "republishWarning": "Nota: algunos de los elementos seleccionados están marcados como ya publicados/enviados. Sólo debería volver a enviar elementos cuando se actualice una biblioteca o envío."
@@ -530,8 +533,8 @@
     }
   },
   "encrypted": {
-    "tooltip": "Tus dibujos están cifrados de punto a punto, por lo que los servidores de Excalidraw nunca los verán.",
-    "link": "Entrada en el blog sobre cifrado de extremo a extremo"
+    "tooltip": "Tus dibujos están cifrados de punto a punto.",
+    "link": "Indicador de cifrado"
   },
   "stats": {
     "angle": "Ángulo",
@@ -563,7 +566,7 @@
     "canvas": "lienzo",
     "selection": "selección",
     "pasteAsSingleElement": "Usa {{shortcut}} para pegar como un solo elemento,\no pegar en un editor de texto existente",
-    "unableToEmbed": "Incorporar esta url no está permitido actualmente. Señale esta incidencia en nuestro GitHub para solicitar que esta url esté entre las permitidas",
+    "unableToEmbed": "Incorporar esta URL no está permitido actualmente. Contacta al soporte interno para solicitar que esta URL sea permitida.",
     "unrecognizedLinkFormat": "El enlace que incrustó no coincide con el formato esperado. Por favor intente pegar la cadena 'embed' proporcionada por el sitio de origen",
     "elementLinkCopied": "Enlace copiado al portapapeles"
   },
@@ -779,6 +782,7 @@
     "deleteCollabLinkText": "Este tablero dejará de mostrar el enlace colaborativo guardado.",
     "copyCollabLinkTitle": "Copiar enlace de colaboración",
     "deleteCollabLinkTitle": "Eliminar enlace de colaboración",
+    "endCollaboration": "Finalizar",
     "sharedBoards": "Tableros compartidos",
     "refreshSharedBoards": "Actualizar tableros compartidos",
     "loadingSharedBoards": "Cargando tableros compartidos...",

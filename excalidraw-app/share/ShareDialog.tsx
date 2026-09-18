@@ -380,7 +380,7 @@ const ShareDialogPicker = (props: ShareDialogProps) => {
       {props.type !== "collaborationOnly" && (
         <>
           <div className="ShareDialog__picker__header">
-            {t("exportDialog.link_title")}
+            {t("exportDialog.send_copy_title")}
           </div>
           <div className="ShareDialog__picker__description">
             {t("exportDialog.link_details")}

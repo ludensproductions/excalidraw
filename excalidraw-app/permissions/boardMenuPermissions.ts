@@ -15,7 +15,6 @@ export type BoardMenuAction =
   | "saveAsImage"
   | "liveCollaboration"
   | "commandPalette"
-  | "help"
   | "clearCanvas"
   | "preferences"
   | "toggleTheme"
@@ -76,7 +75,6 @@ export const getBoardMenuPermissions = (
     saveAsImage: canUseUtilityActions,
     liveCollaboration: context.isCollabEnabled && canUseUtilityActions,
     commandPalette: canMutateScene,
-    help: canUseUtilityActions,
     clearCanvas: canMutateScene,
     preferences: canUseUtilityActions,
     toggleTheme: canUseUtilityActions,

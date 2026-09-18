@@ -1,13 +1,16 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
-import { THEME } from "@excalidraw/excalidraw";
+import { THEME, exportToBlob } from "@excalidraw/excalidraw";
 import { t } from "@excalidraw/excalidraw/i18n";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowsRotate,
   faBan,
   faCheck,
+  faCopy,
+  faLinkSlash,
   faPenToSquare,
+  faTrashCan,
   faUser,
   faUserShield,
   faUserSlash,
@@ -209,6 +212,37 @@ const loadSharedBoardFiles = async (
   ) as BinaryFiles;
 };
 
+const blobToDataURL = async (blob: Blob): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+
+const getSharedBoardPreviewKey = (board: SharedBoard): string =>
+  `${board.roomId}:${board.updatedAt}`;
+
+const createSharedBoardThumbnail = async (
+  board: SharedBoard,
+): Promise<string | null> => {
+  const elements = await loadFromFirebase(board.roomId, board.roomKey, null);
+
+  if (!elements?.length) {
+    return null;
+  }
+
+  const files = await loadSharedBoardFiles(board, elements);
+  const blob = await exportToBlob({
+    elements,
+    appState: { viewBackgroundColor: "#ffffff", exportBackground: true },
+    files,
+    maxWidthOrHeight: 200,
+  });
+
+  return blobToDataURL(blob);
+};
+
 interface BoardCardProps {
   board: DrawingRecord;
   onOpen: (board: DrawingRecord) => void | Promise<void>;
@@ -345,37 +379,44 @@ const BoardCard: React.FC<BoardCardProps> = ({
         {board.collabLink && (
           <div className="dashboard__card-collab-row">
             <button
-              className="dashboard__card-collab"
+              className="dashboard__card-collab dashboard__card-collab--copy"
               title={t("app.copyCollabLinkTitle")}
+              aria-label={t("app.copyCollabLinkTitle")}
               onClick={copyCollabLink}
             >
-              {copied ? t("app.copied") : t("app.copyLink")}
+              <FontAwesomeIcon icon={faCopy} />
+              <span>{copied ? t("app.copied") : t("app.copyLink")}</span>
             </button>
             <button
-              className="dashboard__card-collab-clear"
+              className="dashboard__card-collab dashboard__card-collab--end"
               title={t("app.deleteCollabLinkTitle")}
+              aria-label={t("app.deleteCollabLinkTitle")}
               onClick={clearCollabLink}
             >
-              x
+              <FontAwesomeIcon icon={faLinkSlash} />
+              <span>{t("app.endCollaboration")}</span>
             </button>
           </div>
         )}
       </div>
-      <button
-        className="dashboard__card-rename"
-        title={t("app.renameBoard")}
-        aria-label={t("app.renameBoard")}
-        onClick={startRename}
-      >
-        <FontAwesomeIcon icon={faPenToSquare} />
-      </button>
-      <button
-        className="dashboard__card-delete"
-        title={t("app.deleteBoard")}
-        onClick={(e) => onDelete(board.id, e)}
-      >
-        x
-      </button>
+      <div className="dashboard__card-actions">
+        <button
+          className="dashboard__card-action dashboard__card-rename"
+          title={t("app.renameBoard")}
+          aria-label={t("app.renameBoard")}
+          onClick={startRename}
+        >
+          <FontAwesomeIcon icon={faPenToSquare} />
+        </button>
+        <button
+          className="dashboard__card-action dashboard__card-delete"
+          title={t("app.deleteBoard")}
+          aria-label={t("app.deleteBoard")}
+          onClick={(e) => onDelete(board.id, e)}
+        >
+          <FontAwesomeIcon icon={faTrashCan} />
+        </button>
+      </div>
     </div>
   );
 };
@@ -383,15 +424,19 @@ const BoardCard: React.FC<BoardCardProps> = ({
 interface SharedBoardCardProps {
   board: SharedBoard;
   currentUserId: string;
+  thumbnail: string | null;
   onJoin: (board: SharedBoard) => void;
   onLeave: (board: SharedBoard) => void;
+  onRename: (board: SharedBoard) => void;
 }
 
 const SharedBoardCard: React.FC<SharedBoardCardProps> = ({
   board,
   currentUserId,
+  thumbnail,
   onJoin,
   onLeave,
+  onRename,
 }) => {
   const isOwner = board.createdBy === currentUserId;
   const maxAvatars = 4;
@@ -400,59 +445,98 @@ const SharedBoardCard: React.FC<SharedBoardCardProps> = ({
 
   return (
     <div className="dashboard__shared-card" onClick={() => onJoin(board)}>
-      <div className="dashboard__shared-card-header">
-        <span className="dashboard__shared-card-name" title={board.name}>
-          {board.name}
-        </span>
-        {isOwner && (
-          <span className="dashboard__shared-card-owner-badge">
-            {t("app.yours")}
-          </span>
+      <div className="dashboard__shared-card-thumb">
+        {thumbnail ? (
+          <img src={thumbnail} alt={board.name} />
+        ) : (
+          <div className="dashboard__shared-card-thumb-placeholder">
+            <PencilIcon />
+          </div>
         )}
       </div>
-
-      <div className="dashboard__shared-card-members">
-        {visibleMembers.map((member) => (
-          <span
-            key={member.userId}
-            className={`dashboard__shared-card-avatar${
-              member.userId === currentUserId ? " current" : ""
-            }`}
-            title={member.username}
+      {isOwner && (
+        <div className="dashboard__shared-card-actions">
+          <button
+            className="dashboard__card-action dashboard__card-rename"
+            title={t("app.renameBoard")}
+            aria-label={t("app.renameBoard")}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRename(board);
+            }}
           >
-            {member.username.charAt(0).toUpperCase()}
+            <FontAwesomeIcon icon={faPenToSquare} />
+          </button>
+          <button
+            className="dashboard__card-action dashboard__card-delete"
+            title={t("app.finalizeSession")}
+            aria-label={t("app.finalizeSession")}
+            onClick={(e) => {
+              e.stopPropagation();
+              onLeave(board);
+            }}
+          >
+            <FontAwesomeIcon icon={faTrashCan} />
+          </button>
+        </div>
+      )}
+      <div className="dashboard__shared-card-content">
+        <div className="dashboard__shared-card-header">
+          <span className="dashboard__shared-card-name" title={board.name}>
+            {board.name}
           </span>
-        ))}
-        {overflow > 0 && (
-          <span className="dashboard__shared-card-avatar overflow">
-            +{overflow}
-          </span>
-        )}
-        <span className="dashboard__shared-card-member-names">
-          {board.members.map((member) => member.username).join(", ")}
-        </span>
-      </div>
+          {isOwner && (
+            <span className="dashboard__shared-card-owner-badge">
+              {t("app.yours")}
+            </span>
+          )}
+        </div>
 
-      <div className="dashboard__shared-card-footer">
-        <button
-          className="dashboard__shared-card-join"
-          onClick={(e) => {
-            e.stopPropagation();
-            onJoin(board);
-          }}
-        >
-          {t("app.open")}
-        </button>
-        <button
-          className="dashboard__shared-card-leave"
-          title={isOwner ? t("app.finalizeSession") : t("app.leaveSharedBoard")}
-          onClick={(e) => {
-            e.stopPropagation();
-            onLeave(board);
-          }}
-        >
-          {isOwner ? t("app.finalizeSession") : t("app.leave")}
-        </button>
+        <div className="dashboard__shared-card-members">
+          {visibleMembers.map((member) => (
+            <span
+              key={member.userId}
+              className={`dashboard__shared-card-avatar${
+                member.userId === currentUserId ? " current" : ""
+              }`}
+              title={member.username}
+            >
+              {member.username.charAt(0).toUpperCase()}
+            </span>
+          ))}
+          {overflow > 0 && (
+            <span className="dashboard__shared-card-avatar overflow">
+              +{overflow}
+            </span>
+          )}
+          <span className="dashboard__shared-card-member-names">
+            {board.members.map((member) => member.username).join(", ")}
+          </span>
+        </div>
+
+        <div className="dashboard__shared-card-footer">
+          <button
+            className="dashboard__shared-card-join"
+            onClick={(e) => {
+              e.stopPropagation();
+              onJoin(board);
+            }}
+          >
+            {t("app.open")}
+          </button>
+          <button
+            className="dashboard__shared-card-leave"
+            title={
+              isOwner ? t("app.finalizeSession") : t("app.leaveSharedBoard")
+            }
+            onClick={(e) => {
+              e.stopPropagation();
+              onLeave(board);
+            }}
+          >
+            {isOwner ? t("app.finalizeSession") : t("app.leave")}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -494,6 +578,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState<string | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [sharedBoardPreviews, setSharedBoardPreviews] = useState<
+    Record<string, string | null>
+  >({});
+  const sharedPreviewRequestsRef = useRef<Set<string>>(new Set());
 
   const { editorTheme, setAppTheme } = useHandleAppTheme();
   const isDark = editorTheme === THEME.DARK;
@@ -553,6 +641,46 @@ export const Dashboard: React.FC<DashboardProps> = ({
   useEffect(() => {
     void fetchBoards();
   }, [fetchBoards]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    sharedBoards.forEach((board) => {
+      const previewKey = getSharedBoardPreviewKey(board);
+      if (
+        Object.prototype.hasOwnProperty.call(sharedBoardPreviews, previewKey) ||
+        sharedPreviewRequestsRef.current.has(previewKey)
+      ) {
+        return;
+      }
+
+      sharedPreviewRequestsRef.current.add(previewKey);
+      createSharedBoardThumbnail(board)
+        .then((thumbnail) => {
+          if (cancelled) {
+            return;
+          }
+          setSharedBoardPreviews((prev) => ({
+            ...prev,
+            [previewKey]: thumbnail,
+          }));
+        })
+        .catch((error: unknown) => {
+          console.error("Failed to generate shared board preview:", error);
+          if (cancelled) {
+            return;
+          }
+          setSharedBoardPreviews((prev) => ({
+            ...prev,
+            [previewKey]: null,
+          }));
+        });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sharedBoards, sharedBoardPreviews]);
 
   useEffect(() => {
     if (activeTab === "users" && isAdmin) {
@@ -630,6 +758,39 @@ export const Dashboard: React.FC<DashboardProps> = ({
       ),
     );
     void appDialog.toast({ title: t("app.collabLinkDeletedSuccessfully") });
+  };
+
+  const handleRenameSharedBoard = async (board: SharedBoard) => {
+    const nextName = await appDialog.promptText({
+      title: t("app.renameBoard"),
+      label: t("app.newName"),
+      initialValue: board.name,
+      confirmButtonText: t("app.rename"),
+      requiredMessage: t("app.fieldRequired"),
+      maxLength: 120,
+    });
+
+    if (!nextName || nextName === board.name) {
+      return;
+    }
+
+    try {
+      await SharedBoardsStore.rename(board.id, nextName);
+      const now = Date.now();
+      setSharedBoards((prev) =>
+        prev.map((item) =>
+          item.id === board.id
+            ? { ...item, name: nextName, updatedAt: now }
+            : item,
+        ),
+      );
+      void appDialog.toast({ title: t("app.boardRenamedSuccessfully") });
+    } catch (error: unknown) {
+      await appDialog.alert({
+        title: getErrorMessage(error),
+        icon: "error",
+      });
+    }
   };
 
   const handleLeaveSharedBoard = async (board: SharedBoard) => {
@@ -783,6 +944,37 @@ export const Dashboard: React.FC<DashboardProps> = ({
     await onOpenSharedBoard(board);
   };
 
+  useEffect(() => {
+    if (loading || sharedError) {
+      return;
+    }
+
+    const liveRoomIds = new Set(sharedBoards.map((board) => board.roomId));
+    const staleLinkedBoards = boards.filter((board) => {
+      const roomId = getRoomIdFromCollabLink(board.collabLink);
+      return roomId && !liveRoomIds.has(roomId);
+    });
+
+    if (!staleLinkedBoards.length) {
+      return;
+    }
+
+    const staleBoardIds = new Set(staleLinkedBoards.map((board) => board.id));
+    setBoards((prev) =>
+      prev.map((board) =>
+        staleBoardIds.has(board.id) ? { ...board, collabLink: null } : board,
+      ),
+    );
+
+    void Promise.all(
+      staleLinkedBoards.map((board) =>
+        DrawingsStore.setCollabLink(board.id, null),
+      ),
+    ).catch((error) => {
+      console.error("Failed to clear stale collaboration links:", error);
+    });
+  }, [boards, loading, sharedBoards, sharedError]);
+
   const handleEditManagedUsername = async (profile: ManagedUserProfile) => {
     if (!(await ensureUserIsManageable(profile))) {
       return;
@@ -892,7 +1084,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const sharedRoomIds = new Set(sharedBoards.map((board) => board.roomId));
-  const privateBoards = boards.filter(
+  const canTrustSharedBoardList = !loading && !sharedError;
+  const boardsForDisplay = boards.map((board) => {
+    const roomId = getRoomIdFromCollabLink(board.collabLink);
+    return canTrustSharedBoardList && roomId && !sharedRoomIds.has(roomId)
+      ? { ...board, collabLink: null }
+      : board;
+  });
+  const privateBoards = boardsForDisplay.filter(
     (board) => !getRoomIdFromCollabLink(board.collabLink),
   );
   const recentItems: RecentItem[] = [
@@ -906,16 +1105,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
       board,
       updatedAt: board.updatedAt,
     })),
-    ...boards
-      .filter((board) => {
-        const roomId = getRoomIdFromCollabLink(board.collabLink);
-        return roomId && !sharedRoomIds.has(roomId);
-      })
-      .map((board) => ({
-        type: "own" as const,
-        board,
-        updatedAt: board.updatedAt,
-      })),
   ]
     .sort((a, b) => b.updatedAt - a.updatedAt)
     .slice(0, 6);
@@ -1554,8 +1743,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     key={board.id}
                     board={board}
                     currentUserId={user.id}
+                    thumbnail={
+                      sharedBoardPreviews[getSharedBoardPreviewKey(board)] ??
+                      null
+                    }
                     onJoin={handleOpenSharedBoard}
                     onLeave={handleLeaveSharedBoard}
+                    onRename={handleRenameSharedBoard}
                   />
                 ))}
               </div>
@@ -1626,8 +1820,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       key={`shared:${item.board.id}`}
                       board={item.board}
                       currentUserId={user.id}
+                      thumbnail={
+                        sharedBoardPreviews[
+                          getSharedBoardPreviewKey(item.board)
+                        ] ?? null
+                      }
                       onJoin={handleOpenSharedBoard}
                       onLeave={handleLeaveSharedBoard}
+                      onRename={handleRenameSharedBoard}
                     />
                   ),
                 )}

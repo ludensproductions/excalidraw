@@ -52,6 +52,15 @@
   box-shadow: 0 0 0 3px rgba(105, 101, 219, 0.18);
 }
 
+.app-swal__actions {
+  gap: 0.9rem 1.25rem;
+  justify-content: center;
+}
+
+.app-swal__actions .app-swal__button {
+  margin: 0;
+}
+
 .app-swal__button {
   min-width: 6.25rem;
   border: 1px solid rgba(105, 101, 219, 0.42);
