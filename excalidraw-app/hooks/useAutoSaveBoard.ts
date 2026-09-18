@@ -133,6 +133,7 @@ export const useAutoSaveBoard = () => {
         {
           name: board.name ?? "Sin titulo",
           elements,
+          files,
           appState: { viewBackgroundColor: appState.viewBackgroundColor },
           thumbnail,
           collabLink:

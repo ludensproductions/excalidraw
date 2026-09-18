@@ -95,6 +95,7 @@ export const useSaveBoard = () => {
           {
             name,
             elements,
+            files,
             appState: { viewBackgroundColor: appState.viewBackgroundColor },
             thumbnail,
             collabLink:

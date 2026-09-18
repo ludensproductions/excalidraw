@@ -223,6 +223,7 @@ const legacy_decodeFromBackend = async ({
   return {
     elements: data.elements || null,
     appState: data.appState || null,
+    files: data.files || undefined,
   };
 };
 
@@ -252,6 +253,7 @@ export const importFromBackend = async (
       return {
         elements: data.elements || null,
         appState: data.appState || null,
+        files: data.files || undefined,
       };
     } catch (error: any) {
       console.warn(

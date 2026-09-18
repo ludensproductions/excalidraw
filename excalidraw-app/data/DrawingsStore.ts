@@ -1,10 +1,15 @@
+import { isInitializedImageElement } from "@excalidraw/element";
+
 import type { ExcalidrawElement } from "@excalidraw/element/types";
+import type { BinaryFiles } from "@excalidraw/excalidraw/types";
 
 import { translateErrorMessage } from "../errorMessages";
 
 import { supabase } from "./supabase";
 
 const INSERT_DEDUP_WINDOW_MS = 10_000;
+const BOARD_LIST_COLUMNS =
+  "id,name,owner_id,elements,app_state,thumbnail,created_at,updated_at,collab_link";
 const pendingInsertByKey = new Map<string, Promise<DrawingRecord>>();
 const recentInsertByKey = new Map<string, { id: string; ts: number }>();
 
@@ -17,6 +22,7 @@ export interface DrawingRecord {
   name: string;
   userId?: string;
   elements: readonly ExcalidrawElement[];
+  files: BinaryFiles;
   appState: {
     viewBackgroundColor?: string;
   };
@@ -26,6 +32,13 @@ export interface DrawingRecord {
   collabLink: string | null;
 }
 
+export type SaveDrawingRecordData = Omit<
+  DrawingRecord,
+  "id" | "createdAt" | "updatedAt" | "files"
+> & {
+  files?: BinaryFiles;
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function rowToRecord(row: any): DrawingRecord {
   return {
@@ -33,6 +46,7 @@ function rowToRecord(row: any): DrawingRecord {
     name: row.name as string,
     userId: row.owner_id as string,
     elements: (row.elements ?? []) as readonly ExcalidrawElement[],
+    files: (row.files ?? {}) as BinaryFiles,
     appState: (row.app_state ?? {}) as { viewBackgroundColor?: string },
     thumbnail: (row.thumbnail ?? null) as string | null,
     createdAt: new Date(row.created_at as string).getTime(),
@@ -41,9 +55,24 @@ function rowToRecord(row: any): DrawingRecord {
   };
 }
 
+const getReferencedFiles = (
+  elements: readonly ExcalidrawElement[],
+  files: BinaryFiles,
+): BinaryFiles => {
+  const referencedFiles: BinaryFiles = {};
+
+  for (const element of elements) {
+    if (isInitializedImageElement(element) && files[element.fileId]) {
+      referencedFiles[element.fileId] = files[element.fileId];
+    }
+  }
+
+  return referencedFiles;
+};
+
 const toInsertDedupKey = (
   userId: string,
-  data: Omit<DrawingRecord, "id" | "createdAt" | "updatedAt">,
+  data: SaveDrawingRecordData,
 ): string => {
   const elementsFingerprint = data.elements
     .map(
@@ -53,12 +82,23 @@ const toInsertDedupKey = (
         }`,
     )
     .join("|");
+  const filesFingerprint = data.files
+    ? Object.entries(getReferencedFiles(data.elements, data.files))
+        .map(
+          ([id, file]) =>
+            `${id}:${file.id}:${file.version ?? 1}:${file.mimeType}:${
+              file.created ?? ""
+            }`,
+        )
+        .join("|")
+    : "";
   return [
     userId,
     data.name,
     data.appState.viewBackgroundColor ?? "",
     data.collabLink ?? "",
     elementsFingerprint,
+    filesFingerprint,
   ].join("::");
 };
 
@@ -66,7 +106,7 @@ export const DrawingsStore = {
   async getAll(): Promise<DrawingRecord[]> {
     const { data, error } = await supabase
       .from("boards")
-      .select("*")
+      .select(BOARD_LIST_COLUMNS)
       .order("updated_at", { ascending: false });
     if (error) {
       throwStoreError(error.message);
@@ -78,7 +118,7 @@ export const DrawingsStore = {
     // RLS guarantees only the authenticated user's rows are returned.
     const { data, error } = await supabase
       .from("boards")
-      .select("*")
+      .select(BOARD_LIST_COLUMNS)
       .order("updated_at", { ascending: false });
     if (error) {
       throwStoreError(error.message);
@@ -99,7 +139,7 @@ export const DrawingsStore = {
   },
 
   async save(
-    data: Omit<DrawingRecord, "id" | "createdAt" | "updatedAt">,
+    data: SaveDrawingRecordData,
     existingId?: string,
   ): Promise<DrawingRecord> {
     const {
@@ -109,11 +149,17 @@ export const DrawingsStore = {
       throw new Error("No autenticado");
     }
 
+    const hasFiles = data.files !== undefined;
+    const referencedFiles = hasFiles
+      ? getReferencedFiles(data.elements, data.files ?? {})
+      : undefined;
+
     const payload = {
       name: data.name,
       elements: data.elements,
       app_state: data.appState,
       thumbnail: data.thumbnail,
+      ...(hasFiles ? { files: referencedFiles } : {}),
     };
 
     const upsertById = async (id: string): Promise<DrawingRecord> => {
@@ -143,7 +189,7 @@ export const DrawingsStore = {
           owner_id: user.id,
           ...payload,
           collab_link: collabLink,
-          files: {},
+          files: referencedFiles ?? {},
         })
         .select()
         .maybeSingle();

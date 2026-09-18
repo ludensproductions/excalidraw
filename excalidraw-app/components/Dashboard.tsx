@@ -12,9 +12,15 @@ import {
   faUserShield,
   faUserSlash,
 } from "@fortawesome/free-solid-svg-icons";
+import { isInitializedImageElement } from "@excalidraw/element";
+
+import type { FileId } from "@excalidraw/element/types";
+
+import type { BinaryFiles } from "@excalidraw/excalidraw/types";
 
 import { activeBoardAtom, appJotaiStore } from "../app-jotai";
 import { appDialog } from "../appDialog";
+import { FIREBASE_STORAGE_PREFIXES } from "../app_constants";
 import {
   AUTH_FIELD_LIMITS,
   normalizeUsername,
@@ -29,7 +35,7 @@ import {
   type UserRole,
   type UserStatus,
 } from "../data/UserManagementStore";
-import { loadFromFirebase } from "../data/firebase";
+import { loadFilesFromFirebase, loadFromFirebase } from "../data/firebase";
 import { getErrorMessage } from "../errorMessages";
 import { useHandleAppTheme } from "../useHandleAppTheme";
 
@@ -176,6 +182,32 @@ const getActionIconButtonStyle = (
   justifyContent: "center",
   fontSize: "1rem",
 });
+
+const loadSharedBoardFiles = async (
+  board: SharedBoard,
+  elements: DrawingRecord["elements"],
+): Promise<BinaryFiles> => {
+  const fileIds = elements.reduce((acc, element) => {
+    if (isInitializedImageElement(element)) {
+      acc.push(element.fileId);
+    }
+    return acc;
+  }, [] as FileId[]);
+
+  if (!fileIds.length) {
+    return {};
+  }
+
+  const { loadedFiles } = await loadFilesFromFirebase(
+    `${FIREBASE_STORAGE_PREFIXES.collabFiles}/${board.roomId}`,
+    board.roomKey,
+    fileIds,
+  );
+
+  return Object.fromEntries(
+    loadedFiles.map((file) => [file.id, file]),
+  ) as BinaryFiles;
+};
 
 interface BoardCardProps {
   board: DrawingRecord;
@@ -635,6 +667,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           null,
         );
         const draftElements = remoteElements ?? [];
+        const draftFiles = await loadSharedBoardFiles(board, draftElements);
 
         if (isOwner && linkedBoards.length > 0) {
           persistedBoards = await Promise.all(
@@ -643,6 +676,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 {
                   name: ownBoard.name,
                   elements: draftElements,
+                  files: draftFiles,
                   appState: ownBoard.appState,
                   thumbnail: ownBoard.thumbnail,
                   collabLink: null,
@@ -667,6 +701,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           const draftBoard = await DrawingsStore.save({
             name: `${board.name} (${t("app.draft")})`,
             elements: draftElements,
+            files: draftFiles,
             appState: { viewBackgroundColor: "#ffffff" },
             thumbnail: null,
             collabLink: null,

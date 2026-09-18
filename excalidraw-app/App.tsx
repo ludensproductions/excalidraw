@@ -60,7 +60,6 @@ import {
 } from "@excalidraw/excalidraw/data/library";
 
 import type { RemoteExcalidrawElement } from "@excalidraw/excalidraw/data/reconcile";
-import type { RestoredDataState } from "@excalidraw/excalidraw/data/restore";
 import type {
   FileId,
   NonDeletedExcalidrawElement,
@@ -69,6 +68,7 @@ import type {
 import type {
   AppState,
   ExcalidrawImperativeAPI,
+  BinaryFileData,
   BinaryFiles,
   ExcalidrawInitialDataState,
   UIAppState,
@@ -243,12 +243,7 @@ const initializeScene = async (opts: {
 
   const localDataState = importFromLocalStorage();
 
-  let scene: Omit<
-    RestoredDataState,
-    // we're not storing files in the scene database/localStorage, and instead
-    // fetch them async from a different store
-    "files"
-  > & {
+  let scene: ExcalidrawInitialDataState & {
     scrollToContent?: boolean;
   } = {
     elements: restoreElements(localDataState?.elements, null, {
@@ -270,6 +265,7 @@ const initializeScene = async (opts: {
           repairBindings: true,
           deleteInvisibleElements: true,
         }),
+        files: pending.files,
         appState: restoreAppState(
           {
             ...localDataState?.appState,
@@ -284,7 +280,7 @@ const initializeScene = async (opts: {
   if (isExternalScene) {
     if (
       // don't prompt if scene is empty
-      !scene.elements.length ||
+      !(scene.elements?.length ?? 0) ||
       // don't prompt for collab scenes because we don't override local storage
       roomLinkData ||
       // otherwise, prompt whether user wants to override current scene
@@ -305,6 +301,7 @@ const initializeScene = async (opts: {
 
         scene = {
           elements: importedElements,
+          files: imported.files ?? undefined,
           appState: restoreAppState(
             imported.appState,
             // local appState when importing from backend to ensure we restore
@@ -324,8 +321,9 @@ const initializeScene = async (opts: {
               const copiedBoard = await DrawingsStore.save({
                 name: copiedName,
                 elements: importedElements,
+                files: imported.files ?? {},
                 appState: {
-                  viewBackgroundColor: scene.appState.viewBackgroundColor,
+                  viewBackgroundColor: scene.appState?.viewBackgroundColor,
                 },
                 thumbnail: null,
                 collabLink: null,
@@ -372,7 +370,7 @@ const initializeScene = async (opts: {
       const request = await fetch(window.decodeURIComponent(url));
       const data = await loadFromBlob(await request.blob(), null, null);
       if (
-        !scene.elements.length ||
+        !(scene.elements?.length ?? 0) ||
         (await openConfirmModal(shareableLinkConfirmDialog))
       ) {
         return { scene: data, isExternalScene };
@@ -536,18 +534,32 @@ const ExcalidrawWrapper = () => {
             }
             return acc;
           }, [] as FileId[]) || [];
+        const sceneFiles = data.scene.files ?? {};
+        const loadedSceneFiles = fileIds
+          .map((id) => sceneFiles[id])
+          .filter((file): file is BinaryFileData => !!file);
+        const missingFileIds = fileIds.filter((id) => !sceneFiles[id]);
+
+        if (loadedSceneFiles.length) {
+          excalidrawAPI.addFiles(loadedSceneFiles);
+          FileStatusStore.updateStatuses(
+            loadedSceneFiles.map(
+              (file) => [file.id, "loaded"] as [FileId, "loaded"],
+            ),
+          );
+        }
 
         if (data.isExternalScene) {
-          if (fileIds.length) {
+          if (missingFileIds.length) {
             // Direct Firebase call (not through FileManager), so track manually
             FileStatusStore.updateStatuses(
-              fileIds.map((id) => [id, "loading"]),
+              missingFileIds.map((id) => [id, "loading"]),
             );
           }
           loadFilesFromFirebase(
             `${FIREBASE_STORAGE_PREFIXES.shareLinkFiles}/${data.id}`,
             data.key,
-            fileIds,
+            missingFileIds,
           ).then(({ loadedFiles, erroredFiles }) => {
             excalidrawAPI.addFiles(loadedFiles);
             updateStaleImageStatuses({
@@ -563,9 +575,9 @@ const ExcalidrawWrapper = () => {
             ]);
           });
         } else if (isInitialLoad) {
-          if (fileIds.length) {
+          if (missingFileIds.length) {
             LocalData.fileStorage
-              .getFiles(fileIds)
+              .getFiles(missingFileIds)
               .then(async ({ loadedFiles, erroredFiles }) => {
                 if (loadedFiles.length) {
                   excalidrawAPI.addFiles(loadedFiles);

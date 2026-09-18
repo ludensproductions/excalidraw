@@ -421,6 +421,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       {
         name: activeBoard?.name || "Borrador compartido",
         elements: this.excalidrawAPI.getSceneElements(),
+        files: this.excalidrawAPI.getFiles(),
         appState: {
           viewBackgroundColor: appState.viewBackgroundColor,
         },
