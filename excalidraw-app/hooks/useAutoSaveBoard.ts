@@ -17,7 +17,34 @@ import { dashboardState } from "../dashboardState";
 import { DrawingsStore } from "../data/DrawingsStore";
 
 const AUTO_SAVE_DELAY = 3000; // ms after last change
-let sharedDraftBoardId: string | null = null;
+
+export const resolveAutoSaveTargetBoardId = (params: {
+  activeBoardId: string | null;
+  storeBoardId: string | null;
+  ensuredBoardId: string | null;
+  isCollaborating: boolean;
+  isCollaborationOwner: boolean;
+  isReadOnlySession: boolean;
+  createId: () => string;
+}): { id: string; created: boolean } | null => {
+  const existingId =
+    params.activeBoardId ?? params.storeBoardId ?? params.ensuredBoardId;
+
+  if (params.isCollaborating) {
+    if (
+      !params.isCollaborationOwner ||
+      params.isReadOnlySession ||
+      !existingId
+    ) {
+      return null;
+    }
+    return { id: existingId, created: false };
+  }
+
+  return existingId
+    ? { id: existingId, created: false }
+    : { id: params.createId(), created: true };
+};
 
 export const useAutoSaveBoard = () => {
   const excalidrawAPI = useExcalidrawAPI();
@@ -43,10 +70,8 @@ export const useAutoSaveBoard = () => {
     activeBoardRef.current = activeBoard;
     if (activeBoard.id) {
       ensuredBoardIdRef.current = activeBoard.id;
-      sharedDraftBoardId = activeBoard.id;
-    } else if (!activeBoard.name) {
-      // Explicit "new board" session from dashboard.
-      sharedDraftBoardId = null;
+    } else {
+      ensuredBoardIdRef.current = null;
     }
   }, [activeBoard]);
   useEffect(() => {
@@ -116,18 +141,24 @@ export const useAutoSaveBoard = () => {
     }
 
     try {
-      const targetBoardId =
-        board.id ??
-        storeBoard.id ??
-        ensuredBoardIdRef.current ??
-        sharedDraftBoardId ??
-        (() => {
-          const id = crypto.randomUUID();
-          sharedDraftBoardId = id;
-          activeBoardRef.current = { id, name: board.name };
-          appJotaiStore.set(activeBoardAtom, { id, name: board.name });
-          return id;
-        })();
+      const target = resolveAutoSaveTargetBoardId({
+        activeBoardId: board.id,
+        storeBoardId: storeBoard.id,
+        ensuredBoardId: ensuredBoardIdRef.current,
+        isCollaborating: isCollaboratingRef.current,
+        isCollaborationOwner: isCollaborationOwnerRef.current,
+        isReadOnlySession: isReadOnlySessionRef.current,
+        createId: () => crypto.randomUUID(),
+      });
+
+      if (!target) {
+        return;
+      }
+
+      if (target.created) {
+        activeBoardRef.current = { id: target.id, name: board.name };
+        appJotaiStore.set(activeBoardAtom, { id: target.id, name: board.name });
+      }
 
       const record = await DrawingsStore.save(
         {
@@ -142,10 +173,9 @@ export const useAutoSaveBoard = () => {
               : null,
           userId: getCurrentUser()?.id,
         },
-        targetBoardId,
+        target.id,
       );
       ensuredBoardIdRef.current = record.id;
-      sharedDraftBoardId = record.id;
       if (!board.id) {
         // First autosave for a brand-new board: remember the id so subsequent
         // saves update the same record instead of creating new ones.
