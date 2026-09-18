@@ -21,25 +21,26 @@ Este documento registra la primera arquitectura de permisos para el menu lateral
 | Inicio | Si | Si | Si | Si | No | Vuelve al dashboard; antes ejecuta flush de guardado cuando aplica. |
 | Guardar tablero | Si | Si | No | No | No | Guarda el tablero privado. En colaboracion solo el owner puede crear/actualizar este registro. |
 | Renombrar tablero | Si | Si | No | No | No | Si el owner aun no tiene registro privado, renombrar dispara un guardado con ese nombre. |
-| Cargar escena | Si | Si | Si | No | No | Muta la escena; se bloquea para solo lectura. |
+| Cargar escena | Si | Si | No | No | No | Reemplaza la escena; se bloquea para invitados en colaboracion. |
 | Guardar en archivo activo | Si | Si | Si | Si | No | Accion de archivo/exportacion local, no actualiza permisos del tablero en Supabase. |
 | Exportar | Si | Si | Si | Si | No | Exportacion local. |
 | Guardar como imagen | Si | Si | Si | Si | No | Exportacion local. |
-| Colaboracion en vivo | Si | Si | Si | Si | No | Permite iniciar, ver enlace, salir o cerrar segun el rol interno del dialogo. |
+| Colaboracion en vivo | Si | Si | Si | Si | No | Para invitados se muestra como "Salir de la sesion"; owner/personal mantiene el dialogo de colaboracion. |
 | Paleta de comandos | Si | Si | Si | No | No | Se oculta en solo lectura para no exponer comandos mutadores desde el menu. |
 | Ayuda | Si | Si | Si | Si | No | Informativo. |
 | Limpiar lienzo | Si | Si | Si | No | No | Muta la escena; se bloquea para solo lectura. |
 | Preferencias | Si | Si | Si | Si | No | Configuracion local del usuario. |
 | Cambiar tema | Si | Si | Si | Si | No | Preferencia local del usuario. |
 | Cambiar fondo del lienzo | Si | Si | Si | No | No | Muta el tablero; se bloquea para solo lectura. |
-| Cerrar sesion | Si | Si | Si | Si | No | Accion de cuenta. |
 
 ## Cambios aplicados en esta tarea
 
 - Se quito el bloqueo que mostraba "Tablero compartido" al owner cuando intentaba guardar manualmente un tablero en colaboracion.
 - `useSaveBoard` ahora permite guardar en colaboracion solo al `collaboration_owner`; invitados reciben un mensaje claro si la accion se invoca por otra ruta.
 - `useAutoSaveBoard` aplica la misma regla: owner puede persistir el tablero privado; invitados no crean copias privadas por autoguardado.
-- `AppMainMenu` ya no renderiza Guardar/Renombrar para invitados no propietarios.
+- `AppMainMenu` ya no renderiza Guardar/Renombrar/Abrir para invitados no propietarios.
+- La accion de colaboracion de invitados no propietarios se muestra como "Salir de la sesion" y abandona la sala directamente.
+- El menu lateral del editor ya no muestra "Cerrar sesion"; esa accion queda solo en dashboard/home.
 - Renombrar como owner sincroniza el nombre del tablero privado y, si hay sala activa, tambien el registro compartido.
 - Se agrego `excalidraw-app/tests/boardMenuPermissions.test.ts` para cubrir las reglas principales de owner, invitado editor y colaborador solo lectura.
 

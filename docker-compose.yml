@@ -89,6 +89,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      auth-email-templates:
+        condition: service_started
     environment:
       GOTRUE_API_HOST: 0.0.0.0
       GOTRUE_API_PORT: 9999
@@ -112,16 +114,18 @@ services:
       GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: ${ENABLE_ANONYMOUS_USERS:-false}
       GOTRUE_MAILER_AUTOCONFIRM: ${ENABLE_EMAIL_AUTOCONFIRM:-true}
 
-      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL:-admin@example.com}
-      GOTRUE_SMTP_HOST: ${SMTP_HOST:-mail}
-      GOTRUE_SMTP_PORT: ${SMTP_PORT:-2500}
-      GOTRUE_SMTP_USER: ${SMTP_USER:-admin}
-      GOTRUE_SMTP_PASS: ${SMTP_PASS:-admin}
-      GOTRUE_SMTP_SENDER_NAME: ${SMTP_SENDER_NAME:-Excalidraw}
-      GOTRUE_MAILER_URLPATHS_INVITE: ${MAILER_URLPATHS_INVITE:-/auth/v1/verify}
-      GOTRUE_MAILER_URLPATHS_CONFIRMATION: ${MAILER_URLPATHS_CONFIRMATION:-/auth/v1/verify}
-      GOTRUE_MAILER_URLPATHS_RECOVERY: ${MAILER_URLPATHS_RECOVERY:-/auth/v1/verify}
-      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: ${MAILER_URLPATHS_EMAIL_CHANGE:-/auth/v1/verify}
+      GOTRUE_SMTP_ADMIN_EMAIL: ${SYSTEM_EMAIL:?Define SYSTEM_EMAIL in .env}
+      GOTRUE_SMTP_HOST: smtp.gmail.com
+      GOTRUE_SMTP_PORT: 587
+      GOTRUE_SMTP_USER: ${SYSTEM_EMAIL:?Define SYSTEM_EMAIL in .env}
+      GOTRUE_SMTP_PASS: ${EMAIL_APP_KEY:?Define EMAIL_APP_KEY in .env}
+      GOTRUE_SMTP_SENDER_NAME: Excalidraw
+      GOTRUE_MAILER_URLPATHS_INVITE: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_RECOVERY: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: /auth/v1/verify
+      GOTRUE_MAILER_TEMPLATES_RECOVERY: http://auth-email-templates/recovery.html
+      GOTRUE_MAILER_SUBJECTS_RECOVERY: Recuperar contraseña
 
       GOTRUE_EXTERNAL_PHONE_ENABLED: ${ENABLE_PHONE_SIGNUP:-false}
       GOTRUE_SMS_AUTOCONFIRM: ${ENABLE_PHONE_AUTOCONFIRM:-false}
@@ -232,11 +236,6 @@ services:
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
       AUTH_JWT_SECRET: ${JWT_SECRET}
-      SNIPPETS_MANAGEMENT_FOLDER: /app/snippets
-      EDGE_FUNCTIONS_MANAGEMENT_FOLDER: /app/edge-functions
-    volumes:
-      - ./docker/volumes/snippets:/app/snippets:ro
-      - ./docker/volumes/functions:/app/edge-functions:ro
 
   # --- API Gateway (Kong) ---
   kong:
@@ -286,10 +285,14 @@ services:
     command: ["TCP-LISTEN:8000,fork,reuseaddr", "TCP:kong:8000"]
     ports:
       - "${KONG_DEV_PROXY_PORT:-8000}:8000"
-  # --- Mail catcher (development SMTP) ---
-  mail:
-    image: ${MAILPIT_IMAGE:-axllent/mailpit:v1.23}
+
+  # --- Auth email templates ---
+  auth-email-templates:
+    image: caddy:2-alpine
     restart: unless-stopped
+    command: ["caddy", "file-server", "-r", "/templates", "--listen", ":80"]
+    volumes:
+      - ./docker/volumes/auth/templates:/templates:ro
 
   # ========================================================================
   # Excalidraw Services
@@ -318,13 +321,10 @@ services:
         - NODE_ENV=${NODE_ENV:-production}
         - VITE_APP_PORT=${EXCALIDRAW_PORT:-3000}
         - FAST_REFRESH=${FAST_REFRESH:-false}
-        - VITE_APP_BACKEND_V2_GET_URL=${VITE_APP_BACKEND_V2_GET_URL:-https://json.excalidraw.com/api/v2/}
-        - VITE_APP_BACKEND_V2_POST_URL=${VITE_APP_BACKEND_V2_POST_URL:-https://json.excalidraw.com/api/v2/post/}
         - VITE_APP_LIBRARY_URL=${VITE_APP_LIBRARY_URL:-https://libraries.excalidraw.com}
         - VITE_APP_LIBRARY_BACKEND=${VITE_APP_LIBRARY_BACKEND:-https://us-central1-excalidraw-room-persistence.cloudfunctions.net/libraries}
         - VITE_APP_WS_SERVER_URL=${VITE_APP_WS_SERVER_URL:-${EXCALIDRAW_ROOM_PUBLIC_URL:-https://room.excalidraw.issirmax.mx}}
         - VITE_APP_AI_BACKEND=${VITE_APP_AI_BACKEND:-https://oss-ai.excalidraw.com}
-        - VITE_APP_FIREBASE_CONFIG=${VITE_APP_FIREBASE_CONFIG:-{}}
         - VITE_APP_SUPABASE_URL=${VITE_APP_SUPABASE_URL:-${SUPABASE_PUBLIC_URL:-${EXCALIDRAW_PUBLIC_URL:-https://excalidraw.issirmax.mx}}}
         - VITE_APP_SUPABASE_ANON_KEY=${VITE_APP_SUPABASE_ANON_KEY:-}
         - VITE_APP_DISABLE_SENTRY=${VITE_APP_DISABLE_SENTRY:-true}

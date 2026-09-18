@@ -5,7 +5,6 @@ import { FilledButton } from "@excalidraw/excalidraw/components/FilledButton";
 import { TextField } from "@excalidraw/excalidraw/components/TextField";
 import {
   copyIcon,
-  eyeIcon,
   LinkIcon,
   pencilIcon,
   playerPlayIcon,
@@ -171,11 +170,13 @@ const ActiveRoomDialog = ({
         const updatedUser = await updateCurrentUsername(normalizedUsername);
         collabAPI.setUsername(updatedUser.username);
         setDisplayUsername(updatedUser.username);
+        void appDialog.toast({ title: t("app.userUpdatedSuccessfully") });
         return;
       }
 
       collabAPI.setUsername(normalizedUsername);
       setDisplayUsername(normalizedUsername);
+      void appDialog.toast({ title: t("app.userUpdatedSuccessfully") });
     } catch (error) {
       await appDialog.error(
         t("app.userActionFailed"),
@@ -260,7 +261,7 @@ const ActiveRoomDialog = ({
             <FilledButton
               size="large"
               label={t("buttons.copyLink")}
-              icon={eyeIcon}
+              icon={copyIcon}
               status={copyStatusReadOnly}
               onClick={() => {
                 copyReadOnlyLink();
@@ -282,7 +283,13 @@ const ActiveRoomDialog = ({
           </span>
           {t("roomDialog.desc_privacy")}
         </p>
-        <p>{t("roomDialog.desc_exitSession")}</p>
+        <p>
+          {t(
+            isOwner
+              ? "roomDialog.desc_stopSession"
+              : "roomDialog.desc_exitSession",
+          )}
+        </p>
       </div>
 
       <div className="ShareDialog__active__actions">
@@ -298,6 +305,9 @@ const ActiveRoomDialog = ({
               const didStop = await collabAPI.stopCollaboration();
               if (didStop) {
                 handleClose();
+                void appDialog.toast({
+                  title: t("app.sharedSessionFinalizedSuccessfully"),
+                });
               }
             }}
           />
@@ -311,8 +321,13 @@ const ActiveRoomDialog = ({
             onClick={async () => {
               trackEvent("share", "room left");
               handleClose();
-              await collabAPI.leaveCollaboration();
+              const didLeave = await collabAPI.leaveCollaboration();
               dashboardState.getOnBack()?.();
+              if (didLeave) {
+                void appDialog.toast({
+                  title: t("app.sharedBoardLeftSuccessfully"),
+                });
+              }
             }}
           />
         )}

@@ -1,9 +1,9 @@
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 
-import "./appDialog.scss";
-
 import { t } from "@excalidraw/excalidraw/i18n";
+
+import "./appDialog.scss";
 
 type DialogIcon = "success" | "error" | "warning" | "info" | "question";
 
@@ -24,11 +24,37 @@ const baseOptions = () => ({
     confirmButton: "app-swal__button app-swal__button--primary",
     cancelButton: "app-swal__button",
     denyButton: "app-swal__button",
+    closeButton: "app-swal__close",
     validationMessage: "app-swal__validation",
   },
 });
 
 export const appDialog = {
+  async toast(options: {
+    title: string;
+    icon?: Extract<DialogIcon, "success" | "error" | "warning" | "info">;
+    timer?: number;
+  }): Promise<void> {
+    const optionsBase = baseOptions();
+
+    await Swal.fire({
+      ...optionsBase,
+      title: options.title,
+      icon: options.icon ?? "success",
+      toast: true,
+      position: "top-end",
+      showCloseButton: false,
+      showConfirmButton: false,
+      timer: options.timer ?? 2600,
+      timerProgressBar: true,
+      customClass: {
+        ...optionsBase.customClass,
+        popup: `${optionsBase.customClass.popup} app-swal--toast`,
+        title: "app-swal__toast-title",
+      },
+    });
+  },
+
   async alert(options: {
     title: string;
     text?: string;
@@ -40,6 +66,7 @@ export const appDialog = {
       title: options.title,
       text: options.text,
       icon: options.icon ?? "info",
+      showCloseButton: true,
       confirmButtonText: options.confirmButtonText ?? t("app.gotIt"),
     });
   },
@@ -61,6 +88,7 @@ export const appDialog = {
       title: options.title,
       text: options.text,
       icon: options.icon ?? "warning",
+      showCloseButton: true,
       showCancelButton: true,
       confirmButtonText: options.confirmButtonText ?? t("app.confirm"),
       cancelButtonText: options.cancelButtonText ?? t("app.cancel"),
@@ -96,6 +124,7 @@ export const appDialog = {
       title: options.title,
       text: options.text,
       icon: options.icon ?? "question",
+      showCloseButton: true,
       showDenyButton: true,
       showCancelButton: true,
       confirmButtonText: options.confirmButtonText,
@@ -112,8 +141,8 @@ export const appDialog = {
           denyButtonVariant === "danger"
             ? "app-swal__button--danger"
             : denyButtonVariant === "primary"
-              ? "app-swal__button--primary"
-              : ""
+            ? "app-swal__button--primary"
+            : ""
         }`.trim(),
       },
     });
@@ -143,6 +172,7 @@ export const appDialog = {
       inputLabel: options.label,
       inputPlaceholder: options.placeholder,
       inputValue: options.initialValue ?? "",
+      showCloseButton: true,
       showCancelButton: true,
       confirmButtonText: options.confirmButtonText ?? t("app.save"),
       cancelButtonText: options.cancelButtonText ?? t("app.cancel"),

@@ -1,5 +1,7 @@
-﻿import { t } from "@excalidraw/excalidraw/i18n";
+import { t } from "@excalidraw/excalidraw/i18n";
+
 import { supabase } from "../data/supabase";
+
 import {
   normalizeEmail,
   normalizeUsername,
@@ -8,6 +10,11 @@ import {
   validateUsername,
   validateRegistrationFields,
 } from "./authValidation";
+import {
+  getPasswordResetRequestStartedAt,
+  waitForPasswordResetResponseFloor,
+} from "./passwordResetTiming";
+
 import type { UserRole, UserStatus } from "../data/UserManagementStore";
 import type { Session } from "@supabase/supabase-js";
 
@@ -281,13 +288,20 @@ export async function requestPasswordReset(email: string): Promise<void> {
     throw new Error(t(validationError));
   }
 
-  const trimmedEmail = normalizeEmail(email);
-  const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
-    redirectTo: `${window.location.origin}${window.location.pathname}`,
-  });
+  const startedAt = getPasswordResetRequestStartedAt();
+  try {
+    const trimmedEmail = normalizeEmail(email);
+    const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
+      redirectTo: `${window.location.origin}${window.location.pathname}`,
+    });
 
-  if (error) {
-    throw new Error(error.message);
+    if (error) {
+      console.warn("Password reset request failed:", error.message);
+    }
+  } catch (error) {
+    console.warn("Password reset request failed:", error);
+  } finally {
+    await waitForPasswordResetResponseFloor(startedAt);
   }
 }
 

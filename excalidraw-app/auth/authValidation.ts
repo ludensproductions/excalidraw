@@ -8,7 +8,7 @@ export const AUTH_FIELD_LIMITS = {
     max: 254,
   },
   password: {
-    min: 6,
+    min: 8,
     max: 128,
   },
 } as const;
@@ -22,6 +22,10 @@ const EMAIL_ALLOWED_CHARS_REGEX = /^[A-Z0-9._%+@-]+$/i;
 const EMAIL_REGEX = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
 const PASSWORD_DISALLOWED_CHAR_REGEX =
   /[\s\p{C}\p{Extended_Pictographic}\p{Regional_Indicator}\p{Emoji_Modifier}\u20e3]/u;
+const PASSWORD_LOWERCASE_REGEX = /\p{Ll}/u;
+const PASSWORD_UPPERCASE_REGEX = /\p{Lu}/u;
+const PASSWORD_NUMBER_REGEX = /\p{N}/u;
+const PASSWORD_SPECIAL_CHAR_REGEX = /[^\p{L}\p{M}\p{N}]/u;
 
 export type AuthValidationError =
   | "auth.errors.usernameMinLength"
@@ -33,7 +37,8 @@ export type AuthValidationError =
   | "auth.errors.emailMaxLength"
   | "auth.errors.passwordMinLength"
   | "auth.errors.passwordMaxLength"
-  | "auth.errors.passwordInvalidCharacters";
+  | "auth.errors.passwordInvalidCharacters"
+  | "auth.errors.passwordRequiresComplexity";
 
 type RegistrationFields = {
   username: string;
@@ -158,6 +163,14 @@ export const validatePassword = (
   }
   if (PASSWORD_DISALLOWED_CHAR_REGEX.test(password)) {
     return "auth.errors.passwordInvalidCharacters";
+  }
+  if (
+    !PASSWORD_LOWERCASE_REGEX.test(password) ||
+    !PASSWORD_UPPERCASE_REGEX.test(password) ||
+    !PASSWORD_NUMBER_REGEX.test(password) ||
+    !PASSWORD_SPECIAL_CHAR_REGEX.test(password)
+  ) {
+    return "auth.errors.passwordRequiresComplexity";
   }
 
   return null;

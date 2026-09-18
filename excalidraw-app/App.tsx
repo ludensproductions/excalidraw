@@ -85,7 +85,6 @@ import {
   useAtomWithInitialValue,
   appJotaiStore,
   activeBoardAtom,
-  boardSaveStatusAtom,
   hasDashboardBackAtom,
   isReadOnlySessionAtom,
 } from "./app-jotai";
@@ -94,10 +93,12 @@ import {
   STORAGE_KEYS,
   SYNC_BROWSER_TABS_TIMEOUT,
 } from "./app_constants";
+import { appDialog } from "./appDialog";
 import Collab, {
   collabAPIAtom,
   isCollaboratingAtom,
   isOfflineAtom,
+  isOwnerAtom,
 } from "./collab/Collab";
 import { useAutoSaveBoard } from "./hooks/useAutoSaveBoard";
 import { AppFooter } from "./components/AppFooter";
@@ -484,13 +485,13 @@ const ExcalidrawWrapper = () => {
   const [, setShareDialogState] = useAtom(shareDialogStateAtom);
   const [collabAPI] = useAtom(collabAPIAtom);
   const activeBoard = useAtomValue(activeBoardAtom);
-  const boardSaveStatus = useAtomValue(boardSaveStatusAtom);
   const [isCollaborating] = useAtomWithInitialValue(isCollaboratingAtom, () => {
     return isCollaborationLink(window.location.href);
   });
   const collabError = useAtomValue(collabErrorIndicatorAtom);
   const hasDashboardBack = useAtomValue(hasDashboardBackAtom);
   const isReadOnlySession = useAtomValue(isReadOnlySessionAtom);
+  const isCollaborationOwner = useAtomValue(isOwnerAtom);
 
   useHandleLibrary({
     excalidrawAPI,
@@ -904,7 +905,9 @@ const ExcalidrawWrapper = () => {
         yield {
           type: "progress",
           progress: (nowTotal - nowPending) / nowTotal,
-          message: `Cargando imagenes (${nowTotal - nowPending}/${nowTotal})...`,
+          message: `Cargando imagenes (${
+            nowTotal - nowPending
+          }/${nowTotal})...`,
         };
 
         if (nowPending === 0) {
@@ -982,15 +985,6 @@ const ExcalidrawWrapper = () => {
               >
                 {t("app.back")}
               </button>
-              {boardSaveStatus === "saved" && (
-                <span
-                  className="board-save-success-badge"
-                  role="status"
-                  aria-live="polite"
-                >
-                  {t("app.boardSavedSuccessfully")}
-                </span>
-              )}
             </div>
           );
         }}
@@ -1139,9 +1133,17 @@ const ExcalidrawWrapper = () => {
               ],
               perform: async () => {
                 if (collabAPI) {
+                  const wasOwner = isCollaborationOwner;
                   const didStop = await collabAPI.stopCollaboration();
                   if (didStop) {
                     setShareDialogState({ isOpen: false });
+                    void appDialog.toast({
+                      title: t(
+                        wasOwner
+                          ? "app.sharedSessionFinalizedSuccessfully"
+                          : "app.sharedBoardLeftSuccessfully",
+                      ),
+                    });
                   }
                 }
               },

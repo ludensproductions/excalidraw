@@ -409,14 +409,15 @@
   },
   "roomDialog": {
     "desc_intro": "Invita a gente a colaborar en tu dibujo.",
-    "desc_privacy": "No te preocupes, la sesión está encriptada de extremo a extremo y es totalmente privada. Ni siquiera nuestro servidor puede ver lo que dibujas.",
+    "desc_privacy": "Esta sesión es privada y está cifrada de extremo a extremo.",
     "button_startSession": "Iniciar sesión",
     "button_stopSession": "Detener sesión",
     "desc_inProgressIntro": "La sesión de colaboración en vivo está ahora en progreso.",
     "desc_shareLink": "Comparte este enlace con cualquier persona con quien quieras colaborar:",
-    "desc_exitSession": "Detener la sesión te desconectará de la sala, pero podrás seguir trabajando con la escena en su computadora, esto es de modo local. Ten en cuenta que esto no afectará a otras personas, y que las mismas seguirán siendo capaces de colaborar en tu escena.",
+    "desc_stopSession": "Al detener la sesión, se cerrará la sala de colaboración para todos los participantes. Podrás continuar trabajando localmente en este tablero.",
+    "desc_exitSession": "Al salir de la sesión, se finalizará tu conexión con la sala. Podrás continuar trabajando localmente; los demás participantes podrán seguir colaborando.",
     "shareTitle": "Únase a una sesión colaborativa en vivo en Excalidraw",
-    "button_leaveSession": "Salir de la sesion"
+    "button_leaveSession": "Salir de la sesión"
   },
   "errorDialog": {
     "title": "Error"
@@ -759,6 +760,7 @@
     "saving": "Guardando...",
     "saved": "Listo",
     "boardSavedSuccessfully": "Guardado correctamente",
+    "boardRenamedSuccessfully": "Tablero renombrado",
     "renameBoard": "Renombrar tablero",
     "newName": "Nuevo nombre",
     "rename": "Renombrar",
@@ -800,6 +802,7 @@
     "createFirstBoard": "Crear tu primer tablero",
     "deleteBoard": "Eliminar tablero",
     "deleteBoardConfirm": "Esta acción no se puede deshacer.",
+    "boardDeletedSuccessfully": "Tablero eliminado",
     "delete": "Eliminar",
     "comments": "Comentarios",
     "refresh": "Actualizar",
@@ -815,6 +818,7 @@
     "save": "Guardar",
     "deleteComment": "Eliminar comentario",
     "deleteCommentConfirm": "Esta acción no se puede deshacer.",
+    "commentDeletedSuccessfully": "Comentario eliminado",
     "couldNotLoadComments": "No se pudieron cargar.",
     "couldNotComment": "No se pudo comentar.",
     "couldNotEditComment": "No se pudo editar el comentario.",
@@ -834,12 +838,15 @@
     "generationFailedInvalid": "Generación fallida (respuesta inválida)",
     "notAPretzel": "¡No soy un pretzel!",
     "duplicateName": "Ya existe un tablero con ese nombre. Elige otro.",
+    "collabLinkDeletedSuccessfully": "Enlace de colaboración eliminado",
     "leaveSharedSaveDraftText": "¿Quieres guardar este tablero compartido como borrador antes de salir?",
     "saveDraft": "Guardar borrador",
     "closeWithoutSaving": "Cerrar sin guardar",
     "finalizeWithoutSaving": "Finalizar sin guardar",
     "leaveWithoutSaving": "Salir sin guardar",
     "draft": "borrador",
+    "sharedBoardLeftSuccessfully": "Saliste del tablero compartido",
+    "sharedSessionFinalizedSuccessfully": "Sesión compartida finalizada",
     "collaborationClosedTitle": "Colaboración cerrada",
     "collaborationClosedText": "Esta colaboración ya no existe o ya fue cerrada por el propietario.",
     "createBoard": "Crear tablero",
@@ -855,6 +862,7 @@
     "editUsername": "Editar usuario",
     "newUsername": "Nuevo nombre de usuario",
     "userActionFailed": "No se pudo actualizar el usuario.",
+    "userUpdatedSuccessfully": "Usuario actualizado",
     "makeAdmin": "Hacer admin",
     "makeUser": "Hacer usuario",
     "activateUser": "Activar usuario",
@@ -899,7 +907,7 @@
       "username": "Tu nombre",
       "email": "correo@ejemplo.com",
       "password": "Tu contraseña",
-      "newPassword": "mínimo 6 caracteres",
+      "newPassword": "8+ caracteres, mayúscula, minúscula, número y símbolo",
       "confirmPassword": "Repite la contraseña"
     },
     "actions": {
@@ -917,7 +925,7 @@
     },
     "messages": {
       "enterNewPassword": "Ingresa tu nueva contraseña.",
-      "resetEmailSent": "Te enviamos un correo con el enlace para recuperar tu contraseña."
+      "resetEmailSent": "Si el correo está registrado, enviaremos un enlace para recuperar tu contraseña."
     },
     "errors": {
       "openRecoveryLinkFailed": "No se pudo abrir el enlace de recuperación.",
@@ -927,9 +935,10 @@
       "emailInvalidCharacters": "El correo electrónico solo puede contener letras, números, puntos, guiones bajos, signos de porcentaje, signos de suma, guiones y un signo @.",
       "emailInvalid": "Ingresa un correo electrónico válido.",
       "emailMaxLength": "El correo electrónico debe tener 254 caracteres o menos.",
-      "passwordMinLength": "La contraseña debe tener al menos 6 caracteres.",
+      "passwordMinLength": "La contraseña debe tener al menos 8 caracteres.",
       "passwordMaxLength": "La contraseña debe tener 128 caracteres o menos.",
       "passwordInvalidCharacters": "La contraseña no puede contener espacios, caracteres invisibles ni emojis.",
+      "passwordRequiresComplexity": "La contraseña debe incluir al menos una mayúscula, una minúscula, un número y un carácter especial.",
       "passwordsDoNotMatch": "Las contraseñas no coinciden.",
       "unexpected": "Ocurrió un error inesperado.",
       "emailAlreadyRegistered": "Ya existe una cuenta con ese correo electrónico.",

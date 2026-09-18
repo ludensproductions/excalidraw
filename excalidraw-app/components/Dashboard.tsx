@@ -306,7 +306,9 @@ const BoardCard: React.FC<BoardCardProps> = ({
             {board.name}
           </span>
         )}
-        <span className="dashboard__card-date">{formatDate(board.updatedAt)}</span>
+        <span className="dashboard__card-date">
+          {formatDate(board.updatedAt)}
+        </span>
         {board.collabLink && (
           <div className="dashboard__card-collab-row">
             <button
@@ -329,9 +331,10 @@ const BoardCard: React.FC<BoardCardProps> = ({
       <button
         className="dashboard__card-rename"
         title={t("app.renameBoard")}
+        aria-label={t("app.renameBoard")}
         onClick={startRename}
       >
-        Edit
+        <FontAwesomeIcon icon={faPenToSquare} />
       </button>
       <button
         className="dashboard__card-delete"
@@ -369,7 +372,9 @@ const SharedBoardCard: React.FC<SharedBoardCardProps> = ({
           {board.name}
         </span>
         {isOwner && (
-          <span className="dashboard__shared-card-owner-badge">{t("app.yours")}</span>
+          <span className="dashboard__shared-card-owner-badge">
+            {t("app.yours")}
+          </span>
         )}
       </div>
 
@@ -386,7 +391,9 @@ const SharedBoardCard: React.FC<SharedBoardCardProps> = ({
           </span>
         ))}
         {overflow > 0 && (
-          <span className="dashboard__shared-card-avatar overflow">+{overflow}</span>
+          <span className="dashboard__shared-card-avatar overflow">
+            +{overflow}
+          </span>
         )}
         <span className="dashboard__shared-card-member-names">
           {board.members.map((member) => member.username).join(", ")}
@@ -557,6 +564,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     }
     await DrawingsStore.delete(id);
     setBoards((prev) => prev.filter((board) => board.id !== id));
+    void appDialog.toast({ title: t("app.boardDeletedSuccessfully") });
   };
 
   const handleRename = async (id: string, newName: string) => {
@@ -579,6 +587,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     if (active?.id === id) {
       appJotaiStore.set(activeBoardAtom, { ...active, name: newName });
     }
+    void appDialog.toast({ title: t("app.boardRenamedSuccessfully") });
   };
 
   const handleClearCollabLink = async (id: string) => {
@@ -588,6 +597,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         board.id === id ? { ...board, collabLink: null } : board,
       ),
     );
+    void appDialog.toast({ title: t("app.collabLinkDeletedSuccessfully") });
   };
 
   const handleLeaveSharedBoard = async (board: SharedBoard) => {
@@ -706,6 +716,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
     }
 
     setSharedBoards((prev) => prev.filter((item) => item.id !== board.id));
+    void appDialog.toast({
+      title: t(
+        isOwner
+          ? "app.sharedSessionFinalizedSuccessfully"
+          : "app.sharedBoardLeftSuccessfully",
+      ),
+    });
   };
 
   const handleOpenBoard = async (board: DrawingRecord) => {
@@ -768,6 +785,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         username: normalizedUsername,
       });
       syncManagedUser(updated);
+      void appDialog.toast({ title: t("app.userUpdatedSuccessfully") });
     } catch (error) {
       await appDialog.error(
         t("app.userActionFailed"),
@@ -799,6 +817,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         role: nextRole,
       });
       syncManagedUser(updated);
+      void appDialog.toast({ title: t("app.userUpdatedSuccessfully") });
     } catch (error) {
       await appDialog.error(
         t("app.userActionFailed"),
@@ -837,6 +856,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         status: nextStatus,
       });
       syncManagedUser(updated);
+      void appDialog.toast({ title: t("app.userUpdatedSuccessfully") });
     } catch (error) {
       await appDialog.error(
         t("app.userActionFailed"),
@@ -920,7 +940,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         <nav className="dashboard__tabs">
           <button
-            className={`dashboard__tab${activeTab === "recent" ? " active" : ""}`}
+            className={`dashboard__tab${
+              activeTab === "recent" ? " active" : ""
+            }`}
             onClick={() => setActiveTab("recent")}
           >
             {t("app.recent")}
@@ -932,22 +954,30 @@ export const Dashboard: React.FC<DashboardProps> = ({
             {t("app.myBoards")}
           </button>
           <button
-            className={`dashboard__tab${activeTab === "shared" ? " active" : ""}`}
+            className={`dashboard__tab${
+              activeTab === "shared" ? " active" : ""
+            }`}
             onClick={() => setActiveTab("shared")}
           >
             {t("app.shared")}
             {sharedBoards.length > 0 && (
-              <span className="dashboard__tab-badge">{sharedBoards.length}</span>
+              <span className="dashboard__tab-badge">
+                {sharedBoards.length}
+              </span>
             )}
           </button>
           {isAdmin && (
             <button
-              className={`dashboard__tab${activeTab === "users" ? " active" : ""}`}
+              className={`dashboard__tab${
+                activeTab === "users" ? " active" : ""
+              }`}
               onClick={() => setActiveTab("users")}
             >
               {t("app.userManagement")}
               {managedUsers.length > 0 && (
-                <span className="dashboard__tab-badge">{managedUsers.length}</span>
+                <span className="dashboard__tab-badge">
+                  {managedUsers.length}
+                </span>
               )}
             </button>
           )}
@@ -1029,7 +1059,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <FontAwesomeIcon
                   icon={faArrowsRotate}
                   className={`dashboard__shared-refresh-icon${
-                    usersLoading ? " dashboard__shared-refresh-icon--spinning" : ""
+                    usersLoading
+                      ? " dashboard__shared-refresh-icon--spinning"
+                      : ""
                   }`}
                 />
               </button>
@@ -1070,7 +1102,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   {managedUsers.map((profile) => {
                     const selected = profile.id === selectedManagedUser?.id;
                     const rolePalette = getRolePalette(profile.role, isDark);
-                    const statusPalette = getStatusPalette(profile.status, isDark);
+                    const statusPalette = getStatusPalette(
+                      profile.status,
+                      isDark,
+                    );
                     return (
                       <button
                         key={profile.id}
@@ -1081,7 +1116,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           width: "100%",
                           padding: "0.85rem",
                           borderRadius: "10px",
-                          border: `1.5px solid ${selected ? "#6965db" : panelBorder}`,
+                          border: `1.5px solid ${
+                            selected ? "#6965db" : panelBorder
+                          }`,
                           background: selected
                             ? isDark
                               ? "#1e1e4a"
@@ -1189,7 +1226,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           {selectedManagedUser.email}
                         </p>
                       </div>
-                      <div style={{ display: "flex", gap: "0.45rem", flexWrap: "wrap" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "0.45rem",
+                          flexWrap: "wrap",
+                        }}
+                      >
                         <span
                           style={{
                             ...getRolePalette(selectedManagedUser.role, isDark),
@@ -1205,7 +1248,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         </span>
                         <span
                           style={{
-                            ...getStatusPalette(selectedManagedUser.status, isDark),
+                            ...getStatusPalette(
+                              selectedManagedUser.status,
+                              isDark,
+                            ),
                             borderWidth: "1px",
                             borderStyle: "solid",
                             borderRadius: "999px",
@@ -1222,17 +1268,33 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <div
                       style={{
                         display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                        gridTemplateColumns:
+                          "repeat(auto-fit, minmax(220px, 1fr))",
                         gap: "0.85rem",
                       }}
                     >
                       {[
-                        [t("auth.fields.username"), selectedManagedUser.username],
+                        [
+                          t("auth.fields.username"),
+                          selectedManagedUser.username,
+                        ],
                         [t("app.userEmail"), selectedManagedUser.email],
-                        [t("app.userRole"), getUserRoleLabel(selectedManagedUser.role)],
-                        [t("app.userStatus"), getUserStatusLabel(selectedManagedUser.status)],
-                        [t("app.userJoined"), formatDate(selectedManagedUser.createdAt)],
-                        [t("app.userLastUpdate"), formatDate(selectedManagedUser.updatedAt)],
+                        [
+                          t("app.userRole"),
+                          getUserRoleLabel(selectedManagedUser.role),
+                        ],
+                        [
+                          t("app.userStatus"),
+                          getUserStatusLabel(selectedManagedUser.status),
+                        ],
+                        [
+                          t("app.userJoined"),
+                          formatDate(selectedManagedUser.createdAt),
+                        ],
+                        [
+                          t("app.userLastUpdate"),
+                          formatDate(selectedManagedUser.updatedAt),
+                        ],
                       ].map(([label, value]) => (
                         <div
                           key={String(label)}
@@ -1301,7 +1363,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         <button
                           type="button"
                           onClick={() => {
-                            void handleManagedRoleChange(selectedManagedUser, "user");
+                            void handleManagedRoleChange(
+                              selectedManagedUser,
+                              "user",
+                            );
                           }}
                           title={t("app.makeUser")}
                           aria-label={t("app.makeUser")}
@@ -1315,7 +1380,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         <button
                           type="button"
                           onClick={() => {
-                            void handleManagedRoleChange(selectedManagedUser, "admin");
+                            void handleManagedRoleChange(
+                              selectedManagedUser,
+                              "admin",
+                            );
                           }}
                           title={t("app.makeAdmin")}
                           aria-label={t("app.makeAdmin")}
@@ -1331,7 +1399,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         <button
                           type="button"
                           onClick={() => {
-                            void handleManagedStatusChange(selectedManagedUser, "active");
+                            void handleManagedStatusChange(
+                              selectedManagedUser,
+                              "active",
+                            );
                           }}
                           title={t("app.activateUser")}
                           aria-label={t("app.activateUser")}
@@ -1347,7 +1418,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         <button
                           type="button"
                           onClick={() => {
-                            void handleManagedStatusChange(selectedManagedUser, "disabled");
+                            void handleManagedStatusChange(
+                              selectedManagedUser,
+                              "disabled",
+                            );
                           }}
                           title={t("app.disableUser")}
                           aria-label={t("app.disableUser")}
@@ -1363,7 +1437,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         <button
                           type="button"
                           onClick={() => {
-                            void handleManagedStatusChange(selectedManagedUser, "banned");
+                            void handleManagedStatusChange(
+                              selectedManagedUser,
+                              "banned",
+                            );
                           }}
                           title={t("app.banUser")}
                           aria-label={t("app.banUser")}
@@ -1429,7 +1506,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
             {sharedError && (
               <div className="dashboard__shared-error">
-                <strong>{t("app.errorLoadingSharedBoards")}</strong> {sharedError}
+                <strong>{t("app.errorLoadingSharedBoards")}</strong>{" "}
+                {sharedError}
               </div>
             )}
             {loading ? (
@@ -1548,4 +1626,3 @@ export const Dashboard: React.FC<DashboardProps> = ({
     </div>
   );
 };
-

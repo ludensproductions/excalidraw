@@ -135,6 +135,11 @@ const removeOwnedRoom = (roomId: string): void => {
   localStorage.setItem(OWNED_ROOMS_KEY, JSON.stringify([...rooms]));
 };
 
+const clearCollaborationUrl = (): void => {
+  const localRoute = `${window.location.pathname}${window.location.search}`;
+  window.history.replaceState({}, APP_NAME, localRoute || "/");
+};
+
 interface CollabState {
   errorMessage: string | null;
   /** errors related to saving */
@@ -528,7 +533,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       if (!(await closeSharedBoardBeforeStop())) {
         return false;
       }
-      window.history.pushState({}, APP_NAME, window.location.origin);
+      clearCollaborationUrl();
       await this.notifyCollaboratorsCollaborationClosed();
       this.destroySocketClient();
 
@@ -649,7 +654,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
         : Promise.resolve();
 
     resetBrowserStateVersions();
-    window.history.replaceState({}, APP_NAME, window.location.origin);
+    clearCollaborationUrl();
     LocalData.fileStorage.reset();
     this.destroySocketClient();
     appJotaiStore.set(activeBoardAtom, { id: null, name: null });
@@ -670,7 +675,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     this.isHandlingClosedCollaboration = true;
     dashboardState.setAutoSaveSuppressed(true);
     resetBrowserStateVersions();
-    window.history.replaceState({}, APP_NAME, window.location.origin);
+    clearCollaborationUrl();
     LocalData.fileStorage.reset();
     this.destroySocketClient();
     appJotaiStore.set(activeBoardAtom, { id: null, name: null });
@@ -1470,7 +1475,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     }
 
     resetBrowserStateVersions();
-    window.history.pushState({}, APP_NAME, window.location.origin);
+    clearCollaborationUrl();
     LocalData.fileStorage.reset();
     this.destroySocketClient();
 

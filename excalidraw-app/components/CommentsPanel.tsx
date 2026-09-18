@@ -124,14 +124,16 @@ export const CommentsPanel: React.FC = () => {
           areCommentsEqual(prev, nextComments) ? prev : nextComments,
         );
       } catch (err) {
-        setError(err instanceof Error ? err.message : t("app.couldNotLoadComments"));
+        setError(
+          err instanceof Error ? err.message : t("app.couldNotLoadComments"),
+        );
       } finally {
         if (!opts?.silent) {
           setIsLoading(false);
         }
       }
     },
-    [target],
+    [target, t],
   );
 
   useEffect(() => {
@@ -224,11 +226,10 @@ export const CommentsPanel: React.FC = () => {
     try {
       await CommentsStore.delete(target, id);
       setComments((prev) => prev.filter((comment) => comment.id !== id));
+      void appDialog.toast({ title: t("app.commentDeletedSuccessfully") });
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : t("app.couldNotDeleteComment"),
+        err instanceof Error ? err.message : t("app.couldNotDeleteComment"),
       );
     }
   };
@@ -236,7 +237,9 @@ export const CommentsPanel: React.FC = () => {
   if (isResolvingTarget) {
     return (
       <div className="comments-panel comments-panel--empty-state">
-        <div className="comments-panel__empty">{t("app.preparingComments")}</div>
+        <div className="comments-panel__empty">
+          {t("app.preparingComments")}
+        </div>
       </div>
     );
   }
@@ -244,9 +247,7 @@ export const CommentsPanel: React.FC = () => {
   if (!target) {
     return (
       <div className="comments-panel comments-panel--empty-state">
-        <div className="comments-panel__empty">
-          {t("app.saveToComment")}
-        </div>
+        <div className="comments-panel__empty">{t("app.saveToComment")}</div>
       </div>
     );
   }
@@ -260,7 +261,10 @@ export const CommentsPanel: React.FC = () => {
             <div className="comments-panel__subtitle">{target.name}</div>
           )}
         </div>
-        <button className="comments-panel__refresh" onClick={() => void refresh()}>
+        <button
+          className="comments-panel__refresh"
+          onClick={() => void refresh()}
+        >
           {t("app.refresh")}
         </button>
       </div>
@@ -292,11 +296,11 @@ export const CommentsPanel: React.FC = () => {
 
       <div className="comments-panel__list">
         {isLoading ? (
-          <div className="comments-panel__empty">{t("app.loadingComments")}</div>
-        ) : comments.length === 0 ? (
           <div className="comments-panel__empty">
-            {t("app.noComments")}
+            {t("app.loadingComments")}
           </div>
+        ) : comments.length === 0 ? (
+          <div className="comments-panel__empty">{t("app.noComments")}</div>
         ) : (
           comments.map((comment) => {
             const isOwn = comment.userId === currentUser?.id;

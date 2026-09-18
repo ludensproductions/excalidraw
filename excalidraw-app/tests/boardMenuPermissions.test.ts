@@ -45,6 +45,7 @@ describe("board menu permissions", () => {
     expect(permissions.role).toBe("collaboration_editor");
     expect(permissions.saveBoard).toBe(false);
     expect(permissions.renameBoard).toBe(false);
+    expect(permissions.loadScene).toBe(false);
     expect(permissions.clearCanvas).toBe(true);
   });
 

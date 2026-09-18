@@ -7,13 +7,10 @@ COPY . .
 # ── Build-time env vars (baked into the static bundle by Vite) ────────────────
 ARG VITE_APP_PORT=3000
 ARG FAST_REFRESH=false
-ARG VITE_APP_BACKEND_V2_GET_URL=https://json.excalidraw.com/api/v2/
-ARG VITE_APP_BACKEND_V2_POST_URL=https://json.excalidraw.com/api/v2/post/
 ARG VITE_APP_LIBRARY_URL=https://libraries.excalidraw.com
 ARG VITE_APP_LIBRARY_BACKEND=https://us-central1-excalidraw-room-persistence.cloudfunctions.net/libraries
 ARG VITE_APP_WS_SERVER_URL=https://oss-collab.excalidraw.com
 ARG VITE_APP_AI_BACKEND=https://oss-ai.excalidraw.com
-ARG VITE_APP_FIREBASE_CONFIG={}
 ARG VITE_APP_SUPABASE_URL=
 ARG VITE_APP_SUPABASE_ANON_KEY=
 ARG VITE_APP_DISABLE_SENTRY=true

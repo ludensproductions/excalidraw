@@ -60,6 +60,12 @@
       }
     }
 
+    &.ExcButton--status-success {
+      .ExcButton__statusIcon {
+        color: var(--color-success-text);
+      }
+    }
+
     &[disabled] {
       cursor: not-allowed;
 

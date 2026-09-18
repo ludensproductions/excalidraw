@@ -19,8 +19,7 @@ export type BoardMenuAction =
   | "clearCanvas"
   | "preferences"
   | "toggleTheme"
-  | "changeCanvasBackground"
-  | "logout";
+  | "changeCanvasBackground";
 
 export type BoardMenuContext = {
   isAuthenticated: boolean;
@@ -62,7 +61,8 @@ export const getBoardMenuPermissions = (
   const role = getBoardMenuRole(context);
   const canManagePrivateBoard =
     role === "personal_owner" || role === "collaboration_owner";
-  const canMutateScene = role !== "signed_out" && role !== "collaboration_viewer";
+  const canMutateScene =
+    role !== "signed_out" && role !== "collaboration_viewer";
   const canUseUtilityActions = role !== "signed_out";
 
   return {
@@ -70,7 +70,7 @@ export const getBoardMenuPermissions = (
     home: context.hasHomeNavigation && canUseUtilityActions,
     saveBoard: canManagePrivateBoard,
     renameBoard: canManagePrivateBoard,
-    loadScene: canMutateScene,
+    loadScene: canManagePrivateBoard,
     saveToActiveFile: canUseUtilityActions,
     export: canUseUtilityActions,
     saveAsImage: canUseUtilityActions,
@@ -81,6 +81,5 @@ export const getBoardMenuPermissions = (
     preferences: canUseUtilityActions,
     toggleTheme: canUseUtilityActions,
     changeCanvasBackground: canMutateScene,
-    logout: context.isAuthenticated,
   };
 };

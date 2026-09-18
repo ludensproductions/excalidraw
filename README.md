@@ -48,7 +48,18 @@ También copia `ANON_KEY` como `VITE_APP_SUPABASE_ANON_KEY` en `.env`.
 | Supabase Studio | `http://localhost:54321` (auth basic) |
 | Supavisor (session) | `localhost:5432` |
 | Supavisor (transaction) | `localhost:6543` |
-| Mailpit (emails dev) | `http://localhost:8025` |
+
+### Emails de autenticación
+
+GoTrue envía los correos por Gmail SMTP usando solo estas variables del `.env`:
+
+```bash
+SYSTEM_EMAIL=correo-del-sistema@gmail.com
+EMAIL_APP_KEY=clave-de-app-de-gmail
+```
+
+`SYSTEM_EMAIL` se usa como remitente y usuario SMTP. `EMAIL_APP_KEY` debe ser una clave de app de Gmail, no la contraseña normal de la cuenta.
+La plantilla del correo de recuperación vive en `docker/volumes/auth/templates/recovery.html` y solo muestra el enlace de restablecimiento, sin código OTP alternativo.
 
 ### Migraciones (aplicadas automáticamente al iniciar la BD)
 
@@ -142,13 +153,13 @@ yarn fix              # Auto-fix de formato y linting
 |---|---|---|---|
 | `db` | `supabase/postgres:15` | PostgreSQL con schemas de auth, storage, API y migraciones de la app. | **Crítico** — toda la persistencia |
 | `kong` | `kong:3.9` | API Gateway. Enruta `/auth/v1`, `/rest/v1`, `/storage/v1`. Escucha en `:54321`. | **Crítico** — punto de entrada de la API |
-| `auth` | `supabase/gotrue` | GoTrue: registro, login, sesiones JWT, password reset. | **Crítico** — autenticación de usuarios |
+| `auth` | `supabase/gotrue` | GoTrue: registro, login, sesiones JWT, password reset y envío de emails por Gmail SMTP. | **Crítico** — autenticación de usuarios |
+| `auth-email-templates` | `caddy:2-alpine` | Sirve la plantilla HTML interna para recuperación de contraseña sin código OTP visible. | Sí — email de recuperación |
 | `rest` | `postgrest/postgrest` | PostgREST: API REST automática sobre las tablas de Postgres. | **Crítico** — acceso a datos |
 | `room` | `excalidraw/excalidraw-room` | WebSocket (Socket.IO) para colaboración en tiempo real del canvas. | **Crítico** — colaboración |
 | `excalidraw` | build local | App servida por nginx en `:3000`. El bundle se genera con Vite. | **Crítico** — el frontend |
 | `storage` | `supabase/storage-api` | API de archivos. Bucket `excalidraw-files` para imágenes/binarios en collab. | Sí — subida de archivos |
 | `pooler` | `supabase/supavisor` | Pool de conexiones a Postgres en `:5432` (sesión) y `:6543` (transacción). | Sí — gestión de conexiones |
-| `mail` | `axllent/mailpit` | Captura emails de desarrollo (confirmación, reset password). UI en `:8025`. | Sí — emails de auth |
 | `studio` | `supabase/studio` | Dashboard web para administrar la BD: tablas, usuarios, políticas, storage. | **No** — solo desarrollo |
 | `meta` | `supabase/postgres-meta` | API que usa Studio para gestionar Postgres (crear tablas, roles, ejecutar queries). | **No** — solo lo usa Studio |
 
@@ -186,8 +197,10 @@ excalidraw/
 ├── supabase/
 │   └── migrations/        # SQL de creación de tablas (fuente original)
 ├── docker/
+│   ├── nginx/             # Config nginx para servir la app y proxyear Supabase
 │   ├── volumes/           # Config files para Supabase self-hosted
 │   │   ├── api/           # Kong gateway (kong.yml, entrypoint)
+│   │   ├── auth/          # Plantillas HTML internas para emails de Auth
 │   │   ├── db/            # Postgres init scripts (roles, jwt, migrations)
 │   │   └── pooler/        # Supavisor config
 │   └── generate-keys.js   # Script para generar claves JWT

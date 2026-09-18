@@ -346,6 +346,11 @@
     align-items: center;
     justify-content: center;
 
+    svg {
+      width: 0.85rem;
+      height: 0.85rem;
+    }
+
     &:hover {
       background: #6965db;
       opacity: 1;
@@ -749,4 +754,3 @@
     color: #f87171;
   }
 }
-

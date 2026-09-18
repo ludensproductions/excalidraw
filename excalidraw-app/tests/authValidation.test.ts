@@ -50,16 +50,28 @@ describe("auth validation", () => {
   });
 
   it("validates password bounds and characters", () => {
-    expect(validatePassword("123456")).toBeNull();
-    expect(validatePassword("12345")).toBe("auth.errors.passwordMinLength");
+    expect(validatePassword("Aa123456!")).toBeNull();
+    expect(validatePassword("Aa1!")).toBe("auth.errors.passwordMinLength");
     expect(
       validatePassword("a".repeat(AUTH_FIELD_LIMITS.password.max + 1)),
     ).toBe("auth.errors.passwordMaxLength");
-    expect(validatePassword("abc123\u{1f642}")).toBe(
+    expect(validatePassword("Abc12345\u{1f642}!")).toBe(
       "auth.errors.passwordInvalidCharacters",
     );
-    expect(validatePassword("abc 123")).toBe(
+    expect(validatePassword("Abc 12345!")).toBe(
       "auth.errors.passwordInvalidCharacters",
+    );
+    expect(validatePassword("abcdefgh")).toBe(
+      "auth.errors.passwordRequiresComplexity",
+    );
+    expect(validatePassword("ABCDEFGH1!")).toBe(
+      "auth.errors.passwordRequiresComplexity",
+    );
+    expect(validatePassword("Abcdefgh!")).toBe(
+      "auth.errors.passwordRequiresComplexity",
+    );
+    expect(validatePassword("Abcdefg1")).toBe(
+      "auth.errors.passwordRequiresComplexity",
     );
   });
 
@@ -94,7 +106,7 @@ describe("auth validation", () => {
       validateRegistrationFields({
         username: "Maria",
         email: "person@example.com",
-        password: "123456",
+        password: "Maria2026!",
       }),
     ).toBeNull();
   });

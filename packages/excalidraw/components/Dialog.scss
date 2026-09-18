@@ -18,9 +18,10 @@
   .Dialog__close {
     color: var(--color-gray-40);
     margin: 0;
+    padding: 0.35rem;
     position: absolute;
-    top: 0.75rem;
-    right: 0.5rem;
+    top: 0.8rem;
+    right: 0.8rem;
     border: 0;
     background-color: transparent;
     line-height: 0;
@@ -37,18 +38,18 @@
       width: 1.5rem;
       height: 1.5rem;
     }
-
-    & + .Dialog__content {
-      --offset: 28px;
-      height: calc(100% - var(--offset)) !important;
-      margin-top: var(--offset) !important;
-    }
   }
 
   .Dialog--fullscreen {
     .Dialog__close {
       top: 1.25rem;
       right: 1.25rem;
+    }
+
+    .Dialog__close + .Dialog__content {
+      --offset: 28px;
+      height: calc(100% - var(--offset)) !important;
+      margin-top: var(--offset) !important;
     }
   }
 }

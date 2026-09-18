@@ -22,6 +22,24 @@
   line-height: 1.45;
 }
 
+.app-swal__close {
+  width: 2.25rem;
+  height: 2.25rem;
+  margin: 0.45rem 0.45rem 0 0;
+  border-radius: 999px;
+  color: inherit;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: rgba(105, 101, 219, 0.12);
+    color: #6965db;
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 3px rgba(105, 101, 219, 0.18);
+  }
+}
+
 .app-swal__input {
   border: 1px solid #b7b2ff;
   border-radius: 8px;
@@ -61,4 +79,19 @@
 .app-swal__validation {
   border-radius: 8px;
   font-size: 0.85rem;
+}
+
+.app-swal--toast {
+  width: min(24rem, calc(100vw - 2rem));
+  border-radius: 10px;
+  padding: 0.8rem 0.95rem;
+}
+
+.app-swal__toast-title {
+  margin: 0;
+  padding: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: left;
 }

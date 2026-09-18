@@ -12,8 +12,12 @@ import {
   useAtomValue,
 } from "../app-jotai";
 import { appDialog } from "../appDialog";
-import { getCurrentUser, logoutUser } from "../auth/authStore";
-import { activeRoomLinkAtom, isOwnerAtom } from "../collab/Collab";
+import { getCurrentUser } from "../auth/authStore";
+import {
+  activeRoomLinkAtom,
+  collabAPIAtom,
+  isOwnerAtom,
+} from "../collab/Collab";
 import { getCollaborationLinkData } from "../data";
 import { DrawingsStore } from "../data/DrawingsStore";
 import { SharedBoardsStore } from "../data/SharedBoardsStore";
@@ -51,6 +55,7 @@ export const AppMainMenu: React.FC<{
   const { save: saveBoard, status: saveBoardStatus } = useSaveBoard();
   const [activeBoard, setActiveBoard] = useAtom(activeBoardAtom);
   const activeRoomLink = useAtomValue(activeRoomLinkAtom);
+  const collabAPI = useAtomValue(collabAPIAtom);
   const isCollaborationOwner = useAtomValue(isOwnerAtom);
   const isReadOnlySession = useAtomValue(isReadOnlySessionAtom);
   const { t } = useI18n();
@@ -63,9 +68,15 @@ export const AppMainMenu: React.FC<{
     isReadOnlySession,
   });
 
-  const handleLogout = () => {
-    logoutUser();
-    window.location.reload();
+  const handleLeaveCollaboration = async () => {
+    if (!collabAPI) {
+      return;
+    }
+    const didLeave = await collabAPI.leaveCollaboration();
+    if (didLeave) {
+      dashboardState.getOnBack()?.();
+      void appDialog.toast({ title: t("app.sharedBoardLeftSuccessfully") });
+    }
   };
 
   const renameSharedBoardIfNeeded = async (name: string) => {
@@ -122,6 +133,7 @@ export const AppMainMenu: React.FC<{
       await renameSharedBoardIfNeeded(trimmed);
       setActiveBoard({ id: activeBoard.id, name: trimmed });
       appJotaiStore.set(activeBoardAtom, { id: activeBoard.id, name: trimmed });
+      void appDialog.toast({ title: t("app.boardRenamedSuccessfully") });
       return;
     }
 
@@ -180,8 +192,8 @@ export const AppMainMenu: React.FC<{
           {saveBoardStatus === "saving"
             ? t("app.saving")
             : saveBoardStatus === "saved"
-              ? t("app.saved")
-              : t("app.saveBoard")}
+            ? t("app.saved")
+            : t("app.saveBoard")}
         </MainMenu.Item>
       )}
       {permissions.renameBoard && (
@@ -190,26 +202,30 @@ export const AppMainMenu: React.FC<{
         </MainMenu.Item>
       )}
       {permissions.loadScene && <MainMenu.DefaultItems.LoadScene />}
-      {permissions.saveToActiveFile && <MainMenu.DefaultItems.SaveToActiveFile />}
+      {permissions.saveToActiveFile && (
+        <MainMenu.DefaultItems.SaveToActiveFile />
+      )}
       {permissions.export && <MainMenu.DefaultItems.Export />}
       {permissions.saveAsImage && <MainMenu.DefaultItems.SaveAsImage />}
-      {permissions.liveCollaboration && (
-        <MainMenu.DefaultItems.LiveCollaborationTrigger
-          isCollaborating={props.isCollaborating}
-          onSelect={() => props.onCollabDialogOpen()}
-        />
-      )}
+      {permissions.liveCollaboration &&
+        props.isCollaborating &&
+        !isCollaborationOwner && (
+          <MainMenu.Item icon={usersIcon} onSelect={handleLeaveCollaboration}>
+            {t("roomDialog.button_leaveSession")}
+          </MainMenu.Item>
+        )}
+      {permissions.liveCollaboration &&
+        (!props.isCollaborating || isCollaborationOwner) && (
+          <MainMenu.DefaultItems.LiveCollaborationTrigger
+            isCollaborating={props.isCollaborating}
+            onSelect={() => props.onCollabDialogOpen()}
+          />
+        )}
       {permissions.commandPalette && (
         <MainMenu.DefaultItems.CommandPalette className="highlighted" />
       )}
       {permissions.help && <MainMenu.DefaultItems.Help />}
       {permissions.clearCanvas && <MainMenu.DefaultItems.ClearCanvas />}
-      <MainMenu.Separator />
-      {permissions.logout && currentUser && (
-        <MainMenu.Item icon={usersIcon} onSelect={handleLogout}>
-          {currentUser.username} - {t("app.logOut")}
-        </MainMenu.Item>
-      )}
       <MainMenu.Separator />
       {permissions.preferences && <MainMenu.DefaultItems.Preferences />}
       {permissions.toggleTheme && (
