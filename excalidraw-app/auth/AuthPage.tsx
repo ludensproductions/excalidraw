@@ -6,10 +6,11 @@ import { useHandleAppTheme } from "../useHandleAppTheme";
 import { getErrorMessage } from "../errorMessages";
 
 import {
-  beginPasswordRecoveryFromUrl,
+  beginAuthEmailFlowFromUrl,
   loginUser,
   registerUser,
   requestPasswordReset,
+  resendEmailVerification,
   updatePassword,
 } from "./authStore";
 import {
@@ -29,7 +30,7 @@ import type { AuthUser } from "./authStore";
 interface Props {
   onAuthenticated: (user: AuthUser) => void;
 }
-type Mode = "login" | "register" | "forgot" | "reset";
+type Mode = "login" | "register" | "forgot" | "reset" | "verify";
 
 type InputSanitizer = (value: string) => string;
 type InputValueSetter = (value: string) => void;
@@ -104,11 +105,39 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     let cancelled = false;
-    beginPasswordRecoveryFromUrl()
-      .then((isRecovery) => {
-        if (!cancelled && isRecovery) {
+    beginAuthEmailFlowFromUrl()
+      .then((result) => {
+        if (cancelled) {
+          return;
+        }
+
+        if (result.type === "passwordRecovery") {
           setMode("reset");
           setMessage(t("auth.messages.enterNewPassword"));
+          return;
+        }
+
+        if (result.type === "emailVerified") {
+          setMessage(t("auth.messages.emailVerified"));
+          onAuthenticated(result.user);
+          return;
+        }
+
+        if (result.type === "verificationExpired") {
+          setMode("verify");
+          setError(t("auth.errors.verificationLinkExpired"));
+          return;
+        }
+
+        if (result.type === "verificationInvalid") {
+          setMode("verify");
+          setError(t("auth.errors.verificationLinkInvalid"));
+          return;
+        }
+
+        if (result.type === "emailAlreadyVerified") {
+          setMode("login");
+          setMessage(t("auth.messages.emailAlreadyVerified"));
         }
       })
       .catch((err: unknown) => {
@@ -122,7 +151,7 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [onAuthenticated]);
   const resetFeedback = () => {
     setError(null);
     setMessage(null);
@@ -141,12 +170,26 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
         if (validationError) {
           throw new Error(t(validationError));
         }
-        const user = await registerUser(
+        const result = await registerUser(
           normalizeUsername(username),
           normalizeEmail(email),
           password,
         );
-        onAuthenticated(user);
+        if (result.status === "pendingVerification") {
+          setEmail(result.email);
+          setPassword("");
+          setConfirmPassword("");
+          setMode("verify");
+          setMessage(t("auth.messages.verificationEmailSent"));
+          return;
+        }
+
+        onAuthenticated(result.user);
+        return;
+      }
+      if (mode === "verify") {
+        await resendEmailVerification(email);
+        setMessage(t("auth.messages.verificationEmailResent"));
         return;
       }
       if (mode === "forgot") {
@@ -169,7 +212,13 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
       const user = await loginUser(normalizeEmail(email), password);
       onAuthenticated(user);
     } catch (err: unknown) {
-      setError(getErrorMessage(err, t("auth.errors.unexpected")));
+      const nextError = getErrorMessage(err, t("auth.errors.unexpected"));
+      setError(nextError);
+
+      if (nextError === t("auth.errors.emailNotVerified")) {
+        setPassword("");
+        setMode("verify");
+      }
     } finally {
       setLoading(false);
     }
@@ -191,6 +240,12 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
     setPassword("");
     setConfirmPassword("");
   };
+  const goToVerifyEmail = () => {
+    setMode("verify");
+    resetFeedback();
+    setPassword("");
+    setConfirmPassword("");
+  };
   const goToLogin = () => {
     setMode("login");
     resetFeedback();
@@ -204,6 +259,8 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
       ? t("auth.title.register")
       : mode === "forgot"
       ? t("auth.title.forgot")
+      : mode === "verify"
+      ? t("auth.title.verify")
       : t("auth.title.reset");
   const subtitle =
     mode === "login"
@@ -212,6 +269,8 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
       ? t("auth.subtitle.register")
       : mode === "forgot"
       ? t("auth.subtitle.forgot")
+      : mode === "verify"
+      ? t("auth.subtitle.verify")
       : t("auth.subtitle.reset");
   const submitLabel = loading
     ? t("auth.actions.loading")
@@ -221,6 +280,8 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
     ? t("auth.actions.register")
     : mode === "forgot"
     ? t("auth.actions.sendEmail")
+    : mode === "verify"
+    ? t("auth.actions.resendVerification")
     : t("auth.actions.savePassword");
   const shouldConstrainPassword = mode !== "login";
   return (
@@ -336,11 +397,13 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
                 autoComplete="email"
                 autoCapitalize="none"
                 inputMode="email"
-                autoFocus={mode === "login" || mode === "forgot"}
+                autoFocus={
+                  mode === "login" || mode === "forgot" || mode === "verify"
+                }
               />
             </div>
           )}
-          {mode !== "forgot" && (
+          {mode !== "forgot" && mode !== "verify" && (
             <div className="auth-page__field">
               <label htmlFor="auth-password">
                 {mode === "reset"
@@ -435,6 +498,10 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
             <>
               <button type="button" onClick={goToForgotPassword}>
                 {t("auth.actions.forgotPassword")}
+              </button>
+              <span className="auth-page__toggle-separator">|</span>
+              <button type="button" onClick={goToVerifyEmail}>
+                {t("auth.actions.resendVerificationLink")}
               </button>
               <span className="auth-page__toggle-separator">|</span>
               {t("auth.actions.noAccount")}{" "}

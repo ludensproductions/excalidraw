@@ -29,12 +29,27 @@ export interface AuthUser {
   status: UserStatus;
 }
 
+export type RegisterUserResult =
+  | { status: "authenticated"; user: AuthUser }
+  | { status: "pendingVerification"; email: string };
+
+export type AuthEmailFlowResult =
+  | { type: "none" }
+  | { type: "passwordRecovery" }
+  | { type: "emailVerified"; user: AuthUser }
+  | { type: "verificationExpired" }
+  | { type: "verificationInvalid" }
+  | { type: "emailAlreadyVerified" };
+
 type Listener = (user: AuthUser | null) => void;
 
 let currentUser: AuthUser | null = null;
 let hydrated = false;
 let hydrationPromise: Promise<void> | null = null;
 const listeners = new Set<Listener>();
+const EMAIL_VERIFICATION_RESEND_COOLDOWN_MS = 60_000;
+const EMAIL_VERIFICATION_RESEND_STORAGE_KEY =
+  "excalidraw-email-verification-resend";
 
 function emit() {
   for (const l of listeners) {
@@ -46,6 +61,61 @@ function getBlockedAccountMessage(status: UserStatus): string {
   return status === "banned"
     ? t("auth.errors.accountBanned")
     : t("auth.errors.accountDisabled");
+}
+
+function getRegistrationErrorMessage(message: string): string {
+  if (/registered|exists|duplicate/i.test(message)) {
+    return t("auth.errors.emailAlreadyRegistered");
+  }
+  if (/database error saving new user/i.test(message)) {
+    return t("auth.errors.createAccountProfileFailed");
+  }
+  return translateErrorMessage(message);
+}
+
+function getAuthRedirectTo(): string {
+  return `${window.location.origin}${window.location.pathname}`;
+}
+
+function getEmailVerificationResendState(): Record<string, number> {
+  try {
+    return JSON.parse(
+      localStorage.getItem(EMAIL_VERIFICATION_RESEND_STORAGE_KEY) ?? "{}",
+    ) as Record<string, number>;
+  } catch {
+    return {};
+  }
+}
+
+function setEmailVerificationResendTimestamp(email: string): void {
+  const state = getEmailVerificationResendState();
+  state[normalizeEmail(email).toLowerCase()] = Date.now();
+  localStorage.setItem(
+    EMAIL_VERIFICATION_RESEND_STORAGE_KEY,
+    JSON.stringify(state),
+  );
+}
+
+export function getEmailVerificationResendWaitSeconds(email: string): number {
+  const normalizedEmail = normalizeEmail(email).toLowerCase();
+  const lastSentAt = getEmailVerificationResendState()[normalizedEmail] ?? 0;
+  const remainingMs =
+    EMAIL_VERIFICATION_RESEND_COOLDOWN_MS - (Date.now() - lastSentAt);
+
+  return remainingMs > 0 ? Math.ceil(remainingMs / 1000) : 0;
+}
+
+async function isEmailRegistered(email: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc("is_email_registered", {
+    p_email: email,
+  });
+
+  if (error) {
+    console.warn("Failed to verify if email is registered:", error.message);
+    return false;
+  }
+
+  return data === true;
 }
 
 async function loadProfile(
@@ -207,7 +277,7 @@ export async function registerUser(
   username: string,
   email: string,
   password: string,
-): Promise<AuthUser> {
+): Promise<RegisterUserResult> {
   const validationError = validateRegistrationFields({
     username,
     email,
@@ -219,17 +289,22 @@ export async function registerUser(
 
   const trimmedUsername = normalizeUsername(username);
   const trimmedEmail = normalizeEmail(email);
+
+  if (await isEmailRegistered(trimmedEmail)) {
+    throw new Error(t("auth.errors.emailAlreadyRegistered"));
+  }
+
   const { data, error } = await supabase.auth.signUp({
     email: trimmedEmail,
     password,
-    options: { data: { username: trimmedUsername } },
+    options: {
+      data: { username: trimmedUsername },
+      emailRedirectTo: getAuthRedirectTo(),
+    },
   });
 
   if (error) {
-    if (/registered|exists|duplicate/i.test(error.message)) {
-      throw new Error(t("auth.errors.emailAlreadyRegistered"));
-    }
-    throw new Error(translateErrorMessage(error.message));
+    throw new Error(getRegistrationErrorMessage(error.message));
   }
 
   if (!data.user) {
@@ -238,25 +313,46 @@ export async function registerUser(
 
   if (data.session) {
     await applySession(data.session);
-  } else {
-    const now = Date.now();
-    currentUser = {
-      id: data.user.id,
-      username: trimmedUsername,
-      email: trimmedEmail,
-      createdAt: now,
-      updatedAt: now,
-      role: "user",
-      status: "active",
-    };
-    emit();
+    if (!currentUser) {
+      throw new Error(t("auth.errors.createdButLoginFailed"));
+    }
+    return { status: "authenticated", user: currentUser };
+  }
+  currentUser = null;
+  emit();
+  setEmailVerificationResendTimestamp(trimmedEmail);
+  return { status: "pendingVerification", email: trimmedEmail };
+}
+
+export async function resendEmailVerification(email: string): Promise<void> {
+  const validationError = validateEmail(email);
+  if (validationError) {
+    throw new Error(t(validationError));
   }
 
-  if (!currentUser) {
-    throw new Error(t("auth.errors.createdButLoginFailed"));
+  const trimmedEmail = normalizeEmail(email);
+  const waitSeconds = getEmailVerificationResendWaitSeconds(trimmedEmail);
+  if (waitSeconds > 0) {
+    throw new Error(
+      t("auth.errors.verificationResendTooSoon", {
+        seconds: waitSeconds,
+      }),
+    );
   }
 
-  return currentUser;
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email: trimmedEmail,
+    options: {
+      emailRedirectTo: getAuthRedirectTo(),
+    },
+  });
+
+  if (error) {
+    throw new Error(translateErrorMessage(error.message));
+  }
+
+  setEmailVerificationResendTimestamp(trimmedEmail);
 }
 
 export async function loginUser(
@@ -269,6 +365,9 @@ export async function loginUser(
   });
 
   if (error) {
+    if (/email not confirmed|not confirmed/i.test(error.message)) {
+      throw new Error(t("auth.errors.emailNotVerified"));
+    }
     if (/invalid login|invalid credentials/i.test(error.message)) {
       throw new Error(t("auth.errors.invalidCredentials"));
     }
@@ -306,18 +405,46 @@ export async function requestPasswordReset(email: string): Promise<void> {
   }
 }
 
-export async function beginPasswordRecoveryFromUrl(): Promise<boolean> {
+const clearAuthUrlParams = (): void => {
+  window.history.replaceState({}, "", window.location.pathname);
+};
+
+export async function beginAuthEmailFlowFromUrl(): Promise<AuthEmailFlowResult> {
   const hashParams = new URLSearchParams(
     window.location.hash.replace(/^#/, ""),
   );
   const queryParams = new URLSearchParams(window.location.search);
-  const type = hashParams.get("type") ?? queryParams.get("type");
+  const getParam = (name: string) =>
+    hashParams.get(name) ?? queryParams.get(name);
+  const type = getParam("type");
+  const error = getParam("error");
+  const errorCode = getParam("error_code");
+  const errorDescription = getParam("error_description");
   const code = queryParams.get("code") ?? hashParams.get("code");
   const accessToken = hashParams.get("access_token");
   const refreshToken = hashParams.get("refresh_token");
 
-  if (type !== "recovery" && !code) {
-    return false;
+  if (error || errorCode || errorDescription) {
+    const authError = [error, errorCode, errorDescription].join(" ");
+    clearAuthUrlParams();
+
+    if (
+      /already.*(verified|confirmed)|user.*already.*confirmed/i.test(authError)
+    ) {
+      return { type: "emailAlreadyVerified" };
+    }
+    if (/expired|otp_expired/i.test(authError)) {
+      return { type: "verificationExpired" };
+    }
+    if (/invalid|access_denied|token/i.test(authError)) {
+      return { type: "verificationInvalid" };
+    }
+
+    throw new Error(translateErrorMessage(authError));
+  }
+
+  if (type !== "recovery" && type !== "signup" && !code) {
+    return { type: "none" };
   }
 
   if (accessToken && refreshToken) {
@@ -334,11 +461,32 @@ export async function beginPasswordRecoveryFromUrl(): Promise<boolean> {
       throw new Error(translateErrorMessage(error.message));
     }
   } else {
-    throw new Error(t("auth.errors.invalidRecoveryLink"));
+    throw new Error(
+      type === "signup"
+        ? t("auth.errors.verificationLinkInvalid")
+        : t("auth.errors.invalidRecoveryLink"),
+    );
   }
 
-  window.history.replaceState({}, "", window.location.pathname);
-  return true;
+  clearAuthUrlParams();
+
+  if (type === "signup") {
+    const { data } = await supabase.auth.getSession();
+    await applySession(data.session);
+
+    if (!currentUser) {
+      throw new Error(t("auth.errors.loginFailed"));
+    }
+
+    return { type: "emailVerified", user: currentUser };
+  }
+
+  return { type: "passwordRecovery" };
+}
+
+export async function beginPasswordRecoveryFromUrl(): Promise<boolean> {
+  const result = await beginAuthEmailFlowFromUrl();
+  return result.type === "passwordRecovery";
 }
 
 export async function updatePassword(password: string): Promise<AuthUser> {

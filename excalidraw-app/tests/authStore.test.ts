@@ -2,6 +2,9 @@ const supabaseMocks = vi.hoisted(() => ({
   getSession: vi.fn(() => Promise.resolve({ data: { session: null } })),
   onAuthStateChange: vi.fn(),
   resetPasswordForEmail: vi.fn(),
+  signUp: vi.fn(),
+  resend: vi.fn(),
+  rpc: vi.fn(),
 }));
 
 const timingMocks = vi.hoisted(() => ({
@@ -19,7 +22,10 @@ vi.mock("../data/supabase", () => ({
       getSession: supabaseMocks.getSession,
       onAuthStateChange: supabaseMocks.onAuthStateChange,
       resetPasswordForEmail: supabaseMocks.resetPasswordForEmail,
+      signUp: supabaseMocks.signUp,
+      resend: supabaseMocks.resend,
     },
+    rpc: supabaseMocks.rpc,
   },
 }));
 
@@ -33,13 +39,25 @@ vi.mock("../auth/passwordResetTiming", () => ({
 describe("auth store password reset", () => {
   const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
   let requestPasswordReset: (email: string) => Promise<void>;
+  let registerUser: (
+    username: string,
+    email: string,
+    password: string,
+  ) => Promise<unknown>;
+  let resendEmailVerification: (email: string) => Promise<void>;
 
   beforeAll(async () => {
-    ({ requestPasswordReset } = await import("../auth/authStore"));
+    ({ requestPasswordReset, registerUser, resendEmailVerification } =
+      await import("../auth/authStore"));
   });
 
   beforeEach(() => {
     supabaseMocks.resetPasswordForEmail.mockReset();
+    supabaseMocks.signUp.mockReset();
+    supabaseMocks.resend.mockReset();
+    supabaseMocks.rpc.mockReset();
+    supabaseMocks.rpc.mockResolvedValue({ data: false, error: null });
+    localStorage.clear();
     timingMocks.getPasswordResetRequestStartedAt.mockClear();
     timingMocks.waitForPasswordResetResponseFloor.mockClear();
     warnSpy.mockClear();
@@ -77,5 +95,85 @@ describe("auth store password reset", () => {
     expect(
       timingMocks.waitForPasswordResetResponseFloor,
     ).not.toHaveBeenCalled();
+  });
+
+  it("rejects registered emails before calling signup", async () => {
+    supabaseMocks.rpc.mockResolvedValueOnce({ data: true, error: null });
+
+    await expect(
+      registerUser("Paloma", "paloma@example.com", "Password1!"),
+    ).rejects.toThrow("auth.errors.emailAlreadyRegistered");
+
+    expect(supabaseMocks.rpc).toHaveBeenCalledWith("is_email_registered", {
+      p_email: "paloma@example.com",
+    });
+    expect(supabaseMocks.signUp).not.toHaveBeenCalled();
+  });
+
+  it("keeps new signups pending until email verification", async () => {
+    supabaseMocks.signUp.mockResolvedValueOnce({
+      data: {
+        user: { id: "user-1", email: "paloma@example.com" },
+        session: null,
+      },
+      error: null,
+    });
+
+    await expect(
+      registerUser("Paloma", "paloma@example.com", "Password1!"),
+    ).resolves.toEqual({
+      status: "pendingVerification",
+      email: "paloma@example.com",
+    });
+
+    expect(supabaseMocks.signUp).toHaveBeenCalledWith({
+      email: "paloma@example.com",
+      password: "Password1!",
+      options: {
+        data: { username: "Paloma" },
+        emailRedirectTo: "http://localhost:3000/",
+      },
+    });
+  });
+
+  it("shows an actionable registration message for generic provider database errors", async () => {
+    supabaseMocks.signUp.mockResolvedValueOnce({
+      data: { user: null, session: null },
+      error: new Error("Database error saving new user"),
+    });
+
+    await expect(
+      registerUser("Paloma", "paloma@example.com", "Password1!"),
+    ).rejects.toThrow("auth.errors.createAccountProfileFailed");
+
+    expect(supabaseMocks.signUp).toHaveBeenCalledWith({
+      email: "paloma@example.com",
+      password: "Password1!",
+      options: {
+        data: { username: "Paloma" },
+        emailRedirectTo: "http://localhost:3000/",
+      },
+    });
+  });
+
+  it("resends verification emails and throttles repeated requests", async () => {
+    supabaseMocks.resend.mockResolvedValueOnce({ data: {}, error: null });
+
+    await expect(
+      resendEmailVerification("paloma@example.com"),
+    ).resolves.toBeUndefined();
+
+    expect(supabaseMocks.resend).toHaveBeenCalledWith({
+      type: "signup",
+      email: "paloma@example.com",
+      options: {
+        emailRedirectTo: "http://localhost:3000/",
+      },
+    });
+
+    await expect(resendEmailVerification("paloma@example.com")).rejects.toThrow(
+      "auth.errors.verificationResendTooSoon",
+    );
+    expect(supabaseMocks.resend).toHaveBeenCalledTimes(1);
   });
 });

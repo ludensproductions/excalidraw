@@ -644,3 +644,21 @@ begin
   delete from public.collab_rooms where room_id = p_room_id;
 end;
 $$;
+
+-- 0012_is_email_registered.sql
+create or replace function public.is_email_registered(p_email text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from auth.users
+    where lower(email) = lower(btrim(p_email))
+  );
+$$;
+
+revoke all on function public.is_email_registered(text) from public;
+grant execute on function public.is_email_registered(text) to anon, authenticated;

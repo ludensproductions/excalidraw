@@ -888,12 +888,14 @@
       "login": "Welcome back",
       "register": "Create account",
       "forgot": "Reset password",
+      "verify": "Verify email",
       "reset": "New password"
     },
     "subtitle": {
       "login": "Sign in to continue",
       "register": "Sign up to start drawing",
       "forgot": "We will send you a recovery link by email",
+      "verify": "We will resend the verification link",
       "reset": "Enter your new credentials"
     },
     "fields": {
@@ -907,7 +909,7 @@
       "username": "Your name",
       "email": "email@example.com",
       "password": "Your password",
-      "newPassword": "8+ characters, uppercase, lowercase, number, and symbol",
+      "newPassword": "Minimum 8 characters, uppercase, lowercase, number, and symbol",
       "confirmPassword": "Repeat your password"
     },
     "actions": {
@@ -915,6 +917,8 @@
       "login": "Sign in",
       "register": "Create account",
       "sendEmail": "Send email",
+      "resendVerification": "Resend verification",
+      "resendVerificationLink": "Resend verification",
       "savePassword": "Save password",
       "forgotPassword": "Forgot my password",
       "registerLink": "Sign up",
@@ -925,7 +929,11 @@
     },
     "messages": {
       "enterNewPassword": "Enter your new password.",
-      "resetEmailSent": "If the email is registered, we will send a password reset link."
+      "resetEmailSent": "If the email is registered, we will send a password reset link.",
+      "verificationEmailSent": "We sent you a verification link. Check your email to activate your account.",
+      "verificationEmailResent": "We sent you a new verification link. Use the most recent email.",
+      "emailVerified": "Email verified successfully.",
+      "emailAlreadyVerified": "This email was already verified. Sign in to continue."
     },
     "errors": {
       "openRecoveryLinkFailed": "Could not open the recovery link.",
@@ -942,11 +950,16 @@
       "passwordsDoNotMatch": "Passwords do not match.",
       "unexpected": "An unexpected error occurred.",
       "emailAlreadyRegistered": "An account with that email already exists.",
+      "createAccountProfileFailed": "Could not create the account. If this email is already registered, sign in or reset your password.",
       "createAccountFailed": "Could not create the account. Check the Supabase configuration.",
       "createdButLoginFailed": "The account was created, but sign in failed.",
       "invalidCredentials": "Incorrect email or password.",
+      "emailNotVerified": "Verify your email before signing in.",
       "loginFailed": "Could not sign in.",
       "emailRequired": "Enter your email address.",
+      "verificationLinkExpired": "The verification link has expired. Request a new verification email.",
+      "verificationLinkInvalid": "This link is no longer valid. Check your most recent email or request a new one.",
+      "verificationResendTooSoon": "Wait {{seconds}} seconds before requesting another verification email.",
       "invalidRecoveryLink": "The recovery link is invalid or expired.",
       "passwordUpdatedButLoginFailed": "Password updated, but sign in failed.",
       "accountDisabled": "This account is disabled.",

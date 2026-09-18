@@ -11,6 +11,14 @@ describe("translated error messages", () => {
     expect(getErrorMessage(new Error("Invalid login credentials"))).toBe(
       "Correo o contraseña incorrectos.",
     );
+    expect(getErrorMessage(new Error("Database error saving new user"))).toBe(
+      "No se pudo crear la cuenta. Si este correo ya está registrado, inicia sesión o recupera tu contraseña.",
+    );
+    expect(
+      getErrorMessage(new Error("Email link is invalid or has expired")),
+    ).toBe(
+      "El enlace de verificación caducó. Solicita un nuevo correo de verificación.",
+    );
     expect(
       getErrorMessage({
         message: "new row violates row-level security policy",

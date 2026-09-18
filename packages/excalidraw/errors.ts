@@ -109,7 +109,11 @@ const ERROR_TRANSLATIONS: Array<[RegExp, string]> = [
   ],
   [
     /email not confirmed|not confirmed/i,
-    "Confirma tu correo electrónico antes de iniciar sesión.",
+    "Verifica tu correo antes de iniciar sesión.",
+  ],
+  [
+    /already.*(verified|confirmed)|user.*already.*confirmed/i,
+    "Este correo ya fue verificado. Inicia sesión para continuar.",
   ],
   [
     /user already registered|already registered|already exists|duplicate/i,
@@ -126,6 +130,14 @@ const ERROR_TRANSLATIONS: Array<[RegExp, string]> = [
   [
     /rate limit|too many requests|security purposes|over_email_send_rate_limit/i,
     "Demasiados intentos. Espera un momento e inténtalo de nuevo.",
+  ],
+  [
+    /otp_expired|token.*expired|link.*expired|expired.*link/i,
+    "El enlace de verificación caducó. Solicita un nuevo correo de verificación.",
+  ],
+  [
+    /invalid.*token|invalid.*link|email.*link.*invalid/i,
+    "Este enlace ya no es válido. Revisa tu correo más reciente o solicita uno nuevo.",
   ],
   [
     /jwt.*expired|token.*expired|expired jwt|session.*expired/i,
@@ -177,6 +189,10 @@ const ERROR_TRANSLATIONS: Array<[RegExp, string]> = [
   [/jwt is missing|missing jwt/i, "Falta el token de autorización."],
   [/failed to verify jwt/i, "No se pudo validar la autorización."],
   [/failed to export scene data/i, "No se pudo exportar la escena."],
+  [
+    /database error saving new user/i,
+    "No se pudo crear la cuenta. Si este correo ya está registrado, inicia sesión o recupera tu contraseña.",
+  ],
   [
     /something went wrong|unexpected error|internal server error/i,
     DEFAULT_ERROR_MESSAGE,

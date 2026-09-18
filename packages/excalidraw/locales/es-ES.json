@@ -888,12 +888,14 @@
       "login": "Bienvenido de vuelta",
       "register": "Crear cuenta",
       "forgot": "Recuperar contraseña",
+      "verify": "Verificar correo",
       "reset": "Nueva contraseña"
     },
     "subtitle": {
       "login": "Inicia sesión para continuar",
       "register": "Regístrate para empezar a dibujar",
       "forgot": "Te enviaremos un enlace a tu correo",
+      "verify": "Reenviaremos el enlace de verificación",
       "reset": "Escribe los nuevos datos de acceso"
     },
     "fields": {
@@ -907,7 +909,7 @@
       "username": "Tu nombre",
       "email": "correo@ejemplo.com",
       "password": "Tu contraseña",
-      "newPassword": "8+ caracteres, mayúscula, minúscula, número y símbolo",
+      "newPassword": "Mínimo 8 caracteres, mayúscula, minúscula, número y símbolo",
       "confirmPassword": "Repite la contraseña"
     },
     "actions": {
@@ -915,6 +917,8 @@
       "login": "Iniciar sesión",
       "register": "Crear cuenta",
       "sendEmail": "Enviar correo",
+      "resendVerification": "Reenviar verificación",
+      "resendVerificationLink": "Reenviar verificación",
       "savePassword": "Guardar contraseña",
       "forgotPassword": "Olvidé mi contraseña",
       "registerLink": "Regístrate",
@@ -925,7 +929,11 @@
     },
     "messages": {
       "enterNewPassword": "Ingresa tu nueva contraseña.",
-      "resetEmailSent": "Si el correo está registrado, enviaremos un enlace para recuperar tu contraseña."
+      "resetEmailSent": "Si el correo está registrado, enviaremos un enlace para recuperar tu contraseña.",
+      "verificationEmailSent": "Te enviamos un enlace de verificación. Revisa tu correo para activar tu cuenta.",
+      "verificationEmailResent": "Te enviamos un nuevo enlace de verificación. Usa el correo más reciente.",
+      "emailVerified": "Correo verificado correctamente.",
+      "emailAlreadyVerified": "Este correo ya fue verificado. Inicia sesión para continuar."
     },
     "errors": {
       "openRecoveryLinkFailed": "No se pudo abrir el enlace de recuperación.",
@@ -942,11 +950,16 @@
       "passwordsDoNotMatch": "Las contraseñas no coinciden.",
       "unexpected": "Ocurrió un error inesperado.",
       "emailAlreadyRegistered": "Ya existe una cuenta con ese correo electrónico.",
+      "createAccountProfileFailed": "No se pudo crear la cuenta. Si este correo ya está registrado, inicia sesión o recupera tu contraseña.",
       "createAccountFailed": "No se pudo crear la cuenta. Revisa la configuración de Supabase.",
       "createdButLoginFailed": "Cuenta creada, pero no se pudo iniciar sesión.",
       "invalidCredentials": "Correo o contraseña incorrectos.",
+      "emailNotVerified": "Verifica tu correo antes de iniciar sesión.",
       "loginFailed": "No se pudo iniciar sesión.",
       "emailRequired": "Ingresa tu correo electrónico.",
+      "verificationLinkExpired": "El enlace de verificación caducó. Solicita un nuevo correo de verificación.",
+      "verificationLinkInvalid": "Este enlace ya no es válido. Revisa tu correo más reciente o solicita uno nuevo.",
+      "verificationResendTooSoon": "Espera {{seconds}} segundos antes de solicitar otro correo de verificación.",
       "invalidRecoveryLink": "El enlace de recuperación no es válido o expiró.",
       "passwordUpdatedButLoginFailed": "Contraseña actualizada, pero no se pudo iniciar sesión.",
       "accountDisabled": "Esta cuenta esta deshabilitada.",
