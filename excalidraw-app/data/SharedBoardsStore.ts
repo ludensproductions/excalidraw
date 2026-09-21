@@ -101,6 +101,24 @@ export const SharedBoardsStore = {
     return (data ?? []).map(rowToBoard);
   },
 
+  async getCurrentMemberUsernameByRoom(
+    roomId: string,
+    roomKey: string,
+  ): Promise<string | null> {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return null;
+    }
+
+    const board = await this.getByRoom(roomId, roomKey);
+    return (
+      board?.members.find((member) => member.userId === user.id)?.username ??
+      null
+    );
+  },
+
   /** Creates the shared_board record if needed and registers the caller as a member. */
   async joinOrCreate(params: {
     roomId: string;
@@ -162,6 +180,25 @@ export const SharedBoardsStore = {
       p_room_id: roomId,
       p_room_key: roomKey,
     });
+
+    if (error) {
+      throwStoreError(error.message);
+    }
+  },
+
+  async updateCurrentMemberUsernameByRoom(
+    roomId: string,
+    roomKey: string,
+    username: string,
+  ): Promise<void> {
+    const { error } = await supabase.rpc(
+      "update_shared_board_member_username",
+      {
+        p_room_id: roomId,
+        p_room_key: roomKey,
+        p_username: username,
+      },
+    );
 
     if (error) {
       throwStoreError(error.message);

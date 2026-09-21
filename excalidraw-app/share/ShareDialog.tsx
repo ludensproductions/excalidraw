@@ -26,11 +26,6 @@ import {
   normalizeUsername,
   validateUsername,
 } from "../auth/authValidation";
-import {
-  getCurrentUser,
-  updateCurrentUsername,
-  waitForAuthHydration,
-} from "../auth/authStore";
 import { activeRoomLinkAtom, isOwnerAtom } from "../collab/Collab";
 import {
   getCollaborationLinkData,
@@ -137,8 +132,8 @@ const ActiveRoomDialog = ({
   const editUsername = async () => {
     const currentUsername = displayUsername || collabAPI.getUsername();
     const nextUsername = await appDialog.promptText({
-      title: t("app.editUsername"),
-      label: t("app.newUsername"),
+      title: t("app.editBoardUsername"),
+      label: t("app.newBoardUsername"),
       initialValue: currentUsername,
       confirmButtonText: t("app.save"),
       requiredMessage: t("app.fieldRequired"),
@@ -164,20 +159,9 @@ const ActiveRoomDialog = ({
     }
 
     try {
-      await waitForAuthHydration();
-
-      const currentUser = getCurrentUser();
-      if (currentUser) {
-        const updatedUser = await updateCurrentUsername(normalizedUsername);
-        collabAPI.setUsername(updatedUser.username);
-        setDisplayUsername(updatedUser.username);
-        void appDialog.toast({ title: t("app.userUpdatedSuccessfully") });
-        return;
-      }
-
-      collabAPI.setUsername(normalizedUsername);
+      await collabAPI.setBoardUsername(normalizedUsername);
       setDisplayUsername(normalizedUsername);
-      void appDialog.toast({ title: t("app.userUpdatedSuccessfully") });
+      void appDialog.toast({ title: t("app.boardUserUpdatedSuccessfully") });
     } catch (error) {
       await appDialog.error(t("app.userActionFailed"), getErrorMessage(error));
     }
@@ -211,7 +195,7 @@ const ActiveRoomDialog = ({
         <FilledButton
           size="large"
           variant="icon"
-          label={t("app.editUsername")}
+          label={t("app.editBoardUsername")}
           icon={pencilIcon}
           className="ShareDialog__active__editName"
           onClick={editUsername}

@@ -29,6 +29,7 @@ import {
   normalizeUsername,
   validateUsername,
 } from "../auth/authValidation";
+import { updateCurrentUsername, type AuthUser } from "../auth/authStore";
 import { getCollaborationLinkData } from "../data";
 import { DrawingsStore } from "../data/DrawingsStore";
 import { SharedBoardsStore } from "../data/SharedBoardsStore";
@@ -44,7 +45,6 @@ import { useHandleAppTheme } from "../useHandleAppTheme";
 
 import "./Dashboard.scss";
 
-import type { AuthUser } from "../auth/authStore";
 import type { DrawingRecord } from "../data/DrawingsStore";
 import type { SharedBoard } from "../data/SharedBoardsStore";
 
@@ -440,8 +440,17 @@ const SharedBoardCard: React.FC<SharedBoardCardProps> = ({
 }) => {
   const isOwner = board.createdBy === currentUserId;
   const maxAvatars = 4;
-  const visibleMembers = board.members.slice(0, maxAvatars);
-  const overflow = board.members.length - maxAvatars;
+  const otherMembers = board.members.filter(
+    (member) => member.userId !== currentUserId,
+  );
+  const visibleMembers = otherMembers.slice(0, maxAvatars);
+  const hiddenMembers = otherMembers.slice(maxAvatars);
+  const overflow = hiddenMembers.length;
+  const memberNames = [
+    t("app.you"),
+    ...otherMembers.map((member) => member.username),
+  ];
+  const membersLabel = memberNames.join(", ");
 
   return (
     <div className="dashboard__shared-card" onClick={() => onJoin(board)}>
@@ -492,16 +501,17 @@ const SharedBoardCard: React.FC<SharedBoardCardProps> = ({
           )}
         </div>
 
-        <div className="dashboard__shared-card-members">
+        <div
+          className="dashboard__shared-card-members"
+          aria-label={membersLabel}
+        >
           {visibleMembers.map((member) => (
             <span
               key={member.userId}
-              className={`dashboard__shared-card-avatar${
-                member.userId === currentUserId ? " current" : ""
-              }`}
+              className="dashboard__shared-card-avatar"
               title={member.username}
             >
-              {member.username.charAt(0).toUpperCase()}
+              {member.username.trim().charAt(0).toUpperCase() || "?"}
             </span>
           ))}
           {overflow > 0 && (
@@ -510,7 +520,24 @@ const SharedBoardCard: React.FC<SharedBoardCardProps> = ({
             </span>
           )}
           <span className="dashboard__shared-card-member-names">
-            {board.members.map((member) => member.username).join(", ")}
+            {membersLabel}
+          </span>
+          <span
+            className="dashboard__shared-card-members-popover"
+            aria-hidden="true"
+          >
+            <span className="dashboard__shared-card-members-popover-content">
+              {memberNames.map((name, index) => (
+                <span
+                  key={`${index}-${name}`}
+                  className={`dashboard__shared-card-member-chip${
+                    index === 0 ? " current" : ""
+                  }`}
+                >
+                  {name}
+                </span>
+              ))}
+            </span>
           </span>
         </div>
 
@@ -637,6 +664,49 @@ export const Dashboard: React.FC<DashboardProps> = ({
       setUsersLoading(false);
     }
   }, [isAdmin]);
+
+  const handleEditCurrentUsername = async () => {
+    const nextUsername = await appDialog.promptText({
+      title: t("app.editUsername"),
+      label: t("app.newUsername"),
+      initialValue: user.username,
+      confirmButtonText: t("app.save"),
+      requiredMessage: t("app.fieldRequired"),
+      maxLength: AUTH_FIELD_LIMITS.username.max,
+    });
+
+    if (!nextUsername) {
+      return;
+    }
+
+    const normalizedUsername = normalizeUsername(nextUsername);
+    if (normalizedUsername === user.username) {
+      return;
+    }
+
+    const validationError = validateUsername(normalizedUsername);
+    if (validationError) {
+      await appDialog.alert({
+        title: t(validationError),
+        icon: "warning",
+      });
+      return;
+    }
+
+    try {
+      const updatedUser = await updateCurrentUsername(normalizedUsername);
+      setManagedUsers((prev) =>
+        prev.map((profile) =>
+          profile.id === updatedUser.id
+            ? { ...profile, username: updatedUser.username }
+            : profile,
+        ),
+      );
+      void appDialog.toast({ title: t("app.userUpdatedSuccessfully") });
+    } catch (error) {
+      await appDialog.error(t("app.userActionFailed"), getErrorMessage(error));
+    }
+  };
 
   useEffect(() => {
     void fetchBoards();
@@ -1200,6 +1270,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         <div className="dashboard__user">
           <span className="dashboard__username">{user.username}</span>
+          <button
+            className="dashboard__username-edit"
+            onClick={handleEditCurrentUsername}
+            title={t("app.editUsername")}
+            aria-label={t("app.editUsername")}
+          >
+            <FontAwesomeIcon icon={faPenToSquare} />
+          </button>
           <button
             className="dashboard__theme-toggle"
             onClick={() => setAppTheme(isDark ? THEME.LIGHT : THEME.DARK)}

@@ -130,6 +130,14 @@ export type SocketUpdateDataSource = {
       username: string;
     };
   };
+  USERNAME_UPDATE: {
+    type: WS_SUBTYPES.USERNAME_UPDATE;
+    payload: {
+      id?: string;
+      socketId: SocketId;
+      username: string;
+    };
+  };
 };
 
 export type SocketUpdateDataIncoming =

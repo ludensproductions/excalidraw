@@ -230,6 +230,21 @@ class Portal {
     }
   };
 
+  broadcastUsername = (username: string) => {
+    if (this.socket?.id) {
+      const data: SocketUpdateDataSource["USERNAME_UPDATE"] = {
+        type: WS_SUBTYPES.USERNAME_UPDATE,
+        payload: {
+          id: this.collab.getUserId(),
+          socketId: this.socket.id as SocketId,
+          username,
+        },
+      };
+
+      return this._broadcastSocketData(data as SocketUpdateData);
+    }
+  };
+
   broadcastMouseLocation = (payload: {
     pointer: SocketUpdateDataSource["MOUSE_LOCATION"]["payload"]["pointer"];
     button: SocketUpdateDataSource["MOUSE_LOCATION"]["payload"]["button"];

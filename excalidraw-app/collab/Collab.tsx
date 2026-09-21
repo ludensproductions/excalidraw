@@ -166,6 +166,7 @@ export interface CollabAPI {
   syncImageFiles: CollabInstance["syncImageFiles"];
   fetchImageFilesFromFirebase: CollabInstance["fetchImageFilesFromFirebase"];
   setUsername: CollabInstance["setUsername"];
+  setBoardUsername: CollabInstance["setBoardUsername"];
   getUsername: CollabInstance["getUsername"];
   getActiveRoomLink: CollabInstance["getActiveRoomLink"];
   setCollabError: CollabInstance["setErrorDialog"];
@@ -290,6 +291,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       leaveCollaboration: this.leaveCollaboration,
       flushCollaboration: this.flushCollaboration,
       setUsername: this.setUsername,
+      setBoardUsername: this.setBoardUsername,
       getUsername: this.getUsername,
       getActiveRoomLink: this.getActiveRoomLink,
       setCollabError: this.setErrorDialog,
@@ -782,7 +784,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       readOnly?: boolean;
     },
   ) => {
-    if (!this.getUsername()) {
+    if (!getCurrentUser()?.username && !this.getUsername()) {
       import("@excalidraw/random-username").then(({ getRandomUsername }) => {
         const username = getRandomUsername();
         this.setUsername(username);
@@ -827,7 +829,22 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     LocalData.pauseSave("collaboration");
 
     const activeBoard = appJotaiStore.get(activeBoardAtom);
-    const username = this.getUsername() || "Usuario";
+    const defaultUsername =
+      getCurrentUser()?.username || this.getUsername() || "Usuario";
+    let username = defaultUsername;
+
+    if (existingRoomLinkData) {
+      const roomUsername =
+        await SharedBoardsStore.getCurrentMemberUsernameByRoom(
+          roomId,
+          roomKey,
+        ).catch((error) => {
+          console.warn("Failed to load shared board username:", error);
+          return null;
+        });
+      username = roomUsername || defaultUsername;
+    }
+    this.setUsername(username);
 
     // Publish/join the shared-board record before any first save or room
     // initialization check runs, so a newly-created room isn't mistaken for a
@@ -1024,6 +1041,14 @@ class Collab extends PureComponent<CollabProps, CollabState> {
             this.updateCollaborator(socketId, {
               id,
               userState,
+              username,
+            });
+            break;
+          }
+          case WS_SUBTYPES.USERNAME_UPDATE: {
+            const { id, socketId, username } = decryptedData.payload;
+            this.updateCollaborator(socketId, {
+              id,
               username,
             });
             break;
@@ -1449,10 +1474,36 @@ class Collab extends PureComponent<CollabProps, CollabState> {
 
   setUsername = (username: string) => {
     this.setState({ username });
-    saveUsernameToLocalStorage(username);
+    if (!getCurrentUser()) {
+      saveUsernameToLocalStorage(username);
+    }
   };
 
-  getUsername = () => getCurrentUser()?.username || this.state.username;
+  setBoardUsername = async (username: string) => {
+    const roomId = this.portal.roomId;
+    const roomKey = this.portal.roomKey;
+
+    if (roomId && roomKey && getCurrentUser()) {
+      await SharedBoardsStore.updateCurrentMemberUsernameByRoom(
+        roomId,
+        roomKey,
+        username,
+      );
+    }
+
+    this.setUsername(username);
+
+    const socketId = this.portal.socket?.id as SocketId | undefined;
+    if (socketId) {
+      this.updateCollaborator(socketId, {
+        id: this.getUserId(),
+        username,
+      });
+      void this.portal.broadcastUsername(username);
+    }
+  };
+
+  getUsername = () => this.state.username || getCurrentUser()?.username || "";
 
   getIsOwner = () => this.isOwnerSession;
 
