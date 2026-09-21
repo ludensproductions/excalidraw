@@ -50,6 +50,8 @@ const listeners = new Set<Listener>();
 const EMAIL_VERIFICATION_RESEND_COOLDOWN_MS = 60_000;
 const EMAIL_VERIFICATION_RESEND_STORAGE_KEY =
   "excalidraw-email-verification-resend";
+const PASSWORD_RESET_RESEND_COOLDOWN_MS = 120_000;
+const PASSWORD_RESET_RESEND_STORAGE_KEY = "excalidraw-password-reset-resend";
 
 function emit() {
   for (const l of listeners) {
@@ -101,6 +103,34 @@ export function getEmailVerificationResendWaitSeconds(email: string): number {
   const lastSentAt = getEmailVerificationResendState()[normalizedEmail] ?? 0;
   const remainingMs =
     EMAIL_VERIFICATION_RESEND_COOLDOWN_MS - (Date.now() - lastSentAt);
+
+  return remainingMs > 0 ? Math.ceil(remainingMs / 1000) : 0;
+}
+
+function getPasswordResetResendState(): Record<string, number> {
+  try {
+    return JSON.parse(
+      localStorage.getItem(PASSWORD_RESET_RESEND_STORAGE_KEY) ?? "{}",
+    ) as Record<string, number>;
+  } catch {
+    return {};
+  }
+}
+
+function setPasswordResetResendTimestamp(email: string): void {
+  const state = getPasswordResetResendState();
+  state[normalizeEmail(email).toLowerCase()] = Date.now();
+  localStorage.setItem(
+    PASSWORD_RESET_RESEND_STORAGE_KEY,
+    JSON.stringify(state),
+  );
+}
+
+export function getPasswordResetResendWaitSeconds(email: string): number {
+  const normalizedEmail = normalizeEmail(email).toLowerCase();
+  const lastSentAt = getPasswordResetResendState()[normalizedEmail] ?? 0;
+  const remainingMs =
+    PASSWORD_RESET_RESEND_COOLDOWN_MS - (Date.now() - lastSentAt);
 
   return remainingMs > 0 ? Math.ceil(remainingMs / 1000) : 0;
 }
@@ -388,9 +418,18 @@ export async function requestPasswordReset(email: string): Promise<void> {
     throw new Error(t(validationError));
   }
 
+  const trimmedEmail = normalizeEmail(email);
+  const waitSeconds = getPasswordResetResendWaitSeconds(trimmedEmail);
+  if (waitSeconds > 0) {
+    throw new Error(
+      t("auth.errors.passwordResetResendTooSoon", {
+        seconds: waitSeconds,
+      }),
+    );
+  }
+
   const startedAt = getPasswordResetRequestStartedAt();
   try {
-    const trimmedEmail = normalizeEmail(email);
     const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
       redirectTo: `${window.location.origin}${window.location.pathname}`,
     });
@@ -403,6 +442,8 @@ export async function requestPasswordReset(email: string): Promise<void> {
   } finally {
     await waitForPasswordResetResponseFloor(startedAt);
   }
+
+  setPasswordResetResendTimestamp(trimmedEmail);
 }
 
 const clearAuthUrlParams = (): void => {
@@ -421,6 +462,9 @@ export async function beginAuthEmailFlowFromUrl(): Promise<AuthEmailFlowResult> 
   const errorCode = getParam("error_code");
   const errorDescription = getParam("error_description");
   const code = queryParams.get("code") ?? hashParams.get("code");
+  const tokenHash = getParam("token_hash");
+  const token = getParam("token");
+  const email = getParam("email");
   const accessToken = hashParams.get("access_token");
   const refreshToken = hashParams.get("refresh_token");
 
@@ -457,6 +501,23 @@ export async function beginAuthEmailFlowFromUrl(): Promise<AuthEmailFlowResult> 
     }
   } else if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) {
+      throw new Error(translateErrorMessage(error.message));
+    }
+  } else if (tokenHash) {
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: type === "signup" ? "signup" : "recovery",
+    });
+    if (error) {
+      throw new Error(translateErrorMessage(error.message));
+    }
+  } else if (token && email) {
+    const { error } = await supabase.auth.verifyOtp({
+      email: normalizeEmail(email),
+      token,
+      type: type === "signup" ? "signup" : "recovery",
+    });
     if (error) {
       throw new Error(translateErrorMessage(error.message));
     }

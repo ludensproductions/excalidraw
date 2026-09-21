@@ -4,6 +4,7 @@ const supabaseMocks = vi.hoisted(() => ({
   resetPasswordForEmail: vi.fn(),
   signUp: vi.fn(),
   resend: vi.fn(),
+  verifyOtp: vi.fn(),
   rpc: vi.fn(),
 }));
 
@@ -24,6 +25,7 @@ vi.mock("../data/supabase", () => ({
       resetPasswordForEmail: supabaseMocks.resetPasswordForEmail,
       signUp: supabaseMocks.signUp,
       resend: supabaseMocks.resend,
+      verifyOtp: supabaseMocks.verifyOtp,
     },
     rpc: supabaseMocks.rpc,
   },
@@ -38,25 +40,34 @@ vi.mock("../auth/passwordResetTiming", () => ({
 
 describe("auth store password reset", () => {
   const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+  let beginAuthEmailFlowFromUrl: () => Promise<unknown>;
   let requestPasswordReset: (email: string) => Promise<void>;
   let registerUser: (
     username: string,
     email: string,
     password: string,
   ) => Promise<unknown>;
+  let getPasswordResetResendWaitSeconds: (email: string) => number;
   let resendEmailVerification: (email: string) => Promise<void>;
 
   beforeAll(async () => {
-    ({ requestPasswordReset, registerUser, resendEmailVerification } =
-      await import("../auth/authStore"));
+    ({
+      beginAuthEmailFlowFromUrl,
+      getPasswordResetResendWaitSeconds,
+      requestPasswordReset,
+      registerUser,
+      resendEmailVerification,
+    } = await import("../auth/authStore"));
   });
 
   beforeEach(() => {
     supabaseMocks.resetPasswordForEmail.mockReset();
     supabaseMocks.signUp.mockReset();
     supabaseMocks.resend.mockReset();
+    supabaseMocks.verifyOtp.mockReset();
     supabaseMocks.rpc.mockReset();
     supabaseMocks.rpc.mockResolvedValue({ data: false, error: null });
+    window.history.replaceState({}, "", "/");
     localStorage.clear();
     timingMocks.getPasswordResetRequestStartedAt.mockClear();
     timingMocks.waitForPasswordResetResponseFloor.mockClear();
@@ -86,6 +97,25 @@ describe("auth store password reset", () => {
     );
   });
 
+  it("throttles repeated password reset emails", async () => {
+    supabaseMocks.resetPasswordForEmail.mockResolvedValueOnce({ error: null });
+
+    await expect(
+      requestPasswordReset("registered@example.com"),
+    ).resolves.toBeUndefined();
+
+    expect(
+      getPasswordResetResendWaitSeconds("registered@example.com"),
+    ).toBeGreaterThan(0);
+    await expect(
+      requestPasswordReset("registered@example.com"),
+    ).rejects.toThrow("auth.errors.passwordResetResendTooSoon");
+    expect(supabaseMocks.resetPasswordForEmail).toHaveBeenCalledTimes(1);
+    expect(timingMocks.waitForPasswordResetResponseFloor).toHaveBeenCalledTimes(
+      1,
+    );
+  });
+
   it("rejects invalid emails before calling reset or waiting", async () => {
     await expect(requestPasswordReset("")).rejects.toThrow(
       "auth.errors.emailRequired",
@@ -95,6 +125,28 @@ describe("auth store password reset", () => {
     expect(
       timingMocks.waitForPasswordResetResponseFloor,
     ).not.toHaveBeenCalled();
+  });
+
+  it("accepts direct recovery token hash links", async () => {
+    window.history.replaceState(
+      {},
+      "",
+      "/?type=recovery&token_hash=recovery-hash",
+    );
+    supabaseMocks.verifyOtp.mockResolvedValueOnce({
+      data: { session: { access_token: "token" }, user: { id: "user-1" } },
+      error: null,
+    });
+
+    await expect(beginAuthEmailFlowFromUrl()).resolves.toEqual({
+      type: "passwordRecovery",
+    });
+
+    expect(supabaseMocks.verifyOtp).toHaveBeenCalledWith({
+      token_hash: "recovery-hash",
+      type: "recovery",
+    });
+    expect(window.location.search).toBe("");
   });
 
   it("rejects registered emails before calling signup", async () => {

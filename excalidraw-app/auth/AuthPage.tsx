@@ -7,6 +7,7 @@ import { getErrorMessage } from "../errorMessages";
 
 import {
   beginAuthEmailFlowFromUrl,
+  getPasswordResetResendWaitSeconds,
   loginUser,
   registerUser,
   requestPasswordReset,
@@ -103,6 +104,7 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [passwordResetWaitSeconds, setPasswordResetWaitSeconds] = useState(0);
   useEffect(() => {
     let cancelled = false;
     beginAuthEmailFlowFromUrl()
@@ -152,6 +154,23 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
       cancelled = true;
     };
   }, [onAuthenticated]);
+  useEffect(() => {
+    if (mode !== "forgot" || !email) {
+      setPasswordResetWaitSeconds(0);
+      return;
+    }
+
+    const updateWaitSeconds = () => {
+      setPasswordResetWaitSeconds(getPasswordResetResendWaitSeconds(email));
+    };
+
+    updateWaitSeconds();
+    const intervalId = window.setInterval(updateWaitSeconds, 1000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [email, mode]);
   const resetFeedback = () => {
     setError(null);
     setMessage(null);
@@ -194,6 +213,7 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
       }
       if (mode === "forgot") {
         await requestPasswordReset(email);
+        setPasswordResetWaitSeconds(getPasswordResetResendWaitSeconds(email));
         setMessage(t("auth.messages.resetEmailSent"));
         return;
       }
@@ -240,12 +260,6 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
     setPassword("");
     setConfirmPassword("");
   };
-  const goToVerifyEmail = () => {
-    setMode("verify");
-    resetFeedback();
-    setPassword("");
-    setConfirmPassword("");
-  };
   const goToLogin = () => {
     setMode("login");
     resetFeedback();
@@ -279,11 +293,17 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
     : mode === "register"
     ? t("auth.actions.register")
     : mode === "forgot"
-    ? t("auth.actions.sendEmail")
+    ? passwordResetWaitSeconds > 0
+      ? t("auth.actions.resendRecoveryIn", {
+          seconds: passwordResetWaitSeconds,
+        })
+      : t("auth.actions.sendEmail")
     : mode === "verify"
     ? t("auth.actions.resendVerification")
     : t("auth.actions.savePassword");
   const shouldConstrainPassword = mode !== "login";
+  const isSubmitDisabled =
+    loading || (mode === "forgot" && passwordResetWaitSeconds > 0);
   return (
     <div className={`auth-page${isDark ? " auth-page--dark" : ""}`}>
       <div className="auth-page__card">
@@ -488,7 +508,7 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
           <button
             type="submit"
             className="auth-page__submit"
-            disabled={loading}
+            disabled={isSubmitDisabled}
           >
             {submitLabel}
           </button>
@@ -498,10 +518,6 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
             <>
               <button type="button" onClick={goToForgotPassword}>
                 {t("auth.actions.forgotPassword")}
-              </button>
-              <span className="auth-page__toggle-separator">|</span>
-              <button type="button" onClick={goToVerifyEmail}>
-                {t("auth.actions.resendVerificationLink")}
               </button>
               <span className="auth-page__toggle-separator">|</span>
               {t("auth.actions.noAccount")}{" "}
