@@ -15,7 +15,7 @@ done
 echo "excalidraw-db: Setting service role passwords..."
 
 # Only alter roles that exist (some are created by migrations on first boot)
-for role in authenticator pgbouncer supabase_auth_admin supabase_storage_admin supabase_functions_admin; do
+for role in authenticator pgbouncer supabase_admin supabase_auth_admin supabase_storage_admin supabase_functions_admin; do
   if psql -qAt -U postgres -h /var/run/postgresql -c "SELECT 1 FROM pg_roles WHERE rolname='${role}'" 2>/dev/null | grep -q 1; then
     psql -q -U postgres -h /var/run/postgresql -c "ALTER USER ${role} WITH PASSWORD '${POSTGRES_PASSWORD}';" 2>/dev/null || true
   fi
