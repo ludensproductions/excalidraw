@@ -9,7 +9,9 @@
     <h2>Recuperar contraseña</h2>
     <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta.</p>
     <p>Haz clic en el siguiente enlace para crear una nueva contraseña:</p>
-    <p><a href="{{ .ConfirmationURL }}">Restablecer contraseña</a></p>
+    <p>
+      <a href="{{ .SiteURL }}?type=recovery&amp;token_hash={{ .TokenHash }}">Restablecer contraseña</a>
+    </p>
     <p>Si no solicitaste este cambio, puedes ignorar este correo.</p>
   </body>
 </html>
