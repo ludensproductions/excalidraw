@@ -720,3 +720,20 @@ $$;
 
 revoke all on function public.update_shared_board_member_username(text, text, text) from public;
 grant execute on function public.update_shared_board_member_username(text, text, text) to authenticated;
+
+-- 0015_public_api_grants.sql
+-- Allow PostgREST roles to reach public objects; RLS policies still decide rows.
+grant usage on schema public to anon, authenticated, service_role;
+
+grant all on all tables in schema public to anon, authenticated, service_role;
+grant all on all routines in schema public to anon, authenticated, service_role;
+grant all on all sequences in schema public to anon, authenticated, service_role;
+
+alter default privileges in schema public
+  grant all on tables to anon, authenticated, service_role;
+
+alter default privileges in schema public
+  grant all on routines to anon, authenticated, service_role;
+
+alter default privileges in schema public
+  grant all on sequences to anon, authenticated, service_role;
