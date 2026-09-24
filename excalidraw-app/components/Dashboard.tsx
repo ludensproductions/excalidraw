@@ -229,6 +229,25 @@ const blobToDataURL = async (blob: Blob): Promise<string> =>
 const getSharedBoardPreviewKey = (board: SharedBoard): string =>
   `${board.roomId}:${board.updatedAt}`;
 
+const createDashboardThumbnail = async (
+  elements: DrawingRecord["elements"],
+  files: BinaryFiles,
+  viewBackgroundColor = "#ffffff",
+): Promise<string | null> => {
+  if (!elements.length) {
+    return null;
+  }
+
+  const blob = await exportToBlob({
+    elements,
+    appState: { viewBackgroundColor, exportBackground: true },
+    files,
+    maxWidthOrHeight: 200,
+  });
+
+  return blobToDataURL(blob);
+};
+
 const createSharedBoardThumbnail = async (
   board: SharedBoard,
 ): Promise<string | null> => {
@@ -239,14 +258,7 @@ const createSharedBoardThumbnail = async (
   }
 
   const files = await loadSharedBoardFiles(board, elements);
-  const blob = await exportToBlob({
-    elements,
-    appState: { viewBackgroundColor: "#ffffff", exportBackground: true },
-    files,
-    maxWidthOrHeight: 200,
-  });
-
-  return blobToDataURL(blob);
+  return createDashboardThumbnail(elements, files);
 };
 
 interface BoardCardProps {
@@ -616,6 +628,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   >({});
   const sharedBoardPreviewsRef = useRef<Record<string, string | null>>({});
   const sharedPreviewRequestsRef = useRef<Set<string>>(new Set());
+  const isMountedRef = useRef(true);
 
   const { editorTheme, setAppTheme } = useHandleAppTheme();
   const isDark = editorTheme === THEME.DARK;
@@ -767,8 +780,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
   }, [fetchBoards]);
 
   useEffect(() => {
-    let cancelled = false;
-
     visibleSharedBoards.forEach((board) => {
       const previewKey = getSharedBoardPreviewKey(board);
       if (
@@ -784,7 +795,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       sharedPreviewRequestsRef.current.add(previewKey);
       createSharedBoardThumbnail(board)
         .then((thumbnail) => {
-          if (cancelled) {
+          if (!isMountedRef.current) {
             return;
           }
           setSharedBoardPreviews((prev) => {
@@ -798,7 +809,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         })
         .catch((error: unknown) => {
           console.error("Failed to generate shared board preview:", error);
-          if (cancelled) {
+          if (!isMountedRef.current) {
             return;
           }
           setSharedBoardPreviews((prev) => {
@@ -814,11 +825,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
           sharedPreviewRequestsRef.current.delete(previewKey);
         });
     });
+  }, [visibleSharedBoards]);
+
+  useEffect(() => {
+    isMountedRef.current = true;
 
     return () => {
-      cancelled = true;
+      isMountedRef.current = false;
     };
-  }, [visibleSharedBoards]);
+  }, []);
 
   useEffect(() => {
     if (activeTab === "users" && isAdmin) {
@@ -956,8 +971,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
             getRoomIdFromCollabLink(ownBoard.collabLink) === board.roomId,
         )
       : [];
+    const primaryLinkedBoard =
+      linkedBoards.length > 0
+        ? [...linkedBoards].sort((a, b) => b.updatedAt - a.updatedAt)[0]
+        : null;
+    const duplicateLinkedBoardIds = primaryLinkedBoard
+      ? linkedBoards
+          .filter((ownBoard) => ownBoard.id !== primaryLinkedBoard.id)
+          .map((ownBoard) => ownBoard.id)
+      : [];
 
     let persistedBoards: DrawingRecord[] = [];
+    let deletedDuplicateLinkedBoardIds: string[] = [];
     if (shouldSaveDraft) {
       try {
         const remoteElements = await loadFromFirebase(
@@ -967,32 +992,45 @@ export const Dashboard: React.FC<DashboardProps> = ({
         );
         const draftElements = remoteElements ?? [];
         const draftFiles = await loadSharedBoardFiles(board, draftElements);
+        let draftThumbnail: string | null = null;
 
-        if (isOwner && linkedBoards.length > 0) {
-          persistedBoards = await Promise.all(
-            linkedBoards.map((ownBoard) =>
-              DrawingsStore.save(
-                {
-                  name: ownBoard.name,
-                  elements: draftElements,
-                  files: draftFiles,
-                  appState: ownBoard.appState,
-                  thumbnail: ownBoard.thumbnail,
-                  collabLink: null,
-                  userId: ownBoard.userId,
-                },
-                ownBoard.id,
-              ),
-            ),
+        try {
+          draftThumbnail = await createDashboardThumbnail(
+            draftElements,
+            draftFiles,
+            primaryLinkedBoard?.appState.viewBackgroundColor ?? "#ffffff",
           );
+        } catch (error) {
+          console.error(
+            "Failed to generate shared board draft preview:",
+            error,
+          );
+          draftThumbnail = primaryLinkedBoard?.thumbnail ?? null;
+        }
+
+        if (isOwner) {
+          const persistedBoard = await DrawingsStore.save(
+            {
+              name: primaryLinkedBoard?.name ?? board.name,
+              elements: draftElements,
+              files: draftFiles,
+              appState: primaryLinkedBoard?.appState ?? {
+                viewBackgroundColor: "#ffffff",
+              },
+              thumbnail: draftThumbnail,
+              collabLink: null,
+              userId: primaryLinkedBoard?.userId ?? user.id,
+            },
+            primaryLinkedBoard?.id,
+          );
+          persistedBoards = [persistedBoard];
 
           setBoards((prev) =>
-            prev.map((ownBoard) => {
-              const updated = persistedBoards.find(
-                (persistedBoard) => persistedBoard.id === ownBoard.id,
-              );
-              return updated ?? ownBoard;
-            }),
+            primaryLinkedBoard
+              ? prev.map((ownBoard) =>
+                  ownBoard.id === persistedBoard.id ? persistedBoard : ownBoard,
+                )
+              : [persistedBoard, ...prev],
           );
         }
 
@@ -1002,7 +1040,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             elements: draftElements,
             files: draftFiles,
             appState: { viewBackgroundColor: "#ffffff" },
-            thumbnail: null,
+            thumbnail: draftThumbnail,
             collabLink: null,
             userId: user.id,
           });
@@ -1024,17 +1062,27 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
     if (isOwner) {
       if (shouldSaveDraft) {
-        await Promise.all(
-          linkedBoards.map((ownBoard) =>
-            DrawingsStore.setCollabLink(ownBoard.id, null),
-          ),
-        );
+        const persistedBoard = persistedBoards[0] ?? primaryLinkedBoard;
+        if (persistedBoard) {
+          await DrawingsStore.setCollabLink(persistedBoard.id, null);
+        }
+        if (duplicateLinkedBoardIds.length > 0) {
+          await Promise.all(
+            duplicateLinkedBoardIds.map((id) => DrawingsStore.delete(id)),
+          );
+          deletedDuplicateLinkedBoardIds = duplicateLinkedBoardIds;
+        }
         setBoards((prev) =>
-          prev.map((ownBoard) =>
-            getRoomIdFromCollabLink(ownBoard.collabLink) === board.roomId
-              ? { ...ownBoard, collabLink: null }
-              : ownBoard,
-          ),
+          prev
+            .filter(
+              (ownBoard) =>
+                !deletedDuplicateLinkedBoardIds.includes(ownBoard.id),
+            )
+            .map((ownBoard) =>
+              ownBoard.id === persistedBoard?.id
+                ? { ...ownBoard, collabLink: null }
+                : ownBoard,
+            ),
         );
       } else {
         await Promise.all(
