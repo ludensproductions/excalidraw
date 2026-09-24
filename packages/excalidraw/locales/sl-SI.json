@@ -11,8 +11,6 @@
     "copyAsPng": "Kopiraj v odložišče kot PNG",
     "copyAsSvg": "Kopiraj v odložišče kot SVG",
     "copyText": "Kopiraj v odložišče kot besedilo",
-    "copySource": "Kopiraj vir v odložišče",
-    "convertToCode": "Pretvori v kodo",
     "bringForward": "Postavi naprej",
     "sendToBack": "Pomakni v ozadje",
     "bringToFront": "Pomakni v ospredje",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "Izberi vse elemente v okvirju",
     "removeAllElementsFromFrame": "Izbriši vse elemente v okvirju",
     "eyeDropper": "Izberi barvo s platna",
-    "textToDiagram": "Besedilo v diagram",
     "prompt": "Poziv",
     "followUs": "Sledi nas",
     "discordChat": "Klepet v Discordu",
@@ -307,12 +304,10 @@
     "link": "Dodaj / posodobi povezavo za izbrano obliko",
     "eraser": "Radirka",
     "frame": "Okvir",
-    "magicframe": "Žični okvir v kodo",
     "embeddable": "Spletna vdelava",
     "laser": "Laserski kazalec",
     "hand": "Roka (orodje za premikanje)",
     "extraTools": "Več orodij",
-    "mermaidToExcalidraw": "Mermaid v Excalidraw",
     "convertElementType": ""
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "Slika",
     "group": "Skupina",
     "frame": "Okvir",
-    "magicframe": "Žični okvir v kodo",
+    "magicframe": "Okvir",
     "embeddable": "Spletna vdelava",
     "selection": "Izbor",
     "iframe": "IFrame"
@@ -401,10 +396,7 @@
     "disk_button": "Shrani v datoteko",
     "link_title": "Povezava za deljenje",
     "link_details": "Izvoz kot povezava samo za branje.",
-    "link_button": "Izvoz kot povezava",
-    "excalidrawplus_description": "Shrani sceno v svoj delovni prostor Excalidraw+.",
-    "excalidrawplus_button": "Izvoz",
-    "excalidrawplus_exportError": "Trenutno ni bilo mogoče izvoziti v Excalidraw+..."
+    "link_button": "Izvoz kot povezava"
   },
   "helpDialog": {
     "blog": "Preberite naš blog",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "Ste namesto tega želeli odpreti Excalidraw+?",
       "menuHint": "Izvoz, nastavitve, jeziki, ..."
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "Shrani na disk",
         "button": "Shrani na disk",
         "description": "Izvozite podatke scene v datoteko, iz katere jo lahko pozneje uvozite."
-      },
-      "excalidrawPlus": {
-        "title": "Excalidraw+",
-        "button": "Izvozi v Excalidraw+",
-        "description": "Shrani sceno v svoj delovni prostor Excalidraw+."
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": "Nalaganje zunanje risbe bo <bold>prepisalo vašo obstoječo vsebino</bold>.<br></br>Svojo risbo lahko najprej varnostno kopirate z eno od spodnjih možnosti."
       }
     }
-  },
-  "mermaid": {
-    "title": "Mermaid v Excalidraw",
-    "button": "Vstavi",
-    "description": "Trenutno so podprti samo <flowchartLink>diagrami poteka</flowchartLink>, <sequenceLink>diagrami zaporedij</sequenceLink> in <classLink>Razredni diagrami</classLink>. Druge vrste bodo upodobljene kot slike v Excalidraw.",
-    "syntax": "Sintaksa Mermaid",
-    "preview": "Predogled",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": "Hitro iskanje"

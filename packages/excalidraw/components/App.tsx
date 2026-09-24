@@ -18,7 +18,6 @@ import {
 } from "@excalidraw/math";
 
 import {
-  COLOR_PALETTE,
   CODES,
   shouldResizeFromCenter,
   shouldMaintainAspectRatio,
@@ -149,7 +148,6 @@ import {
   isUsingAdaptiveRadius,
   isIframeElement,
   isIframeLikeElement,
-  isMagicFrameElement,
   isTextBindableContainer,
   isElbowArrow,
   isFlowchartNodeElement,
@@ -161,7 +159,6 @@ import {
   isInvisiblySmallElement,
   getCornerRadius,
   isPathALoop,
-  createSrcDoc,
   embeddableURLValidator,
   maybeParseEmbedSrc,
   getEmbedLink,
@@ -188,7 +185,6 @@ import {
   updateFrameMembershipOfSelectedElements,
   isElementInFrame,
   getFrameLikeTitle,
-  getElementsOverlappingFrame,
   filterElementsEligibleAsFrameChildren,
   hitElementBoundText,
   hitElementBoundingBoxOnly,
@@ -277,13 +273,11 @@ import type {
   NonDeletedExcalidrawElement,
   ExcalidrawTextContainer,
   ExcalidrawFrameLikeElement,
-  ExcalidrawMagicFrameElement,
   ExcalidrawIframeLikeElement,
   IframeData,
   ExcalidrawIframeElement,
   ExcalidrawEmbeddableElement,
   Ordered,
-  MagicGenerationData,
   ExcalidrawArrowElement,
   ExcalidrawElbowArrowElement,
   SceneElementsMap,
@@ -350,7 +344,6 @@ import {
   isHandToolActive,
 } from "../appState";
 import {
-  copyTextToSystemClipboard,
   parseClipboard,
   parseDataTransferEvent,
   type ParsedDataTransferFile,
@@ -416,14 +409,11 @@ import {
   resetCursor,
   setCursorForShape,
 } from "../cursor";
-import { ElementCanvasButtons } from "../components/ElementCanvasButtons";
 import { LaserTrails } from "../laser-trails";
 import { withBatchedUpdates, withBatchedUpdatesThrottled } from "../reactUtils";
 import { isPointHittingTextAutoResizeHandle } from "../textAutoResizeHandle";
 import { textWysiwyg } from "../wysiwyg/textWysiwyg";
 import { isOverScrollBars } from "../scene/scrollbars";
-
-import { isMaybeMermaidDefinition } from "../mermaid";
 
 import { LassoTrail } from "../lasso";
 
@@ -445,14 +435,12 @@ import { ContextMenu, CONTEXT_MENU_SEPARATOR } from "./ContextMenu";
 import { activeEyeDropperAtom } from "./EyeDropper";
 import FollowMode from "./FollowMode/FollowMode";
 import LayerUI from "./LayerUI";
-import { ElementCanvasButton } from "./MagicButton";
 import { SVGLayer } from "./SVGLayer";
 import { searchItemInFocusAtom } from "./SearchMenu";
 import { isSidebarDockedAtom } from "./Sidebar/Sidebar";
 import { StaticCanvas, InteractiveCanvas } from "./canvases";
 import NewElementCanvas from "./canvases/NewElementCanvas";
 import { isPointHittingLink } from "./hyperlink/helpers";
-import { MagicIcon, copyIcon, fullscreenIcon } from "./icons";
 import { AppStateObserver, type OnStateChange } from "./AppStateObserver";
 
 import { findShapeByKey } from "./shapes";
@@ -493,7 +481,6 @@ import type {
   EmbedsValidationStatus,
   ElementsPendingErasure,
   ExcalidrawImperativeAPIEventMap,
-  GenerateDiagramToCode,
   NullableGridSize,
   Offsets,
 } from "../types";
@@ -1595,135 +1582,15 @@ class App extends React.Component<AppProps, AppState> {
           if (isIframeElement(el)) {
             src = null;
 
-            const data: MagicGenerationData = (el.customData?.generationData ??
-              this.magicGenerations.get(el.id)) || {
-              status: "error",
-              message: t("magic.noGenerationData"),
-              code: "ERR_NO_GENERATION_DATA",
-            };
+            const data = el.customData?.generationData;
 
-            if (data.status === "done") {
+            if (data?.status === "done") {
               const html = data.html;
               src = {
                 intrinsicSize: { w: el.width, h: el.height },
                 type: "document",
                 srcdoc: () => {
                   return html;
-                },
-              } as const;
-            } else if (data.status === "pending") {
-              src = {
-                intrinsicSize: { w: el.width, h: el.height },
-                type: "document",
-                srcdoc: () => {
-                  return createSrcDoc(`
-                    <style>
-                      html, body {
-                        width: 100%;
-                        height: 100%;
-                        color: ${
-                          this.state.theme === THEME.DARK ? "white" : "black"
-                        };
-                      }
-                      body {
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        flex-direction: column;
-                        gap: 1rem;
-                      }
-
-                      .Spinner {
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        margin-left: auto;
-                        margin-right: auto;
-                      }
-
-                      .Spinner svg {
-                        animation: rotate 1.6s linear infinite;
-                        transform-origin: center center;
-                        width: 40px;
-                        height: 40px;
-                      }
-
-                      .Spinner circle {
-                        stroke: currentColor;
-                        animation: dash 1.6s linear 0s infinite;
-                        stroke-linecap: round;
-                      }
-
-                      @keyframes rotate {
-                        100% {
-                          transform: rotate(360deg);
-                        }
-                      }
-
-                      @keyframes dash {
-                        0% {
-                          stroke-dasharray: 1, 300;
-                          stroke-dashoffset: 0;
-                        }
-                        50% {
-                          stroke-dasharray: 150, 300;
-                          stroke-dashoffset: -200;
-                        }
-                        100% {
-                          stroke-dasharray: 1, 300;
-                          stroke-dashoffset: -280;
-                        }
-                      }
-                    </style>
-                    <div class="Spinner">
-                      <svg
-                        viewBox="0 0 100 100"
-                      >
-                        <circle
-                          cx="50"
-                          cy="50"
-                          r="46"
-                          stroke-width="8"
-                          fill="none"
-                          stroke-miter-limit="10"
-                        />
-                      </svg>
-                    </div>
-                    <div>{t("magic.generating")}</div>
-                  `);
-                },
-              } as const;
-            } else {
-              let message: string;
-              if (data.code === "ERR_GENERATION_INTERRUPTED") {
-                message = t("magic.generationInterrupted");
-              } else {
-                message = data.message || t("magic.generationFailed");
-              }
-              src = {
-                intrinsicSize: { w: el.width, h: el.height },
-                type: "document",
-                srcdoc: () => {
-                  return createSrcDoc(`
-                    <style>
-                    html, body {
-                      height: 100%;
-                    }
-                      body {
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
-                        color: ${COLOR_PALETTE.red[3]};
-                      }
-                      h1, h3 {
-                        margin-top: 0;
-                        margin-bottom: 0.5rem;
-                      }
-                    </style>
-                    <h1>Error!</h1>
-                    <h3>${message}</h3>
-                  `);
                 },
               } as const;
             }
@@ -1779,7 +1646,7 @@ class App extends React.Component<AppProps, AppState> {
               }}
             >
               <div
-                //this is a hack that addresses isse with embedded excalidraw.com embeddable
+                //this is a hack that addresses isse with embedded excalidraw.issirmax.mx embeddable
                 //https://github.com/excalidraw/excalidraw/pull/6691#issuecomment-1607383938
                 /*ref={(ref) => {
                   if (!this.excalidrawContainerRef.current) {
@@ -2243,78 +2110,6 @@ class App extends React.Component<AppProps, AppState> {
                                 }
                               />
                             )}
-                          {this.props.aiEnabled !== false &&
-                            selectedElements.length === 1 &&
-                            isMagicFrameElement(firstSelectedElement) && (
-                              <ElementCanvasButtons
-                                element={firstSelectedElement}
-                                elementsMap={elementsMap}
-                              >
-                                <ElementCanvasButton
-                                  title={t("labels.convertToCode")}
-                                  icon={MagicIcon}
-                                  checked={false}
-                                  onChange={() =>
-                                    this.onMagicFrameGenerate(
-                                      firstSelectedElement,
-                                      "button",
-                                    )
-                                  }
-                                />
-                              </ElementCanvasButtons>
-                            )}
-                          {selectedElements.length === 1 &&
-                            isIframeElement(firstSelectedElement) &&
-                            firstSelectedElement.customData?.generationData
-                              ?.status === "done" && (
-                              <ElementCanvasButtons
-                                element={firstSelectedElement}
-                                elementsMap={elementsMap}
-                              >
-                                <ElementCanvasButton
-                                  title={t("labels.copySource")}
-                                  icon={copyIcon}
-                                  checked={false}
-                                  onChange={() =>
-                                    this.onIframeSrcCopy(firstSelectedElement)
-                                  }
-                                />
-                                <ElementCanvasButton
-                                  title={t("buttons.enterFullscreen")}
-                                  icon={fullscreenIcon}
-                                  checked={false}
-                                  onChange={() => {
-                                    const iframe =
-                                      this.getHTMLIFrameElement(
-                                        firstSelectedElement,
-                                      );
-                                    if (iframe) {
-                                      try {
-                                        iframe.requestFullscreen();
-                                        this.setState({
-                                          activeEmbeddable: {
-                                            element: firstSelectedElement,
-                                            state: "active",
-                                          },
-                                          selectedElementIds: {
-                                            [firstSelectedElement.id]: true,
-                                          },
-                                          newElement: null,
-                                          selectionElement: null,
-                                        });
-                                      } catch (err: any) {
-                                        console.warn(err);
-                                        this.setState({
-                                          errorMessage:
-                                            "Couldn't enter fullscreen",
-                                        });
-                                      }
-                                    }
-                                  }}
-                                />
-                              </ElementCanvasButtons>
-                            )}
-
                           {this.state.contextMenu && (
                             <ContextMenu
                               items={this.state.contextMenu.items}
@@ -2496,221 +2291,6 @@ class App extends React.Component<AppProps, AppState> {
       isImageFileHandle(fileHandle)
     ) {
       this.setState({ fileHandle });
-    }
-  };
-
-  private magicGenerations = new Map<
-    ExcalidrawIframeElement["id"],
-    MagicGenerationData
-  >();
-
-  private updateMagicGeneration = ({
-    frameElement,
-    data,
-  }: {
-    frameElement: ExcalidrawIframeElement;
-    data: MagicGenerationData;
-  }) => {
-    if (data.status === "pending") {
-      // We don't wanna persist pending state to storage. It should be in-app
-      // state only.
-      // Thus reset so that we prefer local cache (if there was some
-      // generationData set previously)
-      this.scene.mutateElement(
-        frameElement,
-        {
-          customData: { generationData: undefined },
-        },
-        { informMutation: false, isDragging: false },
-      );
-    } else {
-      this.scene.mutateElement(
-        frameElement,
-        {
-          customData: { generationData: data },
-        },
-        { informMutation: false, isDragging: false },
-      );
-    }
-    this.magicGenerations.set(frameElement.id, data);
-    this.triggerRender();
-  };
-
-  public plugins: {
-    diagramToCode?: {
-      generate: GenerateDiagramToCode;
-    };
-  } = {};
-
-  public setPlugins(plugins: Partial<App["plugins"]>) {
-    Object.assign(this.plugins, plugins);
-  }
-
-  private async onMagicFrameGenerate(
-    magicFrame: ExcalidrawMagicFrameElement,
-    source: "button" | "upstream",
-  ) {
-    const generateDiagramToCode = this.plugins.diagramToCode?.generate;
-
-    if (!generateDiagramToCode) {
-      this.setState({
-        errorMessage: t("errors.noDiagramToCodePlugin"),
-      });
-      return;
-    }
-
-    const magicFrameChildren = getElementsOverlappingFrame(
-      this.scene.getNonDeletedElements(),
-      magicFrame,
-      this.scene.getNonDeletedElementsMap(),
-    ).filter((el) => !isMagicFrameElement(el));
-
-    if (!magicFrameChildren.length) {
-      if (source === "button") {
-        this.setState({ errorMessage: t("errors.emptyFrameGeneration") });
-        trackEvent("ai", "generate (no-children)", "d2c");
-      } else {
-        this.setActiveTool({ type: "magicframe" });
-      }
-      return;
-    }
-
-    const frameElement = this.insertIframeElement({
-      sceneX: magicFrame.x + magicFrame.width + 30,
-      sceneY: magicFrame.y,
-      width: magicFrame.width,
-      height: magicFrame.height,
-    });
-
-    if (!frameElement) {
-      return;
-    }
-
-    this.updateMagicGeneration({
-      frameElement,
-      data: { status: "pending" },
-    });
-
-    this.setState({
-      selectedElementIds: { [frameElement.id]: true },
-    });
-
-    trackEvent("ai", "generate (start)", "d2c");
-    try {
-      const { html } = await generateDiagramToCode({
-        frame: magicFrame,
-        children: magicFrameChildren,
-      });
-
-      trackEvent("ai", "generate (success)", "d2c");
-
-      if (!html.trim()) {
-        this.updateMagicGeneration({
-          frameElement,
-          data: {
-            status: "error",
-            code: "ERR_OAI",
-            message: "Nothing genereated :(",
-          },
-        });
-        return;
-      }
-
-      const parsedHtml =
-        html.includes("<!DOCTYPE html>") && html.includes("</html>")
-          ? html.slice(
-              html.indexOf("<!DOCTYPE html>"),
-              html.indexOf("</html>") + "</html>".length,
-            )
-          : html;
-
-      this.updateMagicGeneration({
-        frameElement,
-        data: { status: "done", html: parsedHtml },
-      });
-    } catch (error: any) {
-      trackEvent("ai", "generate (failed)", "d2c");
-      this.updateMagicGeneration({
-        frameElement,
-        data: {
-          status: "error",
-          code: "ERR_OAI",
-          message: error.message || t("magic.unknownError"),
-        },
-      });
-    }
-  }
-
-  private onIframeSrcCopy(element: ExcalidrawIframeElement) {
-    if (element.customData?.generationData?.status === "done") {
-      copyTextToSystemClipboard(element.customData.generationData.html);
-      this.setToast({
-        message: "copied to clipboard",
-        closable: false,
-        duration: 1500,
-      });
-    }
-  }
-
-  public onMagicframeToolSelect = () => {
-    const selectedElements = this.scene.getSelectedElements({
-      selectedElementIds: this.state.selectedElementIds,
-    });
-
-    if (selectedElements.length === 0) {
-      this.setActiveTool({ type: TOOL_TYPE.magicframe });
-      trackEvent("ai", "tool-select (empty-selection)", "d2c");
-    } else {
-      const selectedMagicFrame: ExcalidrawMagicFrameElement | false =
-        selectedElements.length === 1 &&
-        isMagicFrameElement(selectedElements[0]) &&
-        selectedElements[0];
-
-      // case: user selected elements containing frame-like(s) or are frame
-      // members, we don't want to wrap into another magicframe
-      // (unless the only selected element is a magic frame which we reuse)
-      if (
-        !selectedMagicFrame &&
-        selectedElements.some((el) => isFrameLikeElement(el) || el.frameId)
-      ) {
-        this.setActiveTool({ type: TOOL_TYPE.magicframe });
-        return;
-      }
-
-      trackEvent("ai", "tool-select (existing selection)", "d2c");
-
-      let frame: ExcalidrawMagicFrameElement;
-      if (selectedMagicFrame) {
-        // a single magicframe already selected -> use it
-        frame = selectedMagicFrame;
-      } else {
-        // selected elements aren't wrapped in magic frame yet -> wrap now
-
-        const [minX, minY, maxX, maxY] = getCommonBounds(selectedElements);
-        const padding = 50;
-
-        frame = newMagicFrameElement({
-          ...FRAME_STYLE,
-          x: minX - padding,
-          y: minY - padding,
-          width: maxX - minX + padding * 2,
-          height: maxY - minY + padding * 2,
-          opacity: 100,
-          locked: false,
-        });
-
-        this.insertNewElement(frame);
-
-        for (const child of selectedElements) {
-          this.scene.mutateElement(child, { frameId: frame.id });
-        }
-
-        this.setState({
-          selectedElementIds: { [frame.id]: true },
-        });
-      }
-
-      this.onMagicFrameGenerate(frame, "upstream");
     }
   };
 
@@ -3787,32 +3367,6 @@ class App extends React.Component<AppProps, AppState> {
       return;
     }
 
-    // ------------------- Successful Mermaid -------------------
-    if (!isPlainPaste && isMaybeMermaidDefinition(data.text)) {
-      const api = await import("@excalidraw/mermaid-to-excalidraw");
-      try {
-        const { elements: skeletonElements, files = {} } =
-          await api.parseMermaidToExcalidraw(data.text);
-
-        const elements = convertToExcalidrawElements(skeletonElements, {
-          regenerateIds: true,
-        });
-
-        this.addElementsFromPasteOrLibrary({
-          elements,
-          files,
-          position:
-            this.editorInterface.formFactor === "desktop" ? "cursor" : "center",
-        });
-
-        return;
-      } catch (err: any) {
-        console.warn(
-          `parsing pasted text as mermaid definition failed: ${err.message}`,
-        );
-      }
-    }
-
     // ------------------- Pure embeddable URLs -------------------
     const nonEmptyLines = normalizeEOL(data.text)
       .split(/\n+/)
@@ -4582,7 +4136,7 @@ class App extends React.Component<AppProps, AppState> {
        *  - `CaptureUpdateAction.NEVER`: Updates never make it to undo/redo stack. Use for remote updates or scene initialization.
        *  - `CaptureUpdateAction.EVENTUALLY`: Updates will be eventually be captured as part of a future increment.
        *
-       * Check [API docs](https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/props/excalidraw-api#captureUpdate) for more details.
+       * Check [API docs](https://excalidraw.issirmax.mx/docs/@excalidraw/excalidraw/api/props/excalidraw-api#captureUpdate) for more details.
        *
        * @default CaptureUpdateAction.EVENTUALLY
        */

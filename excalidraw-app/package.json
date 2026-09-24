@@ -41,8 +41,7 @@
     "react-dom": "19.0.0",
     "socket.io-client": "4.7.2",
     "sweetalert2": "11.26.25",
-    "uqr": "0.1.2",
-    "vite-plugin-html": "3.2.2"
+    "uqr": "0.1.2"
   },
   "prettier": "@excalidraw/prettier-config",
   "scripts": {
@@ -57,7 +56,8 @@
     "build:preview": "yarn build && vite preview --port 5000"
   },
   "devDependencies": {
+    "cross-env": "7.0.3",
+    "vite-plugin-html": "3.2.2",
     "vite-plugin-sitemap": "0.7.1"
   }
 }
-

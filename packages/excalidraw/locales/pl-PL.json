@@ -11,8 +11,6 @@
     "copyAsPng": "Kopiuj do schowka jako plik PNG",
     "copyAsSvg": "Kopiuj do schowka jako plik SVG",
     "copyText": "Kopiuj do schowka jako tekst",
-    "copySource": "Kopiuj źródło do schowka",
-    "convertToCode": "Skonwertuj na kod",
     "bringForward": "Przesuń warstwę wyżej",
     "sendToBack": "Przenieś na spód",
     "bringToFront": "Przenieś na wierzch",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "Zaznacz wszystkie elementy w ramce",
     "removeAllElementsFromFrame": "Usuń wszystkie elementy z ramki",
     "eyeDropper": "Wybierz kolor z płótna",
-    "textToDiagram": "Generuj diagram z opisu",
     "prompt": "Opis",
     "followUs": "Obserwuj nas",
     "discordChat": "Czat Discorda",
@@ -307,12 +304,10 @@
     "link": "Dodaj/aktualizuj link dla wybranego kształtu",
     "eraser": "Gumka",
     "frame": "Ramka",
-    "magicframe": "Wireframe do kodu",
     "embeddable": "Osadzenie z internetu",
     "laser": "Wskaźnik laserowy",
     "hand": "Ręka (narzędzie do przesuwania)",
     "extraTools": "Więcej narzędzi",
-    "mermaidToExcalidraw": "Konwertuj diagram Mermaid do Excalidraw",
     "convertElementType": "Przełącz typ kształtu"
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "Obraz",
     "group": "Grupa",
     "frame": "Ramka",
-    "magicframe": "Kod ze szkicu",
+    "magicframe": "Ramka",
     "embeddable": "Osadzenie",
     "selection": "Zaznaczenie",
     "iframe": "IFrame"
@@ -401,10 +396,7 @@
     "disk_button": "Zapisz do pliku",
     "link_title": "Link do udostępnienia",
     "link_details": "Eksportuj jako link tylko do odczytu.",
-    "link_button": "Wygeneruj link",
-    "excalidrawplus_description": "Zapisz scenę do swojego obszaru roboczego Excalidraw+.",
-    "excalidrawplus_button": "Eksportuj",
-    "excalidrawplus_exportError": "W tej chwili nie można wyeksportować do Excalidraw+..."
+    "link_button": "Wygeneruj link"
   },
   "helpDialog": {
     "blog": "Przeczytaj na naszym blogu",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "Czy zamiast tego chcesz przejść do Excalidraw+?",
       "menuHint": "Eksportuj, preferencje, języki..."
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "Zapisz na dysku",
         "button": "Zapisz na dysku",
         "description": "Eksportuj zawartość sceny jako plik z możliwością importowania."
-      },
-      "excalidrawPlus": {
-        "title": "Excalidraw+",
-        "button": "Eksportuj do Excalidraw+",
-        "description": "Zapisz scenę do swojego obszaru roboczego Excalidraw+."
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": "Wczytanie zewnętrznego pliku <bold>nadpisze istniejącą zawartość</bold>.<br></br>Możesz najpierw utworzyć kopię zapasową swojego rysunku, używając jednej z poniższych opcji."
       }
     }
-  },
-  "mermaid": {
-    "title": "Konwertuj diagram Mermaid do Excalidraw",
-    "button": "Wstaw",
-    "description": "Obecnie wspierane są jedynie <flowchartLink>proste grafy</flowchartLink>, <sequenceLink>sekwencje</sequenceLink> i <classLink>diagramy klas</classLink>. Pozostałe typy będą wyświetlane jako obrazy w Excalidraw.",
-    "syntax": "Składnia diagramów Mermaid",
-    "preview": "Podgląd",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": "Szybkie wyszukiwanie"

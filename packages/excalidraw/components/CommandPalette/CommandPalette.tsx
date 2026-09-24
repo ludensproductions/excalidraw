@@ -47,8 +47,6 @@ import {
   boltIcon,
   bucketFillIcon,
   ExportImageIcon,
-  mermaidLogoIcon,
-  brainIconThin,
   LibraryIcon,
   historyCommandIcon,
 } from "../icons";
@@ -74,13 +72,15 @@ import {
 import * as defaultItems from "./defaultCommandPaletteItems";
 import "./CommandPalette.scss";
 
-import type { CommandPaletteItem } from "./types";
 import { DEFAULT_CATEGORIES } from "./types";
-export { DEFAULT_CATEGORIES };
+
+import type { CommandPaletteItem } from "./types";
 import type { AppProps, AppState, LibraryItem, UIAppState } from "../../types";
 import type { ShortcutName } from "../../actions/shortcuts";
 import type { TranslationKeys } from "../../i18n";
 import type { Action } from "../../actions/types";
+
+export { DEFAULT_CATEGORIES };
 
 const lastUsedPaletteItem = atom<CommandPaletteItem | null>(null);
 
@@ -555,48 +555,6 @@ function CommandPaletteInner({
             app.toggleLock();
           },
         },
-        {
-          label: `${t("labels.textToDiagram")}...`,
-          category: DEFAULT_CATEGORIES.tools,
-          icon: brainIconThin,
-          viewMode: false,
-          predicate: appProps.aiEnabled,
-          perform: () => {
-            setAppState((state) => ({
-              ...state,
-              openDialog: {
-                name: "ttd",
-                tab: "text-to-diagram",
-              },
-            }));
-          },
-        },
-        {
-          label: `${t("toolBar.mermaidToExcalidraw")}...`,
-          category: DEFAULT_CATEGORIES.tools,
-          icon: mermaidLogoIcon,
-          viewMode: false,
-          predicate: appProps.aiEnabled,
-          perform: () => {
-            setAppState((state) => ({
-              ...state,
-              openDialog: {
-                name: "ttd",
-                tab: "mermaid",
-              },
-            }));
-          },
-        },
-        // {
-        //   label: `${t("toolBar.magicframe")}...`,
-        //   category: DEFAULT_CATEGORIES.tools,
-        //   icon: MagicIconThin,
-        //   viewMode: false,
-        //   predicate: appProps.aiEnabled,
-        //   perform: () => {
-        //     app.onMagicframeToolSelect();
-        //   },
-        // },
       ];
 
       const allCommands = [
@@ -948,7 +906,11 @@ function CommandPaletteInner({
                     onMouseMove={() => setCurrentCommand(command)}
                     showShortcut={app.editorInterface.formFactor !== "phone"}
                     appState={uiAppState}
-                    size={category === DEFAULT_CATEGORIES.library ? "large" : "small"}
+                    size={
+                      category === DEFAULT_CATEGORIES.library
+                        ? "large"
+                        : "small"
+                    }
                   />
                 ))}
               </div>

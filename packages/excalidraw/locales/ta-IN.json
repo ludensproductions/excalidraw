@@ -11,8 +11,6 @@
     "copyAsPng": "நகலகத்திற்கு PNG ஆக நகலெடு",
     "copyAsSvg": "நகலகத்திற்கு SVG ஆக நகலெடு",
     "copyText": "நகலகத்திற்கு உரையாக நகலெடு",
-    "copySource": "மூலத்தை நகலகத்திற்கு நகலெடு",
-    "convertToCode": "குறியீடாக மாற்று",
     "bringForward": "முன்நோக்கி கொண்டுவா",
     "sendToBack": "பின்னே அனுப்பு",
     "bringToFront": "முன்னே கொண்டுவா",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "சட்டகத்திலுள்ள எல்லா உறுப்புகளையும் தேர்ந்தெடு",
     "removeAllElementsFromFrame": "சட்டகத்திலுள்ள எல்லா உறுப்புகளையும் நீக்கு",
     "eyeDropper": "கித்தானிலிருந்து நிறம் தேர்ந்தெடு",
-    "textToDiagram": "உரையிலிருந்து வரைபடம்",
     "prompt": "தூண்டுக்குறி",
     "followUs": "எங்களைப் பின்தொடர்க",
     "discordChat": "டிஸ்கார்டு அரட்டை",
@@ -307,12 +304,10 @@
     "link": "தேர்தெடுத்த வடிவத்திற்குத் தொடுப்பைச் சேர் / புதுப்பி",
     "eraser": "அழிப்பி",
     "frame": "சட்டகம் கருவி",
-    "magicframe": "",
     "embeddable": "வலை நுழைப்பு",
     "laser": "சீரொளி குறிமுள்",
     "hand": "கை (பார்வை நகர்கும் கருவி)",
     "extraTools": "மற்ற கருவிகள்",
-    "mermaidToExcalidraw": "",
     "convertElementType": ""
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "படம்",
     "group": "குழு",
     "frame": "வடிவு",
-    "magicframe": "",
+    "magicframe": "வடிவு",
     "embeddable": "",
     "selection": "தேர்வு",
     "iframe": "IFrame"
@@ -401,10 +396,7 @@
     "disk_button": "கோப்பில் சேமி",
     "link_title": "பகிரக்கூடிய தொடுப்பு",
     "link_details": "வாசிக்க-மட்டும் தொடுப்பாக ஏற்றுமதிசெய்.",
-    "link_button": "தொடுப்புக்கு ஏற்றுமதிசெய்",
-    "excalidrawplus_description": "காட்சியை உன் எக்ஸ்கேலிட்ரா பணியிடத்தில் சேமி.",
-    "excalidrawplus_button": "ஏற்றுமதி",
-    "excalidrawplus_exportError": "இத்தருணத்தில் எக்ஸ்கேலிட்ரா+ க்கு ஏற்றுமதிசெய்ய முடியவில்லை..."
+    "link_button": "தொடுப்புக்கு ஏற்றுமதிசெய்"
   },
   "helpDialog": {
     "blog": "எமது வலைப்பூவை வாசி",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "நீங்கள் Excalidraw+க்கு செல்ல விரும்புகிறீர்களா?",
       "menuHint": "விருப்பத்தேர்வுகள், மொழிகள் போன்றனவை ஏற்றுமதிசெய்..."
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "வட்டில் சேமி",
         "button": "வட்டில் சேமி",
         "description": "காட்சித் தரவை நீங்கள் பின்னர் இறக்குமதி செய்யக்கூடிய ஒரு கோப்பிற்கு ஏற்றுமதிசெய்க."
-      },
-      "excalidrawPlus": {
-        "title": "எக்ஸ்காலிட்ரா+",
-        "button": "எக்ஸ்காலிட்ரா+-க்கு ஏற்றுமதிசெய்",
-        "description": "காட்சியை உன் எக்ஸ்கேலிட்ரா+ பணியிடத்தில் சேமி."
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": ""
       }
     }
-  },
-  "mermaid": {
-    "title": "மெர்மெய்டிலிருந்து எக்ஸ்காலிட்ரா",
-    "button": "புகுத்து",
-    "description": "",
-    "syntax": "மெர்மெய்டு தொடரியல்",
-    "preview": "முன்னோட்டம்",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": "விரைவு தேடல்"

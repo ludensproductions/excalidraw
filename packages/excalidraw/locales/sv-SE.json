@@ -11,8 +11,6 @@
     "copyAsPng": "Kopiera till urklipp som PNG",
     "copyAsSvg": "Kopiera till urklipp som SVG",
     "copyText": "Kopiera till urklipp som text",
-    "copySource": "Kopiera källa till urklipp",
-    "convertToCode": "Konvertera till kod",
     "bringForward": "Flytta framåt",
     "sendToBack": "Flytta underst",
     "bringToFront": "Flytta främst",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "Markera alla element i rutan",
     "removeAllElementsFromFrame": "Ta bort alla element från rutan",
     "eyeDropper": "Välj färg från canvas",
-    "textToDiagram": "Text till diagram",
     "prompt": "Inmatning",
     "followUs": "Följ oss",
     "discordChat": "Discord chat",
@@ -307,12 +304,10 @@
     "link": "Lägg till / Uppdatera länk för en vald form",
     "eraser": "Radergummi",
     "frame": "Rutverktyg",
-    "magicframe": "Trådram till kod",
     "embeddable": "Bädda in (web)",
     "laser": "Laserpekare",
     "hand": "Hand (panoreringsverktyg)",
     "extraTools": "Fler verktyg",
-    "mermaidToExcalidraw": "Mermaid till Excalidraw",
     "convertElementType": ""
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "Bild",
     "group": "Grupp",
     "frame": "Ram",
-    "magicframe": "Trådram till kod",
+    "magicframe": "Ram",
     "embeddable": "Bädda in (web)",
     "selection": "Markering",
     "iframe": "IFrame"
@@ -401,10 +396,7 @@
     "disk_button": "Spara till fil",
     "link_title": "Delbar länk",
     "link_details": "Exportera som en skrivskyddad länk.",
-    "link_button": "Exportera till länk",
-    "excalidrawplus_description": "Spara skissen till din Excalidraw+ arbetsyta.",
-    "excalidrawplus_button": "Exportera",
-    "excalidrawplus_exportError": "Det gick inte att exportera till Excalidraw+ just nu..."
+    "link_button": "Exportera till länk"
   },
   "helpDialog": {
     "blog": "Läs vår blogg",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "Ville du gå till Excalidraw+ istället?",
       "menuHint": "Exportera, inställningar, språk, ..."
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "Spara till disk",
         "button": "Spara till disk",
         "description": "Exportera scendata till en fil från vilken du kan importera senare."
-      },
-      "excalidrawPlus": {
-        "title": "Excalidraw+",
-        "button": "Exportera till Excalidraw+",
-        "description": "Spara skissen till din Excalidraw+ arbetsyta."
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": "Inläsning av en extern ritning kommer <bold>ersätta ditt befintliga innehåll</bold>.<br></br>Du kan säkerhetskopiera din ritning först genom att använda ett av alternativen nedan."
       }
     }
-  },
-  "mermaid": {
-    "title": "Mermaid till Excalidraw",
-    "button": "Infoga",
-    "description": "För närvarande stöds endast <flowchartLink>Flödesdiagram</flowchartLink>,<sequenceLink> Sekvensdiagram </sequenceLink> och <classLink>Klassdiagram</classLink>. De andra typerna kommer att återges som bild i Excalidraw.",
-    "syntax": "Mermaid-syntax",
-    "preview": "Förhandsgranska",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": "Snabbsök"

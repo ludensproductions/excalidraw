@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { THEME, exportToBlob } from "@excalidraw/excalidraw";
 import { t } from "@excalidraw/excalidraw/i18n";
@@ -379,7 +385,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
         {board.collabLink && (
           <div className="dashboard__card-collab-row">
             <button
-              className="dashboard__card-collab dashboard__card-collab--copy"
+              className="dashboard__card-collab"
               title={t("app.copyCollabLinkTitle")}
               aria-label={t("app.copyCollabLinkTitle")}
               onClick={copyCollabLink}
@@ -608,6 +614,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [sharedBoardPreviews, setSharedBoardPreviews] = useState<
     Record<string, string | null>
   >({});
+  const sharedBoardPreviewsRef = useRef<Record<string, string | null>>({});
   const sharedPreviewRequestsRef = useRef<Set<string>>(new Set());
 
   const { editorTheme, setAppTheme } = useHandleAppTheme();
@@ -665,6 +672,53 @@ export const Dashboard: React.FC<DashboardProps> = ({
     }
   }, [isAdmin]);
 
+  const { privateBoards, recentItems, displayedBoards, visibleSharedBoards } =
+    useMemo(() => {
+      const sharedRoomIds = new Set(sharedBoards.map((board) => board.roomId));
+      const canTrustSharedBoardList = !loading && !sharedError;
+      const boardsForDisplay = boards.map((board) => {
+        const roomId = getRoomIdFromCollabLink(board.collabLink);
+        return canTrustSharedBoardList && roomId && !sharedRoomIds.has(roomId)
+          ? { ...board, collabLink: null }
+          : board;
+      });
+      const privateBoards = boardsForDisplay.filter(
+        (board) => !getRoomIdFromCollabLink(board.collabLink),
+      );
+      const recentItems: RecentItem[] = [
+        ...privateBoards.map((board) => ({
+          type: "own" as const,
+          board,
+          updatedAt: board.updatedAt,
+        })),
+        ...sharedBoards.map((board) => ({
+          type: "shared" as const,
+          board,
+          updatedAt: board.updatedAt,
+        })),
+      ]
+        .sort((a, b) => b.updatedAt - a.updatedAt)
+        .slice(0, 6);
+      const visibleSharedBoards =
+        activeTab === "shared"
+          ? sharedBoards
+          : activeTab === "recent"
+          ? recentItems
+              .filter(
+                (item): item is Extract<RecentItem, { type: "shared" }> =>
+                  item.type === "shared",
+              )
+              .map((item) => item.board)
+          : [];
+
+      return {
+        privateBoards,
+        recentItems,
+        displayedBoards: activeTab === "all" ? privateBoards : [],
+        visibleSharedBoards,
+      };
+    }, [activeTab, boards, loading, sharedBoards, sharedError]);
+
   const handleEditCurrentUsername = async () => {
     const nextUsername = await appDialog.promptText({
       title: t("app.editUsername"),
@@ -715,10 +769,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
   useEffect(() => {
     let cancelled = false;
 
-    sharedBoards.forEach((board) => {
+    visibleSharedBoards.forEach((board) => {
       const previewKey = getSharedBoardPreviewKey(board);
       if (
-        Object.prototype.hasOwnProperty.call(sharedBoardPreviews, previewKey) ||
+        Object.prototype.hasOwnProperty.call(
+          sharedBoardPreviewsRef.current,
+          previewKey,
+        ) ||
         sharedPreviewRequestsRef.current.has(previewKey)
       ) {
         return;
@@ -730,27 +787,38 @@ export const Dashboard: React.FC<DashboardProps> = ({
           if (cancelled) {
             return;
           }
-          setSharedBoardPreviews((prev) => ({
-            ...prev,
-            [previewKey]: thumbnail,
-          }));
+          setSharedBoardPreviews((prev) => {
+            if (Object.prototype.hasOwnProperty.call(prev, previewKey)) {
+              return prev;
+            }
+            const next = { ...prev, [previewKey]: thumbnail };
+            sharedBoardPreviewsRef.current = next;
+            return next;
+          });
         })
         .catch((error: unknown) => {
           console.error("Failed to generate shared board preview:", error);
           if (cancelled) {
             return;
           }
-          setSharedBoardPreviews((prev) => ({
-            ...prev,
-            [previewKey]: null,
-          }));
+          setSharedBoardPreviews((prev) => {
+            if (Object.prototype.hasOwnProperty.call(prev, previewKey)) {
+              return prev;
+            }
+            const next = { ...prev, [previewKey]: null };
+            sharedBoardPreviewsRef.current = next;
+            return next;
+          });
+        })
+        .finally(() => {
+          sharedPreviewRequestsRef.current.delete(previewKey);
         });
     });
 
     return () => {
       cancelled = true;
     };
-  }, [sharedBoards, sharedBoardPreviews]);
+  }, [visibleSharedBoards]);
 
   useEffect(() => {
     if (activeTab === "users" && isAdmin) {
@@ -1153,33 +1221,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
     }
   };
 
-  const sharedRoomIds = new Set(sharedBoards.map((board) => board.roomId));
-  const canTrustSharedBoardList = !loading && !sharedError;
-  const boardsForDisplay = boards.map((board) => {
-    const roomId = getRoomIdFromCollabLink(board.collabLink);
-    return canTrustSharedBoardList && roomId && !sharedRoomIds.has(roomId)
-      ? { ...board, collabLink: null }
-      : board;
-  });
-  const privateBoards = boardsForDisplay.filter(
-    (board) => !getRoomIdFromCollabLink(board.collabLink),
-  );
-  const recentItems: RecentItem[] = [
-    ...privateBoards.map((board) => ({
-      type: "own" as const,
-      board,
-      updatedAt: board.updatedAt,
-    })),
-    ...sharedBoards.map((board) => ({
-      type: "shared" as const,
-      board,
-      updatedAt: board.updatedAt,
-    })),
-  ]
-    .sort((a, b) => b.updatedAt - a.updatedAt)
-    .slice(0, 6);
-
-  const displayedBoards = activeTab === "all" ? privateBoards : [];
   const selectedManagedUser =
     managedUsers.find((profile) => profile.id === selectedUserId) ??
     managedUsers[0] ??

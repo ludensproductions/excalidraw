@@ -11,8 +11,6 @@
     "copyAsPng": "PNG အနေဖြင့်ကူး",
     "copyAsSvg": "SVG အနေဖြင့်ကူး",
     "copyText": "",
-    "copySource": "",
-    "convertToCode": "",
     "bringForward": "ရှေ့ပို့",
     "sendToBack": "နောက်ဆုံးထား",
     "bringToFront": "ရှေ့ဆုံးထား",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "",
     "removeAllElementsFromFrame": "",
     "eyeDropper": "",
-    "textToDiagram": "",
     "prompt": "",
     "followUs": "",
     "discordChat": "",
@@ -307,12 +304,10 @@
     "link": "",
     "eraser": "",
     "frame": "",
-    "magicframe": "",
     "embeddable": "",
     "laser": "",
     "hand": "",
     "extraTools": "",
-    "mermaidToExcalidraw": "",
     "convertElementType": ""
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "",
     "group": "",
     "frame": "",
-    "magicframe": "",
+    "magicframe": "Frame",
     "embeddable": "",
     "selection": "",
     "iframe": ""
@@ -401,10 +396,7 @@
     "disk_button": "",
     "link_title": "",
     "link_details": "",
-    "link_button": "",
-    "excalidrawplus_description": "",
-    "excalidrawplus_button": "",
-    "excalidrawplus_exportError": ""
+    "link_button": ""
   },
   "helpDialog": {
     "blog": "",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "",
       "menuHint": ""
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "",
         "button": "",
         "description": ""
-      },
-      "excalidrawPlus": {
-        "title": "",
-        "button": "",
-        "description": ""
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": ""
       }
     }
-  },
-  "mermaid": {
-    "title": "",
-    "button": "",
-    "description": "",
-    "syntax": "",
-    "preview": "",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": ""

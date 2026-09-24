@@ -11,8 +11,6 @@
     "copyAsPng": "Copiar al portapapeles como PNG",
     "copyAsSvg": "Copiar al portapapeles como SVG",
     "copyText": "Copiar al portapapeles como texto",
-    "copySource": "Copiar fuente al portapapeles",
-    "convertToCode": "Convertir a código",
     "bringForward": "Traer hacia delante",
     "sendToBack": "Enviar al fondo",
     "bringToFront": "Traer al frente",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "Seleccionar todos los elementos en el marco",
     "removeAllElementsFromFrame": "Eliminar todos los elementos del marco",
     "eyeDropper": "Seleccionar un color del lienzo",
-    "textToDiagram": "Texto a diagrama",
     "prompt": "Prompt",
     "followUs": "Síguenos",
     "discordChat": "Chat interno",
@@ -309,9 +306,7 @@
     },
     "asyncPasteFailedOnRead": "No se pudo pegar (no se pudo leer desde el portapapeles del sistema).",
     "asyncPasteFailedOnParse": "No se pudo pegar.",
-    "copyToSystemClipboardFailed": "No se pudo copiar al portapapeles.",
-    "noDiagramToCodePlugin": "No se encontró el plugin de diagrama a código",
-    "emptyFrameGeneration": "No se puede generar desde un marco vacío"
+    "copyToSystemClipboardFailed": "No se pudo copiar al portapapeles."
   },
   "toolBar": {
     "selection": "Selección",
@@ -330,12 +325,10 @@
     "link": "Añadir/Actualizar enlace para una forma seleccionada",
     "eraser": "Borrar",
     "frame": "Herramienta Estructura",
-    "magicframe": "Esquema a código",
     "embeddable": "Incrustar Web",
     "laser": "Puntero láser",
     "hand": "Mano (herramienta de panoramización)",
     "extraTools": "Más herramientas",
-    "mermaidToExcalidraw": "Mermaid a Excalidraw",
     "convertElementType": "Cambiar tipo de elemento"
   },
   "element": {
@@ -349,7 +342,7 @@
     "image": "Imagen",
     "group": "Grupo",
     "frame": "Marco",
-    "magicframe": "Esquema a código",
+    "magicframe": "Marco",
     "embeddable": "Incrustar Web",
     "selection": "Selección",
     "iframe": "IFrame"
@@ -405,7 +398,8 @@
   "shareDialog": {
     "or": "O",
     "editLink": "Enlace de edicion",
-    "viewOnlyLink": "Enlace de solo lectura"
+    "viewOnlyLink": "Enlace de solo lectura",
+    "qrCodeLabel": "Codigo QR del enlace de colaboracion"
   },
   "roomDialog": {
     "desc_intro": "Invita a gente a colaborar en tu dibujo.",
@@ -431,10 +425,7 @@
     "share_link_title": "Compartir enlace",
     "link_field_label": "Enlace",
     "link_details": "Crear un enlace para que otra persona duplique este tablero en su cuenta.",
-    "link_button": "Crear enlace",
-    "excalidrawplus_description": "Guarde la escena en su espacio de trabajo de Excalidraw+.",
-    "excalidrawplus_button": "Exportar",
-    "excalidrawplus_exportError": "No se pudo exportar a Excalidraw+ en este momento..."
+    "link_button": "Crear enlace"
   },
   "helpDialog": {
     "blog": "Novedades internas",
@@ -592,7 +583,6 @@
       "center_heading": "Todo listo para",
       "center_heading_line2": "dibujar y colaborar",
       "center_heading_line3": "en tiempo real",
-      "center_heading_plus": "¿Quieres ir a Excalidraw+?",
       "menuHint": "Exportar, preferencias y más..."
     },
     "defaults": {
@@ -622,11 +612,6 @@
         "title": "Guardar en el disco",
         "button": "Guardar en el disco",
         "description": "Exporta los datos de la escena a un archivo desde el cual podrás importar más tarde."
-      },
-      "excalidrawPlus": {
-        "title": "Excalidraw+",
-        "button": "Exportar a Excalidraw+",
-        "description": "Guarda la escena en su espacio de trabajo de Excalidraw+."
       }
     },
     "modal": {
@@ -641,62 +626,6 @@
         "description": "Cargar un dibujo externo <bold>reemplazará tu contenido existente</bold>.<br></br>Puedes primero hacer una copia de seguridad de tu dibujo usando una de las opciones de abajo."
       }
     }
-  },
-  "mermaid": {
-    "title": "Mermaid a Excalidraw",
-    "button": "Insertar",
-    "description": "Actualmente sólo estos tipos de <flowchartLink>diagrama de flujo</flowchartLink>,<sequenceLink> Secuencia, </sequenceLink> y <classLink>Clase </classLink> son soportados. Los otros tipos de diagramas se renderizarán como imagen en Excalidraw.",
-    "syntax": "Sintaxis Mermaid",
-    "preview": "Vista previa",
-    "label": "Diagrama Mermaid",
-    "inputPlaceholder": "Escribe aquí tu código Mermaid...",
-    "autoFixAvailable": "Hay una corrección automática disponible"
-  },
-  "ttd": {
-    "error": "No se pudo generar el diagrama."
-  },
-  "chat": {
-    "inputPlaceholder": "Empieza a describir tu diagrama aquí... ({{shortcut}} para nueva línea)",
-    "inputPlaceholderWithMessages": "Sigue afinando tu diagrama...",
-    "generating": "Generando...",
-    "rateLimitRemaining": "Quedan {{count}} solicitudes hoy",
-    "role": {
-      "user": "Tu",
-      "assistant": "Asistente IA",
-      "system": "Sistema"
-    },
-    "aiBeta": "IA Beta",
-    "label": "Chat",
-    "menu": "Menú",
-    "newChat": "Nuevo chat",
-    "deleteChat": "Eliminar chat",
-    "deleteMessage": "Eliminar mensaje",
-    "viewAsMermaid": "Ver como Mermaid",
-    "placeholder": {
-      "title": "Diseñemos tu diagrama",
-      "description": "Describe el diagrama que quieres crear y lo generaremos para ti.",
-      "hint": "Por ahora conocemos diagramas de flujo, secuencia, clase, estado y relación entre entidades."
-    },
-    "preview": "Vista previa",
-    "insert": "Insertar",
-    "retry": "Reintentar",
-    "errors": {
-      "promptTooShort": "La descripción es demasiado corta (mínimo {{min}} caracteres)",
-      "promptTooLong": "La descripción es demasiado larga (máximo {{max}} caracteres)",
-      "generationFailed": "La generación falló",
-      "invalidDiagram": "Se generó un diagrama inválido. Puedes editarlo a mano, reintentar con corrección automática o probar otro texto.",
-      "fixInMermaid": "Editar Mermaid manualmente ->",
-      "aiRepair": "Regenerar (corrección automática) ->",
-      "requestAborted": "Solicitud cancelada",
-      "requestFailed": "La solicitud fallo",
-      "mermaidParseError": "Error de sintaxis en Mermaid"
-    },
-    "rateLimit": {
-      "messageLimit": "Has alcanzado el límite de IA del plan gratuito. Prueba Excalidraw+ para más capacidad o vuelve mañana.",
-      "generalRateLimit": "Vas demasiado rápido. Espera un momento antes de intentarlo de nuevo.",
-      "messageLimitInputPlaceholder": "Has alcanzado tu límite de mensajes"
-    },
-    "upsellBtnLabel": "Mejorar a Plus"
   },
   "quickSearch": {
     "placeholder": "Búsqueda rápida"
@@ -750,13 +679,6 @@
   "progressDialog": {
     "title": "Guardando",
     "defaultMessage": "Preparando guardado..."
-  },
-  "magic": {
-    "noGenerationData": "Sin datos de generación",
-    "generating": "Generando...",
-    "generationInterrupted": "Generación interrumpida...",
-    "generationFailed": "Generación fallida",
-    "unknownError": "Error desconocido durante la generación"
   },
   "app": {
     "saveBoard": "Guardar tablero",
@@ -839,8 +761,6 @@
     "confirm": "Confirmar",
     "fieldRequired": "Este campo es obligatorio.",
     "tooManyRequests": "Demasiadas solicitudes hoy, intenta de nuevo mañana.",
-    "tryExcalidrawPlus": "También puedes probar Excalidraw+ para obtener más solicitudes.",
-    "generationFailedInvalid": "Generación fallida (respuesta inválida)",
     "notAPretzel": "¡No soy un pretzel!",
     "duplicateName": "Ya existe un tablero con ese nombre. Elige otro.",
     "collabLinkDeletedSuccessfully": "Enlace de colaboración eliminado",

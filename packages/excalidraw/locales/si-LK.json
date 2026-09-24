@@ -11,8 +11,6 @@
     "copyAsPng": "PNG ලෙස පිටපත් කරන්න",
     "copyAsSvg": "SVG ලෙස පිටපත් කරන්න",
     "copyText": "පෙළ පිටපත් කරන්න",
-    "copySource": "මූලාශ්‍රය පිටපත් කරන්න",
-    "convertToCode": "කේතයට පරිවර්තනය කරන්න",
     "bringForward": "ඉදිරියට ගෙන්න",
     "sendToBack": "පසුපසටම ගෙනියන්න",
     "bringToFront": "ඉදිරියටම ගෙන්න",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "අඳින ලද රාමුවේ සියලුම අංග තෝරන්න",
     "removeAllElementsFromFrame": "රාමුවෙන් සියලුම අංග ඉවත් කරන්න",
     "eyeDropper": "අක්ෂි බිංදුකරු",
-    "textToDiagram": "පෙළෙන් රූපසටහනකට",
     "prompt": "ප්‍රේරකය",
     "followUs": "",
     "discordChat": "",
@@ -307,12 +304,10 @@
     "link": "සබැඳිය",
     "eraser": "මකනය",
     "frame": "රාමුව",
-    "magicframe": "මැජික් රාමුව",
     "embeddable": "බිහිදැමිය හැකි",
     "laser": "ලේසර්",
     "hand": "අත",
     "extraTools": "අමතර මෙවලම්",
-    "mermaidToExcalidraw": "Mermaid වලින් Excalidraw වෙත",
     "convertElementType": ""
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "",
     "group": "",
     "frame": "",
-    "magicframe": "",
+    "magicframe": "Frame",
     "embeddable": "",
     "selection": "",
     "iframe": ""
@@ -401,10 +396,7 @@
     "disk_button": "තැටි බොත්තම",
     "link_title": "සබැඳි මාතෘකාව",
     "link_details": "සබැඳි විස්තර",
-    "link_button": "සබැඳි බොත්තම",
-    "excalidrawplus_description": "ExcalidrawPlus විස්තර",
-    "excalidrawplus_button": "ExcalidrawPlus බොත්තම",
-    "excalidrawplus_exportError": "ExcalidrawPlus නිර්යාත දෝෂය"
+    "link_button": "සබැඳි බොත්තම"
   },
   "helpDialog": {
     "blog": "බ්ලොග්",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "අයදුම් මධ්‍ය ශීර්ෂය Plus",
       "menuHint": "මෙනු ඉඟිය"
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "තැටියට සුරැකීම ආවරණය",
         "button": "තැටියට සුරැකීම බොත්තම",
         "description": "තැටියට සුරැකීම විස්තර"
-      },
-      "excalidrawPlus": {
-        "title": "ExcalidrawPlus ආවරණය",
-        "button": "ExcalidrawPlus බොත්තම",
-        "description": "ExcalidrawPlus විස්තර"
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": "බෙදාහැරිය හැකි සබැඳි විස්තර"
       }
     }
-  },
-  "mermaid": {
-    "title": "Mermaid මාතෘකාව",
-    "button": "Mermaid බොත්තම",
-    "description": "Mermaid විස්තර",
-    "syntax": "Mermaid වාක්‍ය ඛණ්ඩය",
-    "preview": "Mermaid පූර්වදර්ශනය",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": ""

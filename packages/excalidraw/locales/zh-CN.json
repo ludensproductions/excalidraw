@@ -11,8 +11,6 @@
     "copyAsPng": "复制为 PNG 到剪贴板",
     "copyAsSvg": "复制为 SVG 到剪贴板",
     "copyText": "复制文本到剪贴板",
-    "copySource": "复制源码到剪贴板",
-    "convertToCode": "转换成代码",
     "bringForward": "上移一层",
     "sendToBack": "置于底层",
     "bringToFront": "置于顶层",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "选择画框中的所有元素",
     "removeAllElementsFromFrame": "分离出画框中的所有元素",
     "eyeDropper": "从画布上取色",
-    "textToDiagram": "文字至图表",
     "prompt": "Prompt",
     "followUs": "关注我们",
     "discordChat": "Discord 群组",
@@ -307,12 +304,10 @@
     "link": "为选定的形状添加或更改链接",
     "eraser": "橡皮",
     "frame": "画框工具",
-    "magicframe": "线框图至代码",
     "embeddable": "嵌入网页",
     "laser": "激光笔",
     "hand": "抓手（平移工具）",
     "extraTools": "更多工具",
-    "mermaidToExcalidraw": "Mermaid 至 Excalidraw",
     "convertElementType": "切换形状种类"
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "图片",
     "group": "组",
     "frame": "画框",
-    "magicframe": "线框图至代码",
+    "magicframe": "画框",
     "embeddable": "嵌入网页",
     "selection": "选择",
     "iframe": "IFrame"
@@ -401,10 +396,7 @@
     "disk_button": "保存为文件",
     "link_title": "分享链接",
     "link_details": "导出为只读链接。",
-    "link_button": "导出链接",
-    "excalidrawplus_description": "将画布保存到您的 Excalidraw+ 工作区。",
-    "excalidrawplus_button": "导出",
-    "excalidrawplus_exportError": "暂时无法导出到 Excalidraw+ ..."
+    "link_button": "导出链接"
   },
   "helpDialog": {
     "blog": "浏览我们的博客",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "是否前往 Excalidraw+ ？",
       "menuHint": "导出、首选项、语言……"
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "保存到本地",
         "button": "保存到本地",
         "description": "将画布数据导出为文件，以便以后导入。"
-      },
-      "excalidrawPlus": {
-        "title": "Excalidraw+",
-        "button": "导出到 Excalidraw+",
-        "description": "将画布保存到您的 Excalidraw+ 工作区。"
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": "加载外部绘图将<bold>替换您现有的内容</bold>。<br></br>您可以先使用下列方式备份您的绘图。"
       }
     }
-  },
-  "mermaid": {
-    "title": "Mermaid 至 Excalidraw",
-    "button": "插入",
-    "description": "目前仅支持<flowchartLink>流程图</flowchartLink>、<sequenceLink>序列图</sequenceLink>和<classLink>类图</classLink>。其他类型在 Excalidraw 中将以图像呈现。",
-    "syntax": "Mermaid 语法",
-    "preview": "预览",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": "快速搜索"

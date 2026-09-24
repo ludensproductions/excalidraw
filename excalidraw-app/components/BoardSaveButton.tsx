@@ -29,8 +29,8 @@ export const BoardSaveButton: React.FC = () => {
     status === "saving"
       ? t("app.saving")
       : status === "saved"
-        ? t("app.saved")
-        : activeBoard.name ?? t("app.saveBoard");
+      ? t("app.saved")
+      : activeBoard.name ?? t("app.saveBoard");
 
   return (
     <button
@@ -43,7 +43,7 @@ export const BoardSaveButton: React.FC = () => {
       disabled={status === "saving"}
       title={
         activeBoard.name
-          ? t("app.saveBoard") + ` "${activeBoard.name}"`
+          ? `${t("app.saveBoard")} "${activeBoard.name}"`
           : t("app.saveBoard")
       }
     >

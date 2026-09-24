@@ -11,8 +11,6 @@
     "copyAsPng": "Копиране в клипборда",
     "copyAsSvg": "Копирано в клипборда като SVG",
     "copyText": "Копирай в клипборда като текст",
-    "copySource": "Копирай източника в клипборда",
-    "convertToCode": "Конвертирай в код",
     "bringForward": "Преместване напред",
     "sendToBack": "Изнасяне назад",
     "bringToFront": "Изнасяне отпред",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "Избери всички елементи в рамка",
     "removeAllElementsFromFrame": "Премахни всички елементи от рамка",
     "eyeDropper": "Избери цвят от платното",
-    "textToDiagram": "Текст към диаграма",
     "prompt": "",
     "followUs": "Последвайте ни",
     "discordChat": "Дискорд чат",
@@ -307,12 +304,10 @@
     "link": "",
     "eraser": "Гума",
     "frame": "Инструмент за рамки",
-    "magicframe": "",
     "embeddable": "",
     "laser": "Лазерна показалка",
     "hand": "",
     "extraTools": "Още инструменти",
-    "mermaidToExcalidraw": "Mermaid към Excalidraw",
     "convertElementType": ""
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "Изображение",
     "group": "Група",
     "frame": "Рамка",
-    "magicframe": "",
+    "magicframe": "Рамка",
     "embeddable": "",
     "selection": "",
     "iframe": "IFrame"
@@ -401,10 +396,7 @@
     "disk_button": "Запази като файл",
     "link_title": "Връзка за споделяне",
     "link_details": "",
-    "link_button": "",
-    "excalidrawplus_description": "",
-    "excalidrawplus_button": "Експорт",
-    "excalidrawplus_exportError": ""
+    "link_button": ""
   },
   "helpDialog": {
     "blog": "Прочетете нашия блог",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "",
       "menuHint": "Експорт, предпочитания, езици, ..."
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "Запази към диск",
         "button": "Запази към диск",
         "description": ""
-      },
-      "excalidrawPlus": {
-        "title": "Excalidraw+",
-        "button": "Експортирай към Excalidraw+",
-        "description": "Запази сцената към Excalidraw+ работното място."
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": ""
       }
     }
-  },
-  "mermaid": {
-    "title": "",
-    "button": "Вмъкни",
-    "description": "",
-    "syntax": "Mermaid Синтаксис",
-    "preview": "Преглед",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": ""

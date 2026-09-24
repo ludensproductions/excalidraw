@@ -1,7 +1,8 @@
 import Trans from "@excalidraw/excalidraw/components/Trans";
 import { t } from "@excalidraw/excalidraw/i18n";
-import * as Sentry from "@sentry/browser";
 import React from "react";
+
+import { shouldInitializeSentry } from "../sentryConfig";
 
 interface TopErrorBoundaryState {
   hasError: boolean;
@@ -33,16 +34,23 @@ export class TopErrorBoundary extends React.Component<
       }
     }
 
-    Sentry.withScope((scope) => {
-      scope.setExtras(errorInfo);
-      const eventId = Sentry.captureException(error);
-
-      this.setState((state) => ({
-        hasError: true,
-        sentryEventId: eventId,
-        localStorage: JSON.stringify(_localStorage),
-      }));
+    this.setState({
+      hasError: true,
+      localStorage: JSON.stringify(_localStorage),
     });
+
+    if (!shouldInitializeSentry()) {
+      return;
+    }
+
+    void import("../sentry")
+      .then(({ captureTopLevelError }) => {
+        const eventId = captureTopLevelError(error, errorInfo);
+        this.setState({ sentryEventId: eventId });
+      })
+      .catch((reportError) => {
+        console.error("Failed to report error to Sentry:", reportError);
+      });
   }
 
   private selectTextArea(event: React.MouseEvent<HTMLTextAreaElement>) {

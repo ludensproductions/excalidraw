@@ -1,5 +1,6 @@
 import { actionToggleTheme } from "../../actions";
 import { t } from "../../i18n";
+
 import { DEFAULT_CATEGORIES } from "./types";
 
 import type { CommandPaletteItem } from "./types";

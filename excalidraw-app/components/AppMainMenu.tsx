@@ -18,6 +18,7 @@ import {
   collabAPIAtom,
   isOwnerAtom,
 } from "../collab/Collab";
+import { LanguageList } from "../app-language/LanguageList";
 import { getCollaborationLinkData } from "../data";
 import { DrawingsStore } from "../data/DrawingsStore";
 import { SharedBoardsStore } from "../data/SharedBoardsStore";
@@ -227,6 +228,9 @@ export const AppMainMenu: React.FC<{
       {permissions.clearCanvas && <MainMenu.DefaultItems.ClearCanvas />}
       <MainMenu.Separator />
       {permissions.preferences && <MainMenu.DefaultItems.Preferences />}
+      <MainMenu.ItemCustom>
+        <LanguageList style={{ width: "100%" }} />
+      </MainMenu.ItemCustom>
       {permissions.toggleTheme && (
         <MainMenu.DefaultItems.ToggleTheme
           allowSystemTheme

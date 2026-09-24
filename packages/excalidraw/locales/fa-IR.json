@@ -11,8 +11,6 @@
     "copyAsPng": "کپی در حافطه موقت به صورت PNG",
     "copyAsSvg": "کپی در حافطه موقت به صورت SVG",
     "copyText": "کپی در حافطه موقت به صورت متن",
-    "copySource": "کپی منبع در حافظه موقت",
-    "convertToCode": "تبدیل به کد",
     "bringForward": "جلو آوردن",
     "sendToBack": "ارسال به عقب",
     "bringToFront": "جلو آوردن",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "همه آیتم های در فریم را انتخاب کنید",
     "removeAllElementsFromFrame": "حذف همه آیتم های داخل فریم",
     "eyeDropper": "انتخاب رنگ از بوم",
-    "textToDiagram": "متن به دیاگرام",
     "prompt": "فوری",
     "followUs": "ما را دنبال کنید",
     "discordChat": "چت دیسکورد",
@@ -307,12 +304,10 @@
     "link": "افزودن/به‌روزرسانی لینک برای شکل انتخابی",
     "eraser": "پاک کن",
     "frame": "ابزار فریم",
-    "magicframe": "وایرفریم به کد",
     "embeddable": "افزونه وب",
     "laser": "اشاره گر لیزری",
     "hand": "دست (ابزار پانینگ)",
     "extraTools": "ابزارهای بیشتر",
-    "mermaidToExcalidraw": "مرمید به excalidraw",
     "convertElementType": ""
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "تصویر",
     "group": "گروه",
     "frame": "قاب",
-    "magicframe": "وایرفریم به کد",
+    "magicframe": "قاب",
     "embeddable": "افزونه وب",
     "selection": "انتخاب",
     "iframe": "آی فریم"
@@ -401,10 +396,7 @@
     "disk_button": "ذخیره در فایل",
     "link_title": "لینک قابل اشتراک‌گذاری",
     "link_details": "خروجی به عنوان یک پیوند فقط خواندنی.",
-    "link_button": "خروجی در فایل",
-    "excalidrawplus_description": "صحنه را در فضای کاری Excalidraw+ خود ذخیره کنید.",
-    "excalidrawplus_button": "خروجی گرفتن",
-    "excalidrawplus_exportError": "در حال حاضر نمی‌توان به Excalidraw+ صادر کرد..."
+    "link_button": "خروجی در فایل"
   },
   "helpDialog": {
     "blog": "بلاگ ما را بخوانید",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "آیا می‌خواهید به جای آن به Excalidraw+ بروید؟",
       "menuHint": "خروجی، ترجیحات، زبان ها، ..."
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "ذخیره در دیسک",
         "button": "ذخیره در دیسک",
         "description": "خروجی از داده های صحنه را به عنوان فایل که بعدا می توانید بیافزایید."
-      },
-      "excalidrawPlus": {
-        "title": "Excalidraw+",
-        "button": "خروجی به Excalidraw+",
-        "description": "ذخیره صفحه در میز کار Excalidraw+."
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": "بارگذاری از فایل <bold>جایگزین بشه با محتوای موجود</bold>.<br></br> می توانید ابتدا با استفاده از یکی از گزینه های زیر از نقاشی خود نسخه پشتیبان تهیه کنید."
       }
     }
-  },
-  "mermaid": {
-    "title": "مرمید به excalidraw",
-    "button": "درج",
-    "description": "فعلا فقط <flowchartLink> فلوچارت </flowchartLink> ، <sequenceLink> توالی </sequenceLink> و <classLink> کلاس </classLink> نمودارها پشتیبانی می شوند. انواع دیگر به صورت تصویر در Excalidraw ارائه خواهند شد.",
-    "syntax": "مرمید syntax",
-    "preview": "پیشنمایش",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": "جستجو فوری"

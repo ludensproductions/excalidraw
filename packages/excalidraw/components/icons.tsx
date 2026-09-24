@@ -76,18 +76,6 @@ const arrowheadPreviewIconProps: Opts = {
 
 // -----------------------------------------------------------------------------
 
-// tabler-icons: present
-export const PlusPromoIcon = createIcon(
-  <g strokeWidth="1.5">
-    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-    <rect x={3} y={8} width={18} height={4} rx={1} />
-    <line x1={12} y1={8} x2={12} y2={21} />
-    <path d="M19 12v7a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-7" />
-    <path d="M7.5 8a2.5 2.5 0 0 1 0 -5a4.8 8 0 0 1 4.5 5a4.8 8 0 0 1 4.5 -5a2.5 2.5 0 0 1 0 5" />
-  </g>,
-  tablerIconProps,
-);
-
 // tabler-icons: book
 export const LibraryIcon = createIcon(
   <g strokeWidth="1.25">
@@ -713,16 +701,6 @@ export const warning = createIcon(
 export const shareIOS = createIcon(
   "M16 5l-1.42 1.42-1.59-1.59V16h-1.98V4.83L9.42 6.42 8 5l4-4 4 4zm4 5v11c0 1.1-.9 2-2 2H6c-1.11 0-2-.9-2-2V10c0-1.11.89-2 2-2h3v2H6v11h12V10h-3V8h3c1.1 0 2 .89 2 2z",
   { width: 24, height: 24 },
-);
-
-export const exportToPlus = createIcon(
-  <g strokeWidth={1.25}>
-    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-    <path d="M8 9h-1a2 2 0 0 0 -2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-8a2 2 0 0 0 -2 -2h-1" />
-    <path d="M12 14v-11" />
-    <path d="M9 6l3 -3l3 3" />
-  </g>,
-  tablerIconProps,
 );
 
 export const shareWindows = createIcon(
@@ -1917,23 +1895,6 @@ export const frameToolIcon = createIcon(
   tablerIconProps,
 );
 
-export const mermaidLogoIcon = createIcon(
-  <path
-    fill="currentColor"
-    d="M407.48,111.18C335.587,108.103 269.573,152.338 245.08,220C220.587,152.338 154.573,108.103 82.68,111.18C80.285,168.229 107.577,222.632 154.74,254.82C178.908,271.419 193.35,298.951 193.27,328.27L193.27,379.13L296.9,379.13L296.9,328.27C296.816,298.953 311.255,271.42 335.42,254.82C382.596,222.644 409.892,168.233 407.48,111.18Z"
-  />,
-);
-
-// tabler-icons: refresh
-export const RetryIcon = createIcon(
-  <g strokeWidth="1.5">
-    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-    <path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4" />
-    <path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" />
-  </g>,
-  tablerIconProps,
-);
-
 export const stackPushIcon = createIcon(
   <g>
     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -1973,52 +1934,6 @@ export const laserPointerToolIcon = createIcon(
   20,
 );
 
-export const MagicIcon = createIcon(
-  <g stroke="currentColor" fill="none">
-    <path stroke="none" d="M0 0h24v24H0z" />
-    <path d="M6 21l15 -15l-3 -3l-15 15l3 3" />
-    <path d="M15 6l3 3" />
-    <path d="M9 3a2 2 0 0 0 2 2a2 2 0 0 0 -2 2a2 2 0 0 0 -2 -2a2 2 0 0 0 2 -2" />
-    <path d="M19 13a2 2 0 0 0 2 2a2 2 0 0 0 -2 2a2 2 0 0 0 -2 -2a2 2 0 0 0 2 -2" />
-  </g>,
-  tablerIconProps,
-);
-
-export const MagicIconThin = createIcon(
-  <g strokeWidth={1.25}>
-    <path stroke="none" d="M0 0h24v24H0z" />
-    <path d="M6 21l15 -15l-3 -3l-15 15l3 3" />
-    <path d="M15 6l3 3" />
-    <path d="M9 3a2 2 0 0 0 2 2a2 2 0 0 0 -2 2a2 2 0 0 0 -2 -2a2 2 0 0 0 2 -2" />
-    <path d="M19 13a2 2 0 0 0 2 2a2 2 0 0 0 -2 2a2 2 0 0 0 -2 -2a2 2 0 0 0 2 -2" />
-  </g>,
-  tablerIconProps,
-);
-
-export const OpenAIIcon = createIcon(
-  <g stroke="currentColor" fill="none">
-    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-    <path d="M11.217 19.384a3.501 3.501 0 0 0 6.783 -1.217v-5.167l-6 -3.35" />
-    <path d="M5.214 15.014a3.501 3.501 0 0 0 4.446 5.266l4.34 -2.534v-6.946" />
-    <path d="M6 7.63c-1.391 -.236 -2.787 .395 -3.534 1.689a3.474 3.474 0 0 0 1.271 4.745l4.263 2.514l6 -3.348" />
-    <path d="M12.783 4.616a3.501 3.501 0 0 0 -6.783 1.217v5.067l6 3.45" />
-    <path d="M18.786 8.986a3.501 3.501 0 0 0 -4.446 -5.266l-4.34 2.534v6.946" />
-    <path d="M18 16.302c1.391 .236 2.787 -.395 3.534 -1.689a3.474 3.474 0 0 0 -1.271 -4.745l-4.308 -2.514l-5.955 3.42" />
-  </g>,
-  tablerIconProps,
-);
-
-export const fullscreenIcon = createIcon(
-  <g stroke="currentColor" fill="none">
-    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-    <path d="M4 8v-2a2 2 0 0 1 2 -2h2" />
-    <path d="M4 16v2a2 2 0 0 0 2 2h2" />
-    <path d="M16 4h2a2 2 0 0 1 2 2v2" />
-    <path d="M16 20h2a2 2 0 0 0 2 -2v-2" />
-  </g>,
-  tablerIconProps,
-);
-
 export const eyeIcon = createIcon(
   <g stroke="currentColor" fill="none" strokeWidth={1.5}>
     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -2034,32 +1949,6 @@ export const eyeClosedIcon = createIcon(
     <path d="M10.585 10.587a2 2 0 0 0 2.829 2.828" />
     <path d="M16.681 16.673a8.717 8.717 0 0 1 -4.681 1.327c-3.6 0 -6.6 -2 -9 -6c1.272 -2.12 2.712 -3.678 4.32 -4.674m2.86 -1.146a9.055 9.055 0 0 1 1.82 -.18c3.6 0 6.6 2 9 6c-.666 1.11 -1.379 2.067 -2.138 2.87" />
     <path d="M3 3l18 18" />
-  </g>,
-  tablerIconProps,
-);
-
-export const brainIcon = createIcon(
-  <g stroke="currentColor" fill="none">
-    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-    <path d="M15.5 13a3.5 3.5 0 0 0 -3.5 3.5v1a3.5 3.5 0 0 0 7 0v-1.8" />
-    <path d="M8.5 13a3.5 3.5 0 0 1 3.5 3.5v1a3.5 3.5 0 0 1 -7 0v-1.8" />
-    <path d="M17.5 16a3.5 3.5 0 0 0 0 -7h-.5" />
-    <path d="M19 9.3v-2.8a3.5 3.5 0 0 0 -7 0" />
-    <path d="M6.5 16a3.5 3.5 0 0 1 0 -7h.5" />
-    <path d="M5 9.3v-2.8a3.5 3.5 0 0 1 7 0v10" />
-  </g>,
-  tablerIconProps,
-);
-
-export const brainIconThin = createIcon(
-  <g strokeWidth={1.25}>
-    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-    <path d="M15.5 13a3.5 3.5 0 0 0 -3.5 3.5v1a3.5 3.5 0 0 0 7 0v-1.8" />
-    <path d="M8.5 13a3.5 3.5 0 0 1 3.5 3.5v1a3.5 3.5 0 0 1 -7 0v-1.8" />
-    <path d="M17.5 16a3.5 3.5 0 0 0 0 -7h-.5" />
-    <path d="M19 9.3v-2.8a3.5 3.5 0 0 0 -7 0" />
-    <path d="M6.5 16a3.5 3.5 0 0 1 0 -7h.5" />
-    <path d="M5 9.3v-2.8a3.5 3.5 0 0 1 7 0v10" />
   </g>,
   tablerIconProps,
 );

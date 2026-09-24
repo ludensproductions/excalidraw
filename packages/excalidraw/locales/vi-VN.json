@@ -11,8 +11,6 @@
     "copyAsPng": "Sao chép vào bộ nhớ tạm dưới dạng PNG",
     "copyAsSvg": "Sao chép vào bộ nhớ tạm dưới dạng SVG",
     "copyText": "Sao chép vào bộ nhớ tạm dưới dạng chữ",
-    "copySource": "Sao chép vào bộ nhớ tạm",
-    "convertToCode": "Chuyển thành mã",
     "bringForward": "Đưa ra trước",
     "sendToBack": "Hạ xuống dưới",
     "bringToFront": "Đưa ra đầu tiên",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "Chọn tất cả phần tử trong khung",
     "removeAllElementsFromFrame": "Loại bỏ tất cả các phần tử trong khung",
     "eyeDropper": "Chọn màu từ vùng vẽ",
-    "textToDiagram": "Văn bản sang sơ đồ",
     "prompt": "Lời nhắc",
     "followUs": "Theo dõi chúng tôi",
     "discordChat": "Trò chuyện Discord",
@@ -307,12 +304,10 @@
     "link": "Thêm / Cập nhật liên kết cho hình đã chọn",
     "eraser": "Xóa",
     "frame": "Công cụ tạo khung",
-    "magicframe": "Wireframe thành code",
     "embeddable": "Nhúng Web",
     "laser": "Con trỏ laser",
     "hand": "Tay kéo",
     "extraTools": "Công cụ khác",
-    "mermaidToExcalidraw": "Mermaid sang Excalidraw",
     "convertElementType": ""
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "Hình ảnh",
     "group": "Nhóm",
     "frame": "Khung hình",
-    "magicframe": "Wireframe thành code",
+    "magicframe": "Khung hình",
     "embeddable": "Nhúng Web",
     "selection": "Lựa chọn",
     "iframe": "IFrame"
@@ -401,10 +396,7 @@
     "disk_button": "Lưu vào tệp tin",
     "link_title": "Liên kết có thể chia sẻ",
     "link_details": "Tạo liên kết chỉ xem",
-    "link_button": "Tạo liên kết",
-    "excalidrawplus_description": "Lưu bản vẽ vào không gian làm việc Excalidraw+ của bạn.",
-    "excalidrawplus_button": "Xuất",
-    "excalidrawplus_exportError": "Hiện tại không thể xuất sang Excalidraw+..."
+    "link_button": "Tạo liên kết"
   },
   "helpDialog": {
     "blog": "Đọc blog của chúng tôi",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "",
       "menuHint": ""
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "",
         "button": "",
         "description": ""
-      },
-      "excalidrawPlus": {
-        "title": "",
-        "button": "",
-        "description": ""
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": ""
       }
     }
-  },
-  "mermaid": {
-    "title": "",
-    "button": "",
-    "description": "",
-    "syntax": "",
-    "preview": "",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": ""

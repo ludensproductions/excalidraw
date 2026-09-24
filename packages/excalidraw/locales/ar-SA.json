@@ -11,8 +11,6 @@
     "copyAsPng": "نسخ إلى الحافظة بصيغة PNG",
     "copyAsSvg": "نسخ إلى الحافظة بصيغة SVG",
     "copyText": "نسخ إلى الحافظة كنص",
-    "copySource": "نسخ المصدر إلى الحافظة",
-    "convertToCode": "تحويل إلى كود",
     "bringForward": "جلب للأمام",
     "sendToBack": "أرسل للخلف",
     "bringToFront": "أحضر للأمام",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "تحديد جميع العناصر في الإطار",
     "removeAllElementsFromFrame": "إزالة جميع العناصر من الإطار",
     "eyeDropper": "اختيار اللون من القماش",
-    "textToDiagram": "نص إلى رسم بياني",
     "prompt": "تعليمات",
     "followUs": "تابعنا",
     "discordChat": "دردشة ديسكورد",
@@ -307,12 +304,10 @@
     "link": "إضافة/تحديث الرابط للشكل المحدد",
     "eraser": "ممحاة",
     "frame": "أداة الإطار",
-    "magicframe": "Wireframe إلى كود",
     "embeddable": "تضمين ويب",
     "laser": "مؤشر ليزر",
     "hand": "يد (أداة الإزاحة)",
     "extraTools": "المزيد من الأدوات",
-    "mermaidToExcalidraw": "من Mermaid إلى Excalidraw",
     "convertElementType": ""
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "صورة",
     "group": "مجموعة",
     "frame": "إطار",
-    "magicframe": "Wireframe إلى كود",
+    "magicframe": "إطار",
     "embeddable": "تضمين ويب",
     "selection": "تحديد",
     "iframe": "IFrame"
@@ -401,10 +396,7 @@
     "disk_button": "حفظ إلى ملف",
     "link_title": "رابط قابل للمشاركة",
     "link_details": "تصدير الملف للمشاهدة فقط.",
-    "link_button": "تصدير كرابط",
-    "excalidrawplus_description": "حفظ المشهد إلى مساحة العمل +Excalidraw الخاصة بك.",
-    "excalidrawplus_button": "تصدير",
-    "excalidrawplus_exportError": "تعذر التص несп في الوقت الحالي إلى +Excalidraw..."
+    "link_button": "تصدير كرابط"
   },
   "helpDialog": {
     "blog": "اقرأ مدونتنا",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "هل تريد الانتقال إلى Excalidraw+ بدلاً من ذلك؟",
       "menuHint": "التصدير، التفضيلات، اللغات..."
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "حفظ الملف على الجهاز",
         "button": "حفظ الملف على الجهاز",
         "description": "تصدير بيانات المشهد إلى ملف يمكنك الاستيراد منه لاحقًا."
-      },
-      "excalidrawPlus": {
-        "title": "Excalidraw+",
-        "button": "تصدير إلى Excalidraw+",
-        "description": "حفظ المشهد إلى مساحة العمل +Excalidraw الخاصة بك."
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": "سيتسبب تحميل رسمة خارجية <bold>باستبدال محتواك الموجود حاليًا</bold>.<br></br>بإمكانك إجراء النسخ الاحتياطي لرسمتك الحالية باستخدام أحد الخيارات أدناه."
       }
     }
-  },
-  "mermaid": {
-    "title": "Mermaid إلى Excalidraw",
-    "button": "إدراج",
-    "description": "حاليًا، يتم دعم <flowchartLink>مخططات التدفق</flowchartLink>، <sequenceLink>التسلسلات</sequenceLink>، و<classLink>الفئات</classLink> فقط. سيتم عرض الأنواع الأخرى كصورة في Excalidraw.",
-    "syntax": "صيغة Mermaid",
-    "preview": "معاينة",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": "بحث سريع"

@@ -284,7 +284,7 @@ The `updateScene` API has changed due to the added `Store` component, as part of
 
 - `ExcalidrawTextElement.baseline` was removed and replaced with a vertical offset computation based on font metrics, performed on each text element re-render. In case of custom font usage, extend the `FONT_METRICS` object with the related properties. [#7693](https://github.com/excalidraw/excalidraw/pull/7693)
 
-- `ExcalidrawEmbeddableElement.validated` was removed and moved to the private editor state. This should largely not affect your apps unless you were reading from this attribute. We keep validating embeddable urls internally, and the public [`props.validateEmbeddable`](https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/props#validateembeddable) still applies. [#7539](https://github.com/excalidraw/excalidraw/pull/7539)
+- `ExcalidrawEmbeddableElement.validated` was removed and moved to the private editor state. This should largely not affect your apps unless you were reading from this attribute. We keep validating embeddable urls internally, and the public [`props.validateEmbeddable`](https://excalidraw.issirmax.mx/docs/@excalidraw/excalidraw/api/props#validateembeddable) still applies. [#7539](https://github.com/excalidraw/excalidraw/pull/7539)
 
 - Stats container CSS has changed, so if you're using `renderCustomStats`, you may need to adjust your styles to retain the same layout. [#8361](https://github.com/excalidraw/excalidraw/pull/8361)
 
@@ -292,7 +292,7 @@ The `updateScene` API has changed due to the added `Store` component, as part of
 
 ### Features
 
-- Prefer user defined coordinates and dimensions when creating a frame using [`convertToExcalidrawElements`](https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/excalidraw-element-skeleton#converttoexcalidrawelements) [#8517](https://github.com/excalidraw/excalidraw/pull/8517)
+- Prefer user defined coordinates and dimensions when creating a frame using [`convertToExcalidrawElements`](https://excalidraw.issirmax.mx/docs/@excalidraw/excalidraw/api/excalidraw-element-skeleton#converttoexcalidrawelements) [#8517](https://github.com/excalidraw/excalidraw/pull/8517)
 
 - `props.initialData` can now be a function that returns `ExcalidrawInitialDataState` or `Promise<ExcalidrawInitialDataState>` [#8107](https://github.com/excalidraw/excalidraw/pull/8135)
 
@@ -390,25 +390,17 @@ The `updateScene` API has changed due to the added `Store` component, as part of
 
 - Ability to debug the state of fractional indices [#8235](https://github.com/excalidraw/excalidraw/pull/8235)
 
-- Improve mermaid detection on paste [#8287](https://github.com/excalidraw/excalidraw/pull/8287)
-
-- Upgrade mermaid-to-excalidraw to v1.1.0 [#8226](https://github.com/excalidraw/excalidraw/pull/8226)
-
 - Bump max file size [#8220](https://github.com/excalidraw/excalidraw/pull/8220)
 
 - Smarter preferred lang detection [#8205](https://github.com/excalidraw/excalidraw/pull/8205)
 
 - Support Stats bound text `fontSize` editing [#8187](https://github.com/excalidraw/excalidraw/pull/8187)
 
-- Paste as mermaid if applicable [#8116](https://github.com/excalidraw/excalidraw/pull/8116)
-
 - Stop autoselecting text on text edit on mobile [#8076](https://github.com/excalidraw/excalidraw/pull/8076)
 
 - Create new text with width [#8038](https://github.com/excalidraw/excalidraw/pull/8038)
 
 - Wrap long text when pasting [#8026](https://github.com/excalidraw/excalidraw/pull/8026)
-
-- Upgrade to mermaid-to-excalidraw v1 🚀 [#8022](https://github.com/excalidraw/excalidraw/pull/8022)
 
 - Rerender canvas on focus [#8035](https://github.com/excalidraw/excalidraw/pull/8035)
 
@@ -431,8 +423,6 @@ The `updateScene` API has changed due to the added `Store` component, as part of
 - Fractional indexing [#7359](https://github.com/excalidraw/excalidraw/pull/7359)
 
 - Show firefox-compatible command palette shortcut alias [#7825](https://github.com/excalidraw/excalidraw/pull/7825)
-
-- Upgrade mermaid-to-excalidraw to 0.3.0 [#7819](https://github.com/excalidraw/excalidraw/pull/7819)
 
 - Support to not render remote cursor & username [#7130](https://github.com/excalidraw/excalidraw/pull/7130)
 
@@ -662,8 +652,6 @@ The `updateScene` API has changed due to the added `Store` component, as part of
 
 - Restore linear dimensions from points [#8062](https://github.com/excalidraw/excalidraw/pull/8062)
 
-- Lp plus url [#8056](https://github.com/excalidraw/excalidraw/pull/8056)
-
 - Fix twitter og image [#8050](https://github.com/excalidraw/excalidraw/pull/8050)
 
 - Flaky snapshot tests with floating point precision issues [#8049](https://github.com/excalidraw/excalidraw/pull/8049)
@@ -745,8 +733,6 @@ The `updateScene` API has changed due to the added `Store` component, as part of
 - Remove dependency of t from clipboard and image [#7712](https://github.com/excalidraw/excalidraw/pull/7712)
 
 - Remove scene hack from export.ts & remove pass elementsMap to getContainingFrame [#7713](https://github.com/excalidraw/excalidraw/pull/7713)
-
-- Decouple pure functions from hyperlink to prevent mermaid bundling [#7710](https://github.com/excalidraw/excalidraw/pull/7710)
 
 - Make bounds independent of scene [#7679](https://github.com/excalidraw/excalidraw/pull/7679)
 
@@ -868,7 +854,7 @@ define: {
 
 - Support `excalidrawAPI` prop for accessing the Excalidraw API [#7251](https://github.com/excalidraw/excalidraw/pull/7251).
 
-- Export [`getCommonBounds`](https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/utils#getcommonbounds) helper from the package [#7247](https://github.com/excalidraw/excalidraw/pull/7247).
+- Export [`getCommonBounds`](https://excalidraw.issirmax.mx/docs/@excalidraw/excalidraw/api/utils#getcommonbounds) helper from the package [#7247](https://github.com/excalidraw/excalidraw/pull/7247).
 
 - Support frames via programmatic API [#7205](https://github.com/excalidraw/excalidraw/pull/7205).
 
@@ -892,7 +878,7 @@ define: {
 
 - Additionally `ready` and `readyPromise` from the API have been discontinued. These APIs were found to be superfluous, and as part of the effort to streamline the APIs and maintain simplicity, they were removed in version v0.17.0 [#7251](https://github.com/excalidraw/excalidraw/pull/7251).
 
-- [`useDevice`](https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/utils#usedevice) hook's return value was changed to differentiate between `editor` and `viewport` breakpoints. [#7243](https://github.com/excalidraw/excalidraw/pull/7243)
+- [`useDevice`](https://excalidraw.issirmax.mx/docs/@excalidraw/excalidraw/api/utils#usedevice) hook's return value was changed to differentiate between `editor` and `viewport` breakpoints. [#7243](https://github.com/excalidraw/excalidraw/pull/7243)
 
 ### Build
 
@@ -921,8 +907,6 @@ define: {
 - Make adaptive-roughness less aggressive [#7250](https://github.com/excalidraw/excalidraw/pull/7250)
 
 - Render frames on export [#7210](https://github.com/excalidraw/excalidraw/pull/7210)
-
-- Support mermaid flowchart and sequence diagrams to excalidraw diagrams 🥳 [#6920](https://github.com/excalidraw/excalidraw/pull/6920)
 
 - Support frames via programmatic API [#7205](https://github.com/excalidraw/excalidraw/pull/7205)
 
@@ -1048,8 +1032,8 @@ define: {
 
 - Support creating containers, linear elements, text containers, labelled arrows and arrow bindings programatically [#6546](https://github.com/excalidraw/excalidraw/pull/6546)
 - Introducing Web-Embeds (alias iframe element)[#6691](https://github.com/excalidraw/excalidraw/pull/6691)
-- Added [`props.validateEmbeddable`](https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/props#validateembeddable) to customize embeddable src url validation. [#6691](https://github.com/excalidraw/excalidraw/pull/6691)
-- Add support for `opts.fitToViewport` and `opts.viewportZoomFactor` in the [`ExcalidrawAPI.scrollToContent`](https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/props/excalidraw-api#scrolltocontent) API. [#6581](https://github.com/excalidraw/excalidraw/pull/6581).
+- Added [`props.validateEmbeddable`](https://excalidraw.issirmax.mx/docs/@excalidraw/excalidraw/api/props#validateembeddable) to customize embeddable src url validation. [#6691](https://github.com/excalidraw/excalidraw/pull/6691)
+- Add support for `opts.fitToViewport` and `opts.viewportZoomFactor` in the [`ExcalidrawAPI.scrollToContent`](https://excalidraw.issirmax.mx/docs/@excalidraw/excalidraw/api/props/excalidraw-api#scrolltocontent) API. [#6581](https://github.com/excalidraw/excalidraw/pull/6581).
 - Properly sanitize element `link` urls. [#6728](https://github.com/excalidraw/excalidraw/pull/6728).
 - Sidebar component now supports tabs — for more detailed description of new behavior and breaking changes, see the linked PR. [#6213](https://github.com/excalidraw/excalidraw/pull/6213)
 - Exposed `DefaultSidebar` component to allow modifying the default sidebar, such as adding custom tabs to it. [#6213](https://github.com/excalidraw/excalidraw/pull/6213)
@@ -1070,7 +1054,6 @@ define: {
 ### Features
 
 - allow `avif`, `jfif`, `webp`, `bmp`, `ico` image types [#6500](https://github.com/excalidraw/excalidraw/pull/6500)
-- Zen-mode/go-to-plus button style tweaks [#7006](https://github.com/excalidraw/excalidraw/pull/7006)
 
 - Holding down CMD/CTRL will disable snap to grid when grid is active [#6983](https://github.com/excalidraw/excalidraw/pull/6983)
 
@@ -1147,8 +1130,6 @@ define: {
 - IsBindableElement to affirm frames [#6900](https://github.com/excalidraw/excalidraw/pull/6900)
 
 - Use `device.isMobile` for sidebar trigger label breakpoint [#6994](https://github.com/excalidraw/excalidraw/pull/6994)
-
-- Export to plus url [#6980](https://github.com/excalidraw/excalidraw/pull/6980)
 
 - Z-index inconsistencies during addition / deletion in frames [#6914](https://github.com/excalidraw/excalidraw/pull/6914)
 
@@ -1328,23 +1309,23 @@ define: {
 
 ### Features
 
-- [`ExcalidrawAPI.scrollToContent`](https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/props/excalidraw-api#scrolltocontent) has new opts object allowing you to fit viewport to content, and animate the scrolling. [#6319](https://github.com/excalidraw/excalidraw/pull/6319)
+- [`ExcalidrawAPI.scrollToContent`](https://excalidraw.issirmax.mx/docs/@excalidraw/excalidraw/api/props/excalidraw-api#scrolltocontent) has new opts object allowing you to fit viewport to content, and animate the scrolling. [#6319](https://github.com/excalidraw/excalidraw/pull/6319)
 
 - Expose `useI18n()` hook return an object containing `t()` i18n helper and current `langCode`. You can use this in components you render as `<Excalidraw>` children to render any of our i18n locale strings. [#6224](https://github.com/excalidraw/excalidraw/pull/6224)
 
-- [`restoreElements`](https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/utils/restore#restoreelements) API now takes an optional parameter `opts` which currently supports the below attributes
+- [`restoreElements`](https://excalidraw.issirmax.mx/docs/@excalidraw/excalidraw/api/utils/restore#restoreelements) API now takes an optional parameter `opts` which currently supports the below attributes
 
 ```js
 { refreshDimensions?: boolean, repairBindings?: boolean }
 ```
 
-The same `opts` param has been added to [`restore`](https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/utils/restore#restore) API as well.
+The same `opts` param has been added to [`restore`](https://excalidraw.issirmax.mx/docs/@excalidraw/excalidraw/api/utils/restore#restore) API as well.
 
-For more details refer to the [docs](https://docs.excalidraw.com)
+For more details refer to the [docs](https://excalidraw.issirmax.mx)
 
 #### BREAKING CHANGE
 
-- The optional parameter `refreshDimensions` in [`restoreElements`](https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/utils/restore#restoreelements) has been removed and can be enabled via `opts`
+- The optional parameter `refreshDimensions` in [`restoreElements`](https://excalidraw.issirmax.mx/docs/@excalidraw/excalidraw/api/utils/restore#restoreelements) has been removed and can be enabled via `opts`
 
 ### Fixes
 
@@ -1407,8 +1388,6 @@ For more details refer to the [docs](https://docs.excalidraw.com)
 - Center align text when bind to container via context menu [#6451](https://github.com/excalidraw/excalidraw/pull/6451)
 
 - Update coords when text unbinded from its container [#6445](https://github.com/excalidraw/excalidraw/pull/6445)
-
-- Autoredirect to plus in prod only [#6446](https://github.com/excalidraw/excalidraw/pull/6446)
 
 - Fixing popover overflow on small screen [#6433](https://github.com/excalidraw/excalidraw/pull/6433)
 
@@ -1966,7 +1945,7 @@ Check out the [release notes](https://github.com/excalidraw/excalidraw/releases/
 - Expose [`serializeAsJSON`](https://github.com/excalidraw/excalidraw/blob/master/src/packages/excalidraw/README.md#serializeAsJSON) helper that we use when saving Excalidraw scene to a file [#3538](https://github.com/excalidraw/excalidraw/pull/3538).
 - Add support to render custom UI in the top right corner via [`renderTopRightUI`](https://github.com/excalidraw/excalidraw/blob/master/src/packages/excalidraw/README.md#renderTopRightUI) prop [#3539](https://github.com/excalidraw/excalidraw/pull/3539), [#3572](https://github.com/excalidraw/excalidraw/pull/3572) .
 
-  This also removes the GitHub icon, keeping it local to the https://excalidraw.com app.
+  This also removes the GitHub icon, keeping it local to the https://excalidraw.issirmax.mx app.
 
 ### Fixes
 

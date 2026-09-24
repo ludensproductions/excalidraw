@@ -6,7 +6,7 @@
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://excalidraw.com"
+          "value": "https://excalidraw.issirmax.mx"
         },
         {
           "key": "X-Content-Type-Options",
@@ -31,7 +31,7 @@
         },
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://excalidraw.com"
+          "value": "https://excalidraw.issirmax.mx"
         }
       ]
     },
@@ -52,14 +52,14 @@
   "redirects": [
     {
       "source": "/webex/:match*",
-      "destination": "https://for-webex.excalidraw.com"
+      "destination": "https://excalidraw.issirmax.mx/"
     },
     {
       "source": "/:path*",
       "has": [
         {
           "type": "host",
-          "value": "vscode.excalidraw.com"
+          "value": "vscode.excalidraw.issirmax.mx"
         }
       ],
       "destination": "https://marketplace.visualstudio.com/items?itemName=pomdtr.excalidraw-editor"

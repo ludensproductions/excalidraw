@@ -27,62 +27,8 @@
       }
     }
 
-    &__popover {
-      @keyframes ShareDialog__popover__scaleIn {
-        from {
-          opacity: 0;
-        }
-        to {
-          opacity: 1;
-        }
-      }
-
-      box-sizing: border-box;
-      z-index: 100;
-
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-      align-items: flex-start;
-      padding: 0.125rem 0.5rem;
-      gap: 0.125rem;
-
-      height: 1.125rem;
-
-      border: none;
-      border-radius: 0.6875rem;
-
-      font-family: "Assistant";
-      font-style: normal;
-      font-weight: 600;
-      font-size: 0.75rem;
-      line-height: 110%;
-
-      background: var(--color-success);
-      color: var(--color-success-text);
-
-      & > svg {
-        width: 0.875rem;
-        height: 0.875rem;
-      }
-
-      transform-origin: var(--radix-popover-content-transform-origin);
-      animation: ShareDialog__popover__scaleIn 150ms ease-out;
-    }
-
     &__picker {
       font-family: "Assistant";
-
-      &__illustration {
-        display: flex;
-        width: 100%;
-        align-items: center;
-        justify-content: center;
-
-        & svg {
-          filter: var(--theme-filter);
-        }
-      }
 
       &__header {
         display: flex;

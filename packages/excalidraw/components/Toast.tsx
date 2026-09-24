@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef } from "react";
 
+import { t } from "../i18n";
+
 import { CloseIcon } from "./icons";
 import { ToolButton } from "./ToolButton";
-import { t } from "../i18n";
 
 import "./Toast.scss";
 

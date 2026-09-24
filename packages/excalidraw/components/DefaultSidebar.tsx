@@ -1,6 +1,7 @@
 import clsx from "clsx";
 
 import {
+  CANVAS_SEARCH_TAB,
   DEFAULT_SIDEBAR,
   LIBRARY_SIDEBAR_TAB,
   composeEventHandlers,
@@ -15,9 +16,10 @@ import "../components/dropdownMenu/DropdownMenu.scss";
 
 import { useExcalidrawSetAppState } from "./App";
 import { LibraryMenu } from "./LibraryMenu";
+import { SearchMenu } from "./SearchMenu";
 import { Sidebar } from "./Sidebar/Sidebar";
 import { withInternalFallback } from "./hoc/withInternalFallback";
-import { LibraryIcon } from "./icons";
+import { LibraryIcon, searchIcon } from "./icons";
 
 import type { SidebarProps, SidebarTriggerProps } from "./Sidebar/common";
 
@@ -93,11 +95,17 @@ export const DefaultSidebar = Object.assign(
                 <Sidebar.TabTrigger tab={LIBRARY_SIDEBAR_TAB}>
                   {LibraryIcon}
                 </Sidebar.TabTrigger>
+                <Sidebar.TabTrigger tab={CANVAS_SEARCH_TAB}>
+                  {searchIcon}
+                </Sidebar.TabTrigger>
                 <DefaultSidebarTabTriggersTunnel.Out />
               </Sidebar.TabTriggers>
             </Sidebar.Header>
             <Sidebar.Tab tab={LIBRARY_SIDEBAR_TAB}>
               <LibraryMenu />
+            </Sidebar.Tab>
+            <Sidebar.Tab tab={CANVAS_SEARCH_TAB}>
+              <SearchMenu />
             </Sidebar.Tab>
             {children}
           </Sidebar.Tabs>

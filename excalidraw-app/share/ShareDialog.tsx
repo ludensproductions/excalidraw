@@ -256,11 +256,7 @@ const ActiveRoomDialog = ({
       )}
       <div className="ShareDialog__active__description">
         <p>
-          <span
-            role="img"
-            aria-hidden="true"
-            className="ShareDialog__active__description__emoji"
-          >
+          <span role="img" aria-hidden="true">
             🔒{" "}
           </span>
           {t("roomDialog.desc_privacy")}

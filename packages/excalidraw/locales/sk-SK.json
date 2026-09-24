@@ -11,8 +11,6 @@
     "copyAsPng": "Kopírovať do schránky ako PNG",
     "copyAsSvg": "Kopírovať do schránky ako SVG",
     "copyText": "Kopírovať do schránky ako text",
-    "copySource": "Kopírovať kód do schránky",
-    "convertToCode": "Konvertovať na kód",
     "bringForward": "Presunúť o úroveň dopredu",
     "sendToBack": "Presunúť dozadu",
     "bringToFront": "Presunúť dopredu",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "Vybrať všetky prvky v ráme",
     "removeAllElementsFromFrame": "Odstrániť všetky prvky z rámu",
     "eyeDropper": "Vybrať farbu z plátna",
-    "textToDiagram": "Text na diagram",
     "prompt": "Inštrukcia",
     "followUs": "Sledujte nás",
     "discordChat": "Discord chat",
@@ -307,12 +304,10 @@
     "link": "Pridať / Upraviť odkaz pre vybraný tvar",
     "eraser": "Guma",
     "frame": "Nástroj rám",
-    "magicframe": "Drôtený model na kód",
     "embeddable": "Web Embed",
     "laser": "Laserový ukazovateľ",
     "hand": "Ruka (nástroj pre pohyb plátna)",
     "extraTools": "Ďalšie nástroje",
-    "mermaidToExcalidraw": "Mermaid do Excalidraw",
     "convertElementType": "Prepnúť typ tvaru"
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "Obrázok",
     "group": "Skupina",
     "frame": "Rám",
-    "magicframe": "Drôtený model na kód",
+    "magicframe": "Rám",
     "embeddable": "Web Embed",
     "selection": "Výber",
     "iframe": "IFrame"
@@ -401,10 +396,7 @@
     "disk_button": "Uložiť do súboru",
     "link_title": "Odkaz na zdieľanie",
     "link_details": "Exportovať ako odkaz iba na čítanie.",
-    "link_button": "Exportovať ako odkaz",
-    "excalidrawplus_description": "Uložiť scénu do vášho Excalidraw+ pracovného priestoru.",
-    "excalidrawplus_button": "Exportovať",
-    "excalidrawplus_exportError": "Nepodarilo sa vykonať export do Excalidraw+..."
+    "link_button": "Exportovať ako odkaz"
   },
   "helpDialog": {
     "blog": "Prečítajte si náš blog",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "Chceli ste namiesto toho prejsť do Excalidraw+?",
       "menuHint": "Exportovanie, nastavenia, jazyky, ..."
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "Uložiť na disk",
         "button": "Uložiť na disk",
         "description": "Exportovať údaje scény do súboru, z ktorého môžu byť neskôr importované."
-      },
-      "excalidrawPlus": {
-        "title": "Excalidraw+",
-        "button": "Exportovať ako Excalidraw+",
-        "description": "Uložiť scénu do vášho Excalidraw+ pracovného priestoru."
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": "Načítanie externej kresby <bold>nahradí váš existujúci obsah</bold>.<br></br>Vašu kresbu môžete zálohovať jednou z nižšie uvedených možností."
       }
     }
-  },
-  "mermaid": {
-    "title": "Mermaid do Excalidraw",
-    "button": "Vložiť",
-    "description": "Aktuálne sú podporované iba <flowchartLink>vývojové diagramy</flowchartLink>, <sequenceLink>sekvenčné diagramy</sequenceLink> a <classLink>diagramy tried</classLink>. Ostatné typy budú v Excalidraw vykreslené ako obrázky.",
-    "syntax": "Mermaid syntax",
-    "preview": "Ukážka",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": "Rýchle vyhľadávanie"

@@ -11,8 +11,6 @@
     "copyAsPng": "העתקה ללוח כ־PNG",
     "copyAsSvg": "העתקה ללוח כ־SVG",
     "copyText": "העתק ללוח כטקסט",
-    "copySource": "העתקת המקור ללוח הגזירים",
-    "convertToCode": "המרה לקוד",
     "bringForward": "קירוב השכבה",
     "sendToBack": "הרחקה אחורה",
     "bringToFront": "קירוב לחזית",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "בחירת כל הרכיבים במסגרת",
     "removeAllElementsFromFrame": "הסרת כל הרכיבים מהמסגרת",
     "eyeDropper": "בחירת צבע מתוך הקנבס",
-    "textToDiagram": "טקסט לתרשים",
     "prompt": "בקשה",
     "followUs": "לעקוב אחרינו",
     "discordChat": "צ׳אט ב־Discord",
@@ -307,12 +304,10 @@
     "link": "הוספת / עדכון קישור לצורה מסוימת",
     "eraser": "מחק",
     "frame": "כלי מסגרת",
-    "magicframe": "תרשים קווי מתאר לקוד",
     "embeddable": "הטמעה באתר",
     "laser": "סמן לייזר",
     "hand": "יד (כלי הזזה)",
     "extraTools": "כלים נוספים",
-    "mermaidToExcalidraw": "Mermaid ל־Excalidraw",
     "convertElementType": ""
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "תמונה",
     "group": "קבוצה",
     "frame": "מסגרת",
-    "magicframe": "מתרשים קווי מתאר לקוד",
+    "magicframe": "מסגרת",
     "embeddable": "הטמעה באתר",
     "selection": "בחירה",
     "iframe": "IFrame"
@@ -401,10 +396,7 @@
     "disk_button": "שמירה לקובץ",
     "link_title": "קבל קישור לשיתוף",
     "link_details": "ייצוא כקישור לקריאה בלבד.",
-    "link_button": "ייצוא לקישור",
-    "excalidrawplus_description": "שמור את הקנבאס לסביבת העבודה שלך ב- +Excalidraw.",
-    "excalidrawplus_button": "ייצוא",
-    "excalidrawplus_exportError": "לא הצלחתי לייצא ל- +Excalidraw כרגע..."
+    "link_button": "ייצוא לקישור"
   },
   "helpDialog": {
     "blog": "קרא את הבלוג שלנו",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "אתה רוצה ללכת אל Excalidraw+ במקום?",
       "menuHint": "ייצוא, העדפות, שפות, ..."
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "שמירה לכונן",
         "button": "שמירה לכונן",
         "description": "ייצוא נתוני הסצנה לקובץ אותו אפשר לייבא בהמשך."
-      },
-      "excalidrawPlus": {
-        "title": "Excalidraw+‎",
-        "button": "ייצוא ל־Excalidraw+‎",
-        "description": "שמירת הסצנה לסביבת העבודה שלך ב־+Excalidraw."
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": "טעינת הקובץ <bold>תחליף את התוכן הקיים</bold>.<br></br>אתם יכולים לגבות את העבודה שלכם תחילה בעזרת האפשרויות שלהלן."
       }
     }
-  },
-  "mermaid": {
-    "title": "Mermaid ל־Excalidraw",
-    "button": "הוספה",
-    "description": "לעת עתה נתמכים רק <flowchartLink>תרשימי זרימה</flowchartLink>, <sequenceLink>תהליכים</sequenceLink>, <classLink>ודיאגרמת מחלקה</classLink>. שאר הסוגים ייוצרו כתמונות ב-Excalidraw.",
-    "syntax": "תחביר Mermaid",
-    "preview": "תצוגה מקדימה",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": "חיפוש מהיר"

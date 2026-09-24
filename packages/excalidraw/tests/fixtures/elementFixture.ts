@@ -51,7 +51,7 @@ export const diamondFixture: ExcalidrawElement = {
 export const rectangleWithLinkFixture: ExcalidrawElement = {
   ...elementBase,
   type: "rectangle",
-  link: "excalidraw.com",
+  link: "excalidraw.issirmax.mx",
 };
 
 export const textFixture: ExcalidrawElement = {

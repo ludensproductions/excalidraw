@@ -11,8 +11,6 @@
     "copyAsPng": "Copiar para a área de transferência como PNG",
     "copyAsSvg": "Copiar para a área de transferência como SVG",
     "copyText": "Copiar para área de transferência como texto",
-    "copySource": "Copiar origem para área de transferência",
-    "convertToCode": "Converter para código",
     "bringForward": "Subir para a frente de tudo",
     "sendToBack": "Baixar",
     "bringToFront": "Subir",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "Selecionar todos os elementos na moldura",
     "removeAllElementsFromFrame": "Remover todos os elementos na moldura",
     "eyeDropper": "Escolher cor da área de desenho",
-    "textToDiagram": "Texto para diagrama",
     "prompt": "Entrada de código",
     "followUs": "Siga-nos",
     "discordChat": "Conversação no Discord",
@@ -307,12 +304,10 @@
     "link": "Adicionar / atualizar hiperligação para uma forma selecionada",
     "eraser": "Borracha",
     "frame": "Ferramenta de moldura",
-    "magicframe": "Esquema para código",
     "embeddable": "Incorporar web",
     "laser": "Ponteiro laser",
     "hand": "Mão (ferramenta de deslocar vista)",
     "extraTools": "Mais ferramentas",
-    "mermaidToExcalidraw": "Mermaid para Excalidraw",
     "convertElementType": ""
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "Imagem",
     "group": "Grupo",
     "frame": "Frame",
-    "magicframe": "Wireframe para código",
+    "magicframe": "Frame",
     "embeddable": "Web Embed",
     "selection": "Seleção",
     "iframe": "IFrame"
@@ -401,10 +396,7 @@
     "disk_button": "Guardar num ficheiro",
     "link_title": "Hiperligação partilhável",
     "link_details": "Exportar como uma hiperligação de apenas leitura.",
-    "link_button": "Exportar para hiperligação",
-    "excalidrawplus_description": "Guardar a cena no seu espaço de trabalho do Excalidraw+.",
-    "excalidrawplus_button": "Exportar",
-    "excalidrawplus_exportError": "Não foi possível exportar para o Excalidraw+ neste momento..."
+    "link_button": "Exportar para hiperligação"
   },
   "helpDialog": {
     "blog": "Leia o nosso blogue",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "Queria antes ir para o Excalidraw+?",
       "menuHint": "Exportar, preferências, idiomas..."
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "Guardar no disco",
         "button": "Guardar no disco",
         "description": "Exportar os dados da cena para um ficheiro do qual poderá importar mais tarde."
-      },
-      "excalidrawPlus": {
-        "title": "Excalidraw+",
-        "button": "Exportar para Excalidraw+",
-        "description": "Guardar a cena no seu espaço de trabalho do Excalidraw+."
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": "Carregar um desenho externo irá <bold>substituir o conteúdo existente</bold>.<br></br>Pode fazer primeiro uma cópia de segurança do seu desenho utilizando uma das opções abaixo."
       }
     }
-  },
-  "mermaid": {
-    "title": "Mermaid para Excalidraw",
-    "button": "Inserir",
-    "description": "Atualmente apenas são suportados diagramas <flowchartLink>fluxo</flowchartLink>, <sequenceLink>sequência, </sequenceLink> e <classLink>classe</classLink>. Os outros tipos serão renderizados como imagem no Excalidraw.",
-    "syntax": "Sintaxe Mermaid",
-    "preview": "Pré-visualizar",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": "Pesquisa rápida"

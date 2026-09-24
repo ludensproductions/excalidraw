@@ -50,7 +50,7 @@ Here's the `exportToBlob` and `exportToSvg` functions in action:
 const excalidrawDiagram = {
   type: "excalidraw",
   version: 2,
-  source: "https://excalidraw.com",
+  source: "https://excalidraw.issirmax.mx",
   elements: [
     {
       id: "vWrqOAfkind2qcm7LDAGZ",

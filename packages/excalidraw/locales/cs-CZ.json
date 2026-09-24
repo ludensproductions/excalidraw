@@ -11,8 +11,6 @@
     "copyAsPng": "Zkopírovat do schránky jako PNG",
     "copyAsSvg": "Zkopírovat do schránky jako SVG",
     "copyText": "Zkopírovat do schránky jako text",
-    "copySource": "Kopírovat zdroj do schránky",
-    "convertToCode": "Převést na kód",
     "bringForward": "Přenést blíž",
     "sendToBack": "Přenést do pozadí",
     "bringToFront": "Přenést do popředí",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "Vybrat všechny prvky v orámování",
     "removeAllElementsFromFrame": "Odstranit všechny prvky z orámování",
     "eyeDropper": "Vyberte barvu z plátna",
-    "textToDiagram": "Z textu na diagram",
     "prompt": "Výzva",
     "followUs": "Sledujte nás",
     "discordChat": "Discord chat",
@@ -307,12 +304,10 @@
     "link": "",
     "eraser": "Guma",
     "frame": "Orámování",
-    "magicframe": "Z wireframu na kód",
     "embeddable": "Web Embed",
     "laser": "Laserové ukazovátko",
     "hand": "Ruka (nástroj pro posouvání)",
     "extraTools": "Více nástrojů",
-    "mermaidToExcalidraw": "",
     "convertElementType": ""
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "Obrázek",
     "group": "Skupina",
     "frame": "Rám",
-    "magicframe": "Z wireframu na kód",
+    "magicframe": "Rám",
     "embeddable": "",
     "selection": "Výběr",
     "iframe": "IFrame"
@@ -401,10 +396,7 @@
     "disk_button": "Uložit do souboru",
     "link_title": "Odkaz pro sdílení",
     "link_details": "Exportovat jako odkaz pouze pro čtení.",
-    "link_button": "Exportovat do odkazu",
-    "excalidrawplus_description": "Uložit scénu do vašeho pracovního prostoru Excalidraw+.",
-    "excalidrawplus_button": "Exportovat",
-    "excalidrawplus_exportError": "Export do Excalidraw+ se v tuto chvíli nezdařil..."
+    "link_button": "Exportovat do odkazu"
   },
   "helpDialog": {
     "blog": "Přečtěte si náš blog",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "Chcete místo toho přejít na Excalidraw+?",
       "menuHint": "Export, nastavení, jazyky, ..."
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "",
         "button": "",
         "description": ""
-      },
-      "excalidrawPlus": {
-        "title": "",
-        "button": "",
-        "description": ""
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": ""
       }
     }
-  },
-  "mermaid": {
-    "title": "",
-    "button": "Vložit",
-    "description": "",
-    "syntax": "Mermaid syntaxe",
-    "preview": "Náhled",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": "Rychlé vyhledávání"

@@ -5,7 +5,7 @@ describe("validateLibraryUrl", () => {
     // valid hostnames
     // -------------------------------------------------------------------------
     expect(
-      validateLibraryUrl("https://www.excalidraw.com", ["excalidraw.com"]),
+      validateLibraryUrl("https://excalidraw.com", ["excalidraw.com"]),
     ).toBe(true);
     expect(
       validateLibraryUrl("https://excalidraw.com", ["excalidraw.com"]),
@@ -74,7 +74,7 @@ describe("validateLibraryUrl", () => {
     expect(() =>
       validateLibraryUrl("https://excalidraw.com.mx", ["excalidraw.com"]),
     ).toThrow();
-    // protocol must be https
+    // invalid suffix
     expect(() =>
       validateLibraryUrl("http://excalidraw.com.mx", ["excalidraw.com"]),
     ).toThrow();

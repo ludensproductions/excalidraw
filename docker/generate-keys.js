@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * generate-keys.js
  * Generates all secrets and API keys needed for self-hosted Supabase.
@@ -26,12 +27,14 @@ function base64url(buf) {
 }
 
 function signHS256(payload, secret) {
-  const header = base64url(Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })));
+  const header = base64url(
+    Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })),
+  );
   const body = base64url(Buffer.from(JSON.stringify(payload)));
   const hmac = crypto.createHmac("sha256", secret);
-  hmac.update(header + "." + body);
+  hmac.update(`${header}.${body}`);
   const signature = base64url(hmac.digest());
-  return header + "." + body + "." + signature;
+  return `${header}.${body}.${signature}`;
 }
 
 const JWT_SECRET = hex(32);
@@ -40,12 +43,12 @@ const exp = now + 3600 * 24 * 365 * 10;
 
 const ANON_KEY = signHS256(
   { role: "anon", iss: "supabase", iat: now, exp },
-  JWT_SECRET
+  JWT_SECRET,
 );
 
 const SERVICE_ROLE_KEY = signHS256(
   { role: "service_role", iss: "supabase", iat: now, exp },
-  JWT_SECRET
+  JWT_SECRET,
 );
 
 const output = {
@@ -62,10 +65,16 @@ const output = {
   S3_PROTOCOL_ACCESS_KEY_SECRET: hex(32),
 };
 
-console.log("# =============================================================================");
-console.log("# Supabase self-hosted secrets (generated " + new Date().toISOString() + ")");
+console.log(
+  "# =============================================================================",
+);
+console.log(
+  `# Supabase self-hosted secrets (generated ${new Date().toISOString()})`,
+);
 console.log("# Copy these into your .env file before running docker compose");
-console.log("# =============================================================================");
+console.log(
+  "# =============================================================================",
+);
 console.log("");
 for (const [key, value] of Object.entries(output)) {
   console.log(`${key}=${value}`);

@@ -1,7 +1,6 @@
 import {
   Excalidraw,
   LiveCollaborationTrigger,
-  TTDDialogTrigger,
   CaptureUpdateAction,
   reconcileElements,
   useEditorInterface,
@@ -129,8 +128,6 @@ import CollabError, { collabErrorIndicatorAtom } from "./collab/CollabError";
 import { useHandleAppTheme } from "./useHandleAppTheme";
 import { getPreferredLanguage } from "./app-language/language-detector";
 import { useAppLangCode } from "./app-language/language-state";
-
-import { AIComponents } from "./components/AI";
 
 import { dashboardState } from "./dashboardState";
 
@@ -1054,9 +1051,6 @@ const ExcalidrawWrapper = () => {
           <OverwriteConfirmDialog.Actions.SaveToDisk />
         </OverwriteConfirmDialog>
         <AppFooter />
-        {excalidrawAPI && <AIComponents excalidrawAPI={excalidrawAPI} />}
-
-        <TTDDialogTrigger />
         {isCollaborating && isOffline && (
           <div className="alertalert--warning">
             {t("alerts.collabOfflineWarning")}

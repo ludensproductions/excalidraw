@@ -11,8 +11,6 @@
     "copyAsPng": "Copiere în memoria temporară ca PNG",
     "copyAsSvg": "Copiere în memoria temporară ca SVG",
     "copyText": "Copiere în memoria temporară ca text",
-    "copySource": "Copiere sursă în memoria temporară",
-    "convertToCode": "Convertire în cod",
     "bringForward": "Aducere în plan apropiat",
     "sendToBack": "Trimitere în ultimul plan",
     "bringToFront": "Aducere în prim plan",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "Selectează toate elementele din cadru",
     "removeAllElementsFromFrame": "Elimină toate elementele din cadru",
     "eyeDropper": "Alegere culoare din pânză",
-    "textToDiagram": "Text la diagramă",
     "prompt": "Mesaj sistem",
     "followUs": "Urmărește-ne",
     "discordChat": "Conversații pe Discord",
@@ -307,12 +304,10 @@
     "link": "Adăugare/actualizare link pentru o formă selectată",
     "eraser": "Radieră",
     "frame": "Instrument cadru",
-    "magicframe": "Structură-de-fire la cod",
     "embeddable": "Încorporare web",
     "laser": "Indicator laser",
     "hand": "Mână (instrument de panoramare)",
     "extraTools": "Mai multe instrumente",
-    "mermaidToExcalidraw": "Mermaid la Excalidraw",
     "convertElementType": "Comutare tip formă"
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "Imagine",
     "group": "Grup",
     "frame": "Cadru",
-    "magicframe": "Structură-de-fire la cod",
+    "magicframe": "Cadru",
     "embeddable": "Încorporare web",
     "selection": "Selecție",
     "iframe": "iFrame"
@@ -401,10 +396,7 @@
     "disk_button": "Salvare în fișier",
     "link_title": "URL partajabil",
     "link_details": "Exportă ca URL doar în citire.",
-    "link_button": "Exportare în URL",
-    "excalidrawplus_description": "Salvează scena în spațiul de lucru Excalidraw+.",
-    "excalidrawplus_button": "Exportare",
-    "excalidrawplus_exportError": "Excalidraw+ nu a putut fi exportat în acest moment..."
+    "link_button": "Exportare în URL"
   },
   "helpDialog": {
     "blog": "Citește blogul nostru",
@@ -560,7 +552,6 @@
       "center_heading": "Desenele tale sunt salvate în spațiul de stocare al navigatorului tău.",
       "center_heading_line2": "Spațiul de stocare al navigatorului poate fi șters în mod neașteptat.",
       "center_heading_line3": "Salvează-ți periodic munca într-un fișier pentru a evita pierderea acesteia.",
-      "center_heading_plus": "Ai vrut să mergi în schimb la Excalidraw+?",
       "menuHint": "Exportare, preferințe, limbi, ..."
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "Salvare pe disc",
         "button": "Salvare pe disc",
         "description": "Exportă datele scenei pe un fișier din care poți importa mai târziu."
-      },
-      "excalidrawPlus": {
-        "title": "Excalidraw+",
-        "button": "Exportare în Excalidraw+",
-        "description": "Salvează scena în spațiul de lucru Excalidraw+."
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": "Încărcarea unui desen extern va <bold>înlocui conținutul existent</bold>.<br></br>Poți face mai întâi o copie de rezervă a desenului folosind una dintre opțiunile de mai jos."
       }
     }
-  },
-  "mermaid": {
-    "title": "Mermaid la Excalidraw",
-    "button": "Introducere",
-    "description": "În prezent, numai <flowchartLink>Organigramele</flowchartLink>, <sequenceLink>Diagramele de secvență</sequenceLink> și <classLink>Diagramele de clasă</classLink> sunt acceptate. Celelalte tipuri vor fi redate ca imagine în Excalidraw.",
-    "syntax": "Sintaxă Mermaid",
-    "preview": "Previzualizare",
-    "label": "Mermaid",
-    "inputPlaceholder": "Scrie definiţia diagramei Mermaid aici..."
-  },
-  "ttd": {
-    "error": "Eroare!"
-  },
-  "chat": {
-    "inputPlaceholder": "Începe să îți introduci ideea de diagramă aici... ({{shortcut}} pentru linia nouă)",
-    "inputPlaceholderWithMessages": "Continuă rafinarea diagramei...",
-    "generating": "Se generează...",
-    "rateLimitRemaining": "Cereri rămase astăzi: {{count}}",
-    "role": {
-      "user": "Tu",
-      "assistant": "Asistent IA",
-      "system": "Sistem"
-    },
-    "aiBeta": "Beta IA",
-    "label": "Conversație",
-    "menu": "Meniu",
-    "newChat": "Conversație nouă",
-    "deleteChat": "Ștergere conversație",
-    "deleteMessage": "Ștergere mesaj",
-    "viewAsMermaid": "Vizualizare ca Mermaid",
-    "placeholder": {
-      "title": "Hai să-ți proiectăm diagrama",
-      "description": "Descrie diagrama pe care vrei să o creezi și o vom genera pentru tine.",
-      "hint": "În acest moment cunoaștem organigrame, diagrame de secvență și diagrame de clasă."
-    },
-    "preview": "Previzualizare",
-    "insert": "Introducere",
-    "retry": "Reîncercare",
-    "errors": {
-      "promptTooShort": "Solicitarea este prea scurtă (min. {{min}} caractere)",
-      "promptTooLong": "Solicitarea este prea lungă (max. {{max}} caractere)",
-      "generationFailed": "Generare nereușită",
-      "invalidDiagram": "A generat o diagramă nevalidă :(. Poți edita manual, reîncerca cu funcția de fixare automată sau încerca o altă solicitare.",
-      "fixInMermaid": "Editare Mermaid manual →",
-      "aiRepair": "Regenerare (fixare automată) →",
-      "requestAborted": "Cerere anulată",
-      "requestFailed": "Cerere nereușită",
-      "mermaidParseError": "Eroare de sintaxă Mermaid"
-    },
-    "rateLimit": {
-      "messageLimit": "Ai atins limita IA la planul gratuit. Încearcă Excalidraw+ pentru mai multe sau revino mâine.",
-      "generalRateLimit": "Stai puțin, te grăbești! Așteaptă un moment înainte de a reîncerca.",
-      "messageLimitInputPlaceholder": "Ai atins limita de mesaje"
-    },
-    "upsellBtnLabel": "Actualizare la Plus"
   },
   "quickSearch": {
     "placeholder": "Căutare rapidă"

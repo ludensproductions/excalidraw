@@ -11,8 +11,6 @@
     "copyAsPng": "Copia al porta-retalls com a PNG",
     "copyAsSvg": "Copia al porta-retalls com a SVG",
     "copyText": "Copia al porta-retalls com a text",
-    "copySource": "Copia al porta-retalls",
-    "convertToCode": "Converteix a codi",
     "bringForward": "Porta endavant",
     "sendToBack": "Envia enrere",
     "bringToFront": "Porta al davant",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "Selecciona tots els elements del marc",
     "removeAllElementsFromFrame": "Elimina tots els elements del marc",
     "eyeDropper": "Tria un color del llenç",
-    "textToDiagram": "Text a diagrama",
     "prompt": "Prompt",
     "followUs": "Seguiu-nos",
     "discordChat": "Xat de Discord",
@@ -307,12 +304,10 @@
     "link": "Afegeix/actualitza l'enllaç per a una forma seleccionada",
     "eraser": "Esborrador",
     "frame": "Eina de marc",
-    "magicframe": "De Wireframe a codi",
     "embeddable": "Incrustació Web",
     "laser": "Punter làser",
     "hand": "Mà (eina de desplaçament)",
     "extraTools": "Més eines",
-    "mermaidToExcalidraw": "Mermaid a Excalidraw",
     "convertElementType": ""
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "Imatge",
     "group": "Grup",
     "frame": "Marc",
-    "magicframe": "De Wireframe a codi",
+    "magicframe": "Marc",
     "embeddable": "Incrustació Web",
     "selection": "Selecció",
     "iframe": "IFrame"
@@ -401,10 +396,7 @@
     "disk_button": "Desa en un fitxer",
     "link_title": "Enllaç per a compartir",
     "link_details": "Exporta com a un enllaç de només lectura.",
-    "link_button": "Exporta a un enllaç",
-    "excalidrawplus_description": "Desa l'escena en el vostre espai de treball Excalidraw+.",
-    "excalidrawplus_button": "Exporta",
-    "excalidrawplus_exportError": "No és possible exportar a Excalidraw+ ara mateix..."
+    "link_button": "Exporta a un enllaç"
   },
   "helpDialog": {
     "blog": "Llegiu el nostre blog",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "Vols anar a Excalidraw+ en comptes?",
       "menuHint": "Exportar, preferències, llenguatges..."
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "Deseu al disc",
         "button": "Deseu al disc",
         "description": "Exporta les dades de l'escena a un fitxer des del qual podràs importar-les més tard."
-      },
-      "excalidrawPlus": {
-        "title": "Excalidraw+",
-        "button": "Exporta a Excalidraw+",
-        "description": "Desa l'escena al teu espai de treball d'Excalidraw+."
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": "Carregar un disseny extern <bold>substituirà el contingut actual</bold>.<br></br>Podeu desar el vostre disseny abans fent servir una de les opcions més avall."
       }
     }
-  },
-  "mermaid": {
-    "title": "Mermaid a Excalidraw",
-    "button": "Inseriu",
-    "description": "Actualment només s'admeten els diagrames <flowchartLink>Flowchart</flowchartLink>, <sequenceLink> Sequence, </sequenceLink> i <classLink> Class </classLink>. Els altres tipus es representaran com a imatge a Excalidraw.",
-    "syntax": "Sintaxi de Mermaid",
-    "preview": "Previsualització",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": "Cerca ràpida"

@@ -25,7 +25,7 @@ jobs:
           FILE_CHANGED=$(git diff packages/excalidraw/locales/percentages.json)
           if [ ! -z "${FILE_CHANGED}" ]; then
             git config --global user.name 'Excalidraw Bot'
-            git config --global user.email 'bot@excalidraw.com'
+            git config --global user.email 'bot@excalidraw.issirmax.mx'
             git add packages/excalidraw/locales/percentages.json
             git commit -am "Auto commit: Calculate translation coverage"
             git push

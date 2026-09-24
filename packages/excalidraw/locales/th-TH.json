@@ -11,8 +11,6 @@
     "copyAsPng": "คัดลองไปยังคลิปบอร์ดเป็น PNG",
     "copyAsSvg": "คัดลองไปยังคลิปบอร์ดเป็น SVG",
     "copyText": "คัดลองไปยังคลิปบอร์ดเป็นข้อความ",
-    "copySource": "คัดลอกไปยังคลิปบอร์ด",
-    "convertToCode": "แปลงไปยังโค้ด",
     "bringForward": "นำขึ้นข้างบน",
     "sendToBack": "ย้ายไปข้างล่าง",
     "bringToFront": "นำขึ้นข้างหน้า",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "เลือกองค์ประกอบทั้งหมดในกรอบ",
     "removeAllElementsFromFrame": "ลบองค์ประกอบทั้งหมดในกรอบ",
     "eyeDropper": "เลือกสีผืนผ้าใบ",
-    "textToDiagram": "ข้อความเป็นภาพ",
     "prompt": "พรอมต์",
     "followUs": "ติดตามเรา",
     "discordChat": "แชทดิสคอร์ด",
@@ -307,12 +304,10 @@
     "link": "เพิ่ม / อัปเดตลิงก์สำหรับรูปร่างที่เลือก",
     "eraser": "ยางลบ",
     "frame": "เครื่องมือกรอบ",
-    "magicframe": "ไวร์เฟรมเป็นโค้ด",
     "embeddable": "ฝังเว็บ",
     "laser": "ตัวชี้เลเซอร์",
     "hand": "มือ (เครื่องมือเลื่อน)",
     "extraTools": "เครื่องมืออื่นๆ",
-    "mermaidToExcalidraw": "เมอร์เมดเป็นเอกซ์คาลิดรอว์",
     "convertElementType": ""
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "รูปภาพ",
     "group": "จัดกลุ่ม",
     "frame": "กรอบ",
-    "magicframe": "ไวร์เฟรมเป็นโค้ด",
+    "magicframe": "กรอบ",
     "embeddable": "ฝังเว็บ",
     "selection": "การเลือก",
     "iframe": "ไอเฟรม"
@@ -401,10 +396,7 @@
     "disk_button": "บันทึกเป็นไฟล์",
     "link_title": "ลิงก์ที่สามารถแชร์ได้",
     "link_details": "",
-    "link_button": "ส่งออกไปยังไฟล์",
-    "excalidrawplus_description": "",
-    "excalidrawplus_button": "ส่งออก",
-    "excalidrawplus_exportError": "ไม่สามารถส่งออกไปที่ Excalidraw+ ได้ในขณะนี้"
+    "link_button": "ส่งออกไปยังไฟล์"
   },
   "helpDialog": {
     "blog": "อ่านบล็อกของพวกเรา",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "",
       "menuHint": ""
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "บันทึกไปยังดิสก์",
         "button": "บันทึกไปยังดิสก์",
         "description": ""
-      },
-      "excalidrawPlus": {
-        "title": "Excalidraw+",
-        "button": "นำออกไปยัง Excalidraw+",
-        "description": ""
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": ""
       }
     }
-  },
-  "mermaid": {
-    "title": "",
-    "button": "แทรก",
-    "description": "",
-    "syntax": "",
-    "preview": "ดูตัวอย่าง",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": "ค้นหาด่วน"

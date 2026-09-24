@@ -33,8 +33,6 @@ import {
   withBatchedUpdatesThrottled,
 } from "../utils";
 
-import CustomFooter from "./CustomFooter";
-import MobileFooter from "./MobileFooter";
 import ExampleSidebar from "./sidebar/ExampleSidebar";
 
 import "./ExampleApp.scss";
@@ -89,14 +87,8 @@ export default function ExampleApp({
     sceneCoordsToViewportCoords,
     viewportCoordsToSceneCoords,
     restoreElements,
-    Sidebar,
-    Footer,
-    WelcomeScreen,
-    MainMenu,
     LiveCollaborationTrigger,
     convertToExcalidrawElements,
-    TTDDialog,
-    TTDDialogTrigger,
     ROUNDNESS,
     loadSceneOrLibraryFromBlob,
   } = excalidrawLib;
@@ -209,56 +201,7 @@ export default function ExampleApp({
         onScrollChange: rerenderCommentIcons,
         validateEmbeddable: true,
       },
-      <>
-        {excalidrawAPI && (
-          <Footer>
-            <CustomFooter
-              excalidrawAPI={excalidrawAPI}
-              excalidrawLib={excalidrawLib}
-            />
-          </Footer>
-        )}
-        <WelcomeScreen />
-        <Sidebar name="custom">
-          <Sidebar.Tabs>
-            <Sidebar.Header />
-            <Sidebar.Tab tab="one">Tab one!</Sidebar.Tab>
-            <Sidebar.Tab tab="two">Tab two!</Sidebar.Tab>
-            <Sidebar.TabTriggers>
-              <Sidebar.TabTrigger tab="one">One</Sidebar.TabTrigger>
-              <Sidebar.TabTrigger tab="two">Two</Sidebar.TabTrigger>
-            </Sidebar.TabTriggers>
-          </Sidebar.Tabs>
-        </Sidebar>
-        <Sidebar.Trigger
-          name="custom"
-          tab="one"
-          style={{
-            position: "absolute",
-            left: "50%",
-            transform: "translateX(-50%)",
-            bottom: "20px",
-            zIndex: 9999999999999999,
-          }}
-        >
-          Toggle Custom Sidebar
-        </Sidebar.Trigger>
-        {renderMenu()}
-        {excalidrawAPI && (
-          <TTDDialogTrigger icon={<span>😀</span>}>
-            Text to diagram
-          </TTDDialogTrigger>
-        )}
-        <TTDDialog
-          onTextSubmit={async (_) => {
-            console.info("submit");
-            // sleep for 2s
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-            throw new Error("error, go away now");
-            // return "dummy";
-          }}
-        />
-      </>,
+      <></>,
     );
     return newElement;
   };
@@ -609,40 +552,6 @@ export default function ExampleApp({
           }
         }}
       />
-    );
-  };
-
-  const renderMenu = () => {
-    return (
-      <MainMenu>
-        <MainMenu.DefaultItems.SaveAsImage />
-        <MainMenu.DefaultItems.Export />
-        <MainMenu.Separator />
-        <MainMenu.DefaultItems.LiveCollaborationTrigger
-          isCollaborating={isCollaborating}
-          onSelect={() => window.alert("You clicked on collab button")}
-        />
-        <MainMenu.Group title="Excalidraw links">
-          <MainMenu.DefaultItems.Socials />
-        </MainMenu.Group>
-        <MainMenu.Separator />
-        <MainMenu.ItemCustom>
-          <button
-            style={{ height: "2rem" }}
-            onClick={() => window.alert("custom menu item")}
-          >
-            custom item
-          </button>
-        </MainMenu.ItemCustom>
-        <MainMenu.DefaultItems.Help />
-
-        {excalidrawAPI && (
-          <MobileFooter
-            excalidrawLib={excalidrawLib}
-            excalidrawAPI={excalidrawAPI}
-          />
-        )}
-      </MainMenu>
     );
   };
 

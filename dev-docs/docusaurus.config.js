@@ -11,7 +11,7 @@ const config = {
   title: "Excalidraw developer docs",
   tagline:
     "For Excalidraw contributors or those integrating the Excalidraw editor",
-  url: "https://docs.excalidraw.com",
+  url: "https://excalidraw.issirmax.mx",
   baseUrl: "/",
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
@@ -66,11 +66,6 @@ const config = {
             label: "Docs",
           },
           {
-            to: "https://plus.excalidraw.com/blog",
-            label: "Blog",
-            position: "left",
-          },
-          {
             to: "https://github.com/excalidraw/excalidraw",
             label: "GitHub",
             position: "right",
@@ -109,10 +104,6 @@ const config = {
           {
             title: "More",
             items: [
-              {
-                label: "Blog",
-                to: "https://plus.excalidraw.com/blog",
-              },
               {
                 label: "GitHub",
                 to: "https://github.com/excalidraw/excalidraw",

@@ -11,7 +11,8 @@ import { woff2BrowserPlugin } from "../scripts/woff2/woff2-vite-plugins";
 export default defineConfig(({ mode }) => {
   // To load .env variables
   const envVars = loadEnv(mode, `../`);
-  const devProxyTarget = envVars.VITE_APP_DEV_PROXY_TARGET || "http://localhost:8000";
+  const devProxyTarget =
+    envVars.VITE_APP_DEV_PROXY_TARGET || "http://localhost:8000";
   // https://vitejs.dev/config/
   return {
     server: {
@@ -116,10 +117,6 @@ export default defineConfig(({ mode }) => {
               return `locales/${id.substring(index + 8)}`;
             }
 
-            if (id.includes("@excalidraw/mermaid-to-excalidraw")) {
-              return "mermaid-to-excalidraw";
-            }
-
             if (id.includes("@codemirror/") || id.includes("@lezer/")) {
               return "codemirror.chunk";
             }
@@ -132,7 +129,7 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       Sitemap({
-        hostname: "https://excalidraw.com",
+        hostname: "https://excalidraw.issirmax.mx",
         outDir: "build",
         changefreq: "monthly",
         // its static in public folder
@@ -169,6 +166,7 @@ export default defineConfig(({ mode }) => {
             // via a static import from the main bundle, defeating lazy
             // loading. So we exclude it by name instead.
             "**/CodeMirrorEditor-*.js",
+            "**/sentry-*.js",
           ],
           runtimeCaching: [
             {
@@ -208,7 +206,9 @@ export default defineConfig(({ mode }) => {
               },
             },
             {
-              urlPattern: new RegExp("(.chunk-.+|CodeMirrorEditor-.+)\\.js"),
+              urlPattern: new RegExp(
+                "(.chunk-.+|CodeMirrorEditor-.+|sentry-.+)\\.js",
+              ),
               handler: "CacheFirst",
               options: {
                 cacheName: "chunk",

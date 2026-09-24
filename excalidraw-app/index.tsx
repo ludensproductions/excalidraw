@@ -1,8 +1,7 @@
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { registerSW } from "virtual:pwa-register";
-
-import "../excalidraw-app/sentry";
+import { t, setLanguage } from "@excalidraw/excalidraw/i18n";
 
 import ExcalidrawApp from "./App";
 import {
@@ -22,8 +21,8 @@ import {
 import { Dashboard } from "./components/Dashboard";
 import { dashboardState } from "./dashboardState";
 import { DrawingsStore } from "./data/DrawingsStore";
-import { t, setLanguage } from "@excalidraw/excalidraw/i18n";
 import { getPreferredLanguage } from "./app-language/language-detector";
+import { shouldInitializeSentry } from "./sentryConfig";
 
 import type { AuthUser } from "./auth/authStore";
 import type { DrawingRecord } from "./data/DrawingsStore";
@@ -165,7 +164,7 @@ const AppRoot: React.FC = () => {
       name: latestRecord.name,
     });
     dashboardState.setPendingBoard(latestRecord);
-    window.history.replaceState({}, "", "/board/" + latestRecord.id);
+    window.history.replaceState({}, "", `/board/${latestRecord.id}`);
     setView({ type: "editor", boardId: latestRecord.id, key: Date.now() });
   };
 
@@ -211,7 +210,7 @@ const AppRoot: React.FC = () => {
       appJotaiStore.set(hasDashboardBackAtom, true);
       appJotaiStore.set(activeBoardAtom, { id: record.id, name: record.name });
       dashboardState.setPendingBoard(record);
-      window.history.replaceState({}, "", "/board/" + record.id);
+      window.history.replaceState({}, "", `/board/${record.id}`);
       setView({ type: "editor", boardId: record.id, key: Date.now() });
     } catch (error) {
       await appDialog.error(
@@ -270,6 +269,12 @@ const root = createRoot(rootElement);
 const SW_CLEARED_KEY = "__excalidraw_sw_cleared__";
 
 const bootstrap = async () => {
+  if (shouldInitializeSentry()) {
+    void import("./sentry").catch((error) => {
+      console.error("Failed to initialize Sentry:", error);
+    });
+  }
+
   // Limpiar caches viejos del service worker una sola vez
   if ("serviceWorker" in navigator && !sessionStorage.getItem(SW_CLEARED_KEY)) {
     const registrations = await navigator.serviceWorker.getRegistrations();

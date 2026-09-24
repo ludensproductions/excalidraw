@@ -11,8 +11,6 @@
     "copyAsPng": "Kopier til PNG",
     "copyAsSvg": "Kopier til utklippstavlen som SVG",
     "copyText": "Kopier til utklippstavlen som tekst",
-    "copySource": "Kopier kilde til utklippstavle",
-    "convertToCode": "Konverter til kode",
     "bringForward": "Flytt framover",
     "sendToBack": "Send bakerst",
     "bringToFront": "Flytt forrest",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "Velg alle elementene i rammen",
     "removeAllElementsFromFrame": "Fjern alle elementer fra rammen",
     "eyeDropper": "Velg farge fra lerretet",
-    "textToDiagram": "Tekst til diagram",
     "prompt": "Tekst",
     "followUs": "Følg oss",
     "discordChat": "Discord-chat",
@@ -307,12 +304,10 @@
     "link": "Legg til / oppdater lenke for en valgt figur",
     "eraser": "Viskelær",
     "frame": "Rammeverktøy",
-    "magicframe": "Wireframe til kode",
     "embeddable": "Nettinnbygging",
     "laser": "Laserpeker",
     "hand": "Hånd (panoreringsverktøy)",
     "extraTools": "Flere verktøy",
-    "mermaidToExcalidraw": "Mermaid til Excalidraw",
     "convertElementType": ""
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "Bilde",
     "group": "Gruppe",
     "frame": "Ramme",
-    "magicframe": "Wireframe til kode",
+    "magicframe": "Ramme",
     "embeddable": "Nettinnbygging",
     "selection": "Valg",
     "iframe": "IFrame"
@@ -401,10 +396,7 @@
     "disk_button": "Lagre til fil",
     "link_title": "Delbar lenke",
     "link_details": "Eksporter som en skrivebeskyttet lenke.",
-    "link_button": "Eksporter til lenke",
-    "excalidrawplus_description": "Lagre scenen til ditt Excalidraw+ arbeidsområde.",
-    "excalidrawplus_button": "Eksporter",
-    "excalidrawplus_exportError": "Kunne ikke eksportere til Excalidraw+ for øyeblikket..."
+    "link_button": "Eksporter til lenke"
   },
   "helpDialog": {
     "blog": "Les bloggen vår",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "Ønsker du å gå til Excalidraw+ i stedet?",
       "menuHint": "Eksporter, innstillinger, språk, ..."
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "Lagre til disk",
         "button": "Lagre til disk",
         "description": "Eksporter scene-dataene til en fil som du kan importere fra senere."
-      },
-      "excalidrawPlus": {
-        "title": "Excalidraw+",
-        "button": "Eksporter til Excalidraw+",
-        "description": "Lagre scenen til ditt Excalidraw+-arbeidsområde."
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": "Lasting av ekstern tegning vil <bold>erstatte ditt eksisterende innhold</bold>.<br></br>Du kan sikkerhetskopiere tegningen din først ved å bruke en av valgene nedenfor."
       }
     }
-  },
-  "mermaid": {
-    "title": "Mermaid til Excalidraw",
-    "button": "Sett inn",
-    "description": "Foreløpig er bare <flowchartLink>Flowchart</flowchartLink>-,<sequenceLink> Sequence</sequenceLink>- og <classLink>klasse </classLink>-diagrammer støttet. De andre typene vil bli gjengitt som bilde i Excalidraw.",
-    "syntax": "Mermaid-syntaks",
-    "preview": "Forhåndsvisning",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": "Hurtigsøk"

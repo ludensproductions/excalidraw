@@ -11,8 +11,6 @@
     "copyAsPng": "PNG रूपे फळी वर कॉपी करा",
     "copyAsSvg": "SVG रूपे फळी वर कॉपी करा",
     "copyText": "लिखित रूपे फळी वर कॉपी करा",
-    "copySource": "स्त्रोत फळी वर कॉपी करा",
-    "convertToCode": "सांकेतिक लिपित रूपांतरित करा",
     "bringForward": "पुढे पुढे आणा",
     "sendToBack": "सर्वात मागे करा",
     "bringToFront": "सर्वात पुढे आणा",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "चौकटीतले सर्व तत्वांचे चयन करा",
     "removeAllElementsFromFrame": "चौकटीतून सर्व काढून टाका",
     "eyeDropper": "चित्रफलकातून रंग निवडा",
-    "textToDiagram": "लिपि पासून चित्र",
     "prompt": "प्रश्न",
     "followUs": "आमचं अनुकरण करा",
     "discordChat": "डिस्कोर्ड संवाद",
@@ -307,12 +304,10 @@
     "link": "निवडलेल्या आकारासाठी दुवा जोडा/बदल करा",
     "eraser": "खोड रबर",
     "frame": "चौकट यंत्र",
-    "magicframe": "वायरफ़्रेम पासून सांकेतिक लिपि",
     "embeddable": "वेब रुतवा",
     "laser": "लेसर टॉर्च",
     "hand": "हात ( सरकवण्या चे उपकरण)",
     "extraTools": "आणिक यंत्रे",
-    "mermaidToExcalidraw": "मर्मेड पासून एक्सकाली मधे",
     "convertElementType": ""
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "प्रतिमा",
     "group": "गट",
     "frame": "चौकट",
-    "magicframe": "वायरफ़्रेम पासून सांकेतिक लिपि",
+    "magicframe": "चौकट",
     "embeddable": "वेब रुतवा",
     "selection": "निवड",
     "iframe": "आयफ़्रेम"
@@ -401,10 +396,7 @@
     "disk_button": "फ़ाइल मधे जतन करा",
     "link_title": "सामायिके साठी दुवा",
     "link_details": "नुसतं वाचु देणारा दुवा चा स्वरूपे बाहेर ठेवा.",
-    "link_button": "दुवा स्वरूपे बाहेर ठेवा",
-    "excalidrawplus_description": "दृश्य तुमच्या एक्सकेलीड्रॉ कार्यक्षेत्र मधे जतन करा.",
-    "excalidrawplus_button": "बाहेर ठेवा",
-    "excalidrawplus_exportError": "एक्सकेलीड्रॉ मधे बाहेर ठेवता नाही येत..."
+    "link_button": "दुवा स्वरूपे बाहेर ठेवा"
   },
   "helpDialog": {
     "blog": "आमचा ब्लॉग वाचा",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "त्याऐवजी तुम्हाला Excalidraw+ वर जायचे आहे का?",
       "menuHint": "निर्यात, आवड़ी-निवडी, भाषा, ..."
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "डिस्क मधे जतन करा",
         "button": "डिस्क मधे जतन करा",
         "description": "सीन डेटा बाहेर एक फ़ाइल मधे जतन करा, त्या फ़ाइल मधुन तो डेटा नंतर परत आणु शकता."
-      },
-      "excalidrawPlus": {
-        "title": "एक्षकालीड्रॉ +",
-        "button": "एक्षकाली ड्रॉ+ मधे निर्यात करा",
-        "description": "दृष्य तुमच्या एक्षकालीड्रॉ+ चा कार्यस्थल मधे जतन करा."
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": "बाहरी चित्र लोड केल्या वर ते <bold>तुमचा सध्याचा कामा ठिकाणि एईल </bold><br></br> तुम्हीं तुमचं चित्र एकाधं खाली दिलेलं विकल्प निवडुन पहले सुरक्षीत करु शकता."
       }
     }
-  },
-  "mermaid": {
-    "title": "मर्मेड पासून एक्सकाली मधे",
-    "button": "शिरवा",
-    "description": "सध्या फक्त <flowchartLink> प्रवाह चित्र (फ़्लो चार्ट) </flowchartLink> आणि <sequenceLink> क्रम चित्र (सिकवेंस ड़ायग्राम) </sequenceLink> करता येतात. बाक़ीचे चित्र प्रकार एक्सकाली चित्र पद्धति नी चित्रित होतील.",
-    "syntax": "मर्मेड संरचना नियम",
-    "preview": "पूर्वावलोकन",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": "जलद शोध"

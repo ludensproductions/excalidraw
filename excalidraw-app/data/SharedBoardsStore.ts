@@ -20,26 +20,72 @@ export interface SharedBoard {
   members: SharedBoardMember[];
 }
 
+type SharedBoardMemberRow = {
+  user_id: string;
+  username: string | null;
+  joined_at: string;
+  read_only: boolean | null;
+};
+
+type SharedBoardRow = {
+  id: string;
+  room_id: string;
+  room_key: string;
+  name: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  shared_board_members?: SharedBoardMemberRow[] | null;
+};
+
+type SharedBoardIdentityRow = {
+  id: string;
+  created_by: string;
+};
+
+type StoreRpcError = {
+  code?: string;
+  message: string;
+};
+
+const DEFAULT_MEMBER_NAME = "Usuario";
+const SHARED_BOARD_SELECT =
+  "id, room_id, room_key, name, created_by, created_at, updated_at, shared_board_members (user_id, username, joined_at, read_only)";
+
 const throwStoreError = (message: string): never => {
   throw new Error(translateErrorMessage(message));
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function rowToBoard(row: any): SharedBoard {
+const logQueryError = (method: string, error: unknown): void => {
+  console.error(`SharedBoardsStore.${method}:`, error);
+};
+
+const logRpcError = (
+  method: string,
+  rpcName: string,
+  error: StoreRpcError,
+): void => {
+  console.error(
+    `SharedBoardsStore.${method} failed (code: ${error.code}): ${error.message}`,
+    `\nHint: verify that the ${rpcName} RPC exists in your Supabase project.`,
+    error,
+  );
+};
+
+function rowToBoard(row: SharedBoardRow): SharedBoard {
   return {
-    id: row.id as string,
-    roomId: row.room_id as string,
-    roomKey: row.room_key as string,
-    name: row.name as string,
-    createdBy: row.created_by as string,
-    createdAt: new Date(row.created_at as string).getTime(),
-    updatedAt: new Date(row.updated_at as string).getTime(),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    members: ((row.shared_board_members ?? []) as any[]).map((m) => ({
-      userId: m.user_id as string,
-      username: m.username as string,
-      joinedAt: new Date(m.joined_at as string).getTime(),
-      readOnly: (m.read_only as boolean) ?? false,
+    id: row.id,
+    roomId: row.room_id,
+    roomKey: row.room_key,
+    name: row.name,
+    createdBy: row.created_by,
+    createdAt: new Date(row.created_at).getTime(),
+    updatedAt: new Date(row.updated_at).getTime(),
+    members: (row.shared_board_members ?? []).map((m) => ({
+      userId: m.user_id,
+      username: m.username ?? DEFAULT_MEMBER_NAME,
+      joinedAt: new Date(m.joined_at).getTime(),
+      readOnly: m.read_only ?? false,
     })),
   };
 }
@@ -51,9 +97,7 @@ export const SharedBoardsStore = {
   ): Promise<SharedBoard | null> {
     let query = supabase
       .from("shared_boards")
-      .select(
-        "id, room_id, room_key, name, created_by, created_at, updated_at, shared_board_members (user_id, username, joined_at, read_only)",
-      )
+      .select(SHARED_BOARD_SELECT)
       .eq("room_id", roomId);
 
     if (roomKey) {
@@ -63,11 +107,11 @@ export const SharedBoardsStore = {
     const { data, error } = await query.maybeSingle();
 
     if (error) {
-      console.error("SharedBoardsStore.getByRoom:", error);
+      logQueryError("getByRoom", error);
       return null;
     }
 
-    return data ? rowToBoard(data) : null;
+    return data ? rowToBoard(data as SharedBoardRow) : null;
   },
 
   async isVisibleByRoom(roomId: string, roomKey: string): Promise<boolean> {
@@ -79,7 +123,7 @@ export const SharedBoardsStore = {
       .maybeSingle();
 
     if (error) {
-      console.error("SharedBoardsStore.isVisibleByRoom:", error);
+      logQueryError("isVisibleByRoom", error);
       return false;
     }
     return !!data?.id;
@@ -88,17 +132,15 @@ export const SharedBoardsStore = {
   async getAll(): Promise<SharedBoard[]> {
     const { data, error } = await supabase
       .from("shared_boards")
-      .select(
-        "id, room_id, room_key, name, created_by, created_at, updated_at, shared_board_members (user_id, username, joined_at, read_only)",
-      )
+      .select(SHARED_BOARD_SELECT)
       .order("updated_at", { ascending: false });
 
     if (error) {
-      console.error("SharedBoardsStore.getAll:", error);
+      logQueryError("getAll", error);
       return [];
     }
 
-    return (data ?? []).map(rowToBoard);
+    return ((data ?? []) as SharedBoardRow[]).map(rowToBoard);
   },
 
   async getCurrentMemberUsernameByRoom(
@@ -134,11 +176,7 @@ export const SharedBoardsStore = {
     });
 
     if (error) {
-      console.error(
-        `SharedBoardsStore.joinOrCreate failed (code: ${error.code}): ${error.message}`,
-        "\nHint: verify that the join_shared_board RPC exists in your Supabase project.",
-        error,
-      );
+      logRpcError("joinOrCreate", "join_shared_board", error);
       return false;
     }
     return this.isVisibleByRoom(params.roomId, params.roomKey);
@@ -159,20 +197,11 @@ export const SharedBoardsStore = {
     });
 
     if (error) {
-      console.error(
-        `SharedBoardsStore.joinExisting failed (code: ${error.code}): ${error.message}`,
-        "\nHint: verify that the join_existing_shared_board RPC exists in your Supabase project.",
-        error,
-      );
+      logRpcError("joinExisting", "join_existing_shared_board", error);
       return false;
     }
 
-    const joined = await this.isVisibleByRoom(params.roomId, params.roomKey);
-    if (joined) {
-      return true;
-    }
-
-    return false;
+    return this.isVisibleByRoom(params.roomId, params.roomKey);
   },
 
   async closeByRoom(roomId: string, roomKey: string): Promise<void> {
@@ -273,19 +302,21 @@ export const SharedBoardsStore = {
       .maybeSingle();
 
     if (boardError) {
-      console.error("SharedBoardsStore.leaveByRoom:", boardError);
+      logQueryError("leaveByRoom", boardError);
       return;
     }
 
-    if (!board?.id) {
+    const sharedBoard = board as SharedBoardIdentityRow | null;
+
+    if (!sharedBoard?.id) {
       return;
     }
 
-    if (board.created_by === user.id) {
+    if (sharedBoard.created_by === user.id) {
       const { error } = await supabase
         .from("shared_boards")
         .delete()
-        .eq("id", board.id);
+        .eq("id", sharedBoard.id);
       if (error) {
         throwStoreError(error.message);
       }
@@ -295,7 +326,7 @@ export const SharedBoardsStore = {
     const { error } = await supabase
       .from("shared_board_members")
       .delete()
-      .eq("board_id", board.id)
+      .eq("board_id", sharedBoard.id)
       .eq("user_id", user.id);
     if (error) {
       throwStoreError(error.message);

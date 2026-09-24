@@ -11,8 +11,6 @@
     "copyAsPng": "Скопировать в буфер обмена как PNG",
     "copyAsSvg": "Скопировать в буфер обмена как SVG",
     "copyText": "Скопировать в буфер обмена как текст",
-    "copySource": "Скопировать источник в буфер обмена",
-    "convertToCode": "Преобразовать в код",
     "bringForward": "Переместить вперед",
     "sendToBack": "На задний план",
     "bringToFront": "На передний план",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "Выбрать все элементы фрейма",
     "removeAllElementsFromFrame": "Убрать все элементы из фрейма",
     "eyeDropper": "Взять образец цвета с холста",
-    "textToDiagram": "Текст в диаграмму",
     "prompt": "Промпт",
     "followUs": "Подписаться",
     "discordChat": "Чат в Discord",
@@ -307,12 +304,10 @@
     "link": "Добавить / Обновить ссылку для выбранной фигуры",
     "eraser": "Ластик",
     "frame": "Фреймовый инструмент",
-    "magicframe": "Каркас для кода",
     "embeddable": "Встроенная страница",
     "laser": "Лазерная указка",
     "hand": "Рука (перемещение холста)",
     "extraTools": "Дополнительные инструменты",
-    "mermaidToExcalidraw": "Mermaid в Excalidraw",
     "convertElementType": "Переключение типа формы"
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "Изображение",
     "group": "Группа",
     "frame": "Фрейм",
-    "magicframe": "Каркас для кода",
+    "magicframe": "Фрейм",
     "embeddable": "Встроенная страница",
     "selection": "Выделение",
     "iframe": "IFrame"
@@ -401,10 +396,7 @@
     "disk_button": "Сохранить в файл",
     "link_title": "Поделитесь ссылкой",
     "link_details": "Экспорт ссылки только для чтения.",
-    "link_button": "Экспорт в ссылку",
-    "excalidrawplus_description": "Сохраните сцену в ваше рабочее пространство Excalidraw+.",
-    "excalidrawplus_button": "Экспорт",
-    "excalidrawplus_exportError": "Не удалось экспортировать в Excalidraw+ на данный момент..."
+    "link_button": "Экспорт в ссылку"
   },
   "helpDialog": {
     "blog": "Прочитайте наш блог",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "Хотите перейти на Excalidraw+?",
       "menuHint": "Экспорт, настройки, языки, ..."
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "Сохранить на диск",
         "button": "Сохранить на диск",
         "description": "Экспортировать данные сцены в файл, из которого можно импортировать позже."
-      },
-      "excalidrawPlus": {
-        "title": "Excalidraw+",
-        "button": "Экспорт в Excalidraw+",
-        "description": "Сохраните сцену в ваше рабочее пространство Excalidraw+."
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": "Загрузка внешнего рисунка <bold>заменит существующее содержимое</bold>.<br></br>Вы можете сначала создать резервную копию своего рисунка, используя один из приведённых ниже вариантов."
       }
     }
-  },
-  "mermaid": {
-    "title": "Из Mermaid в Excalidraw",
-    "button": "Вставить",
-    "description": "В настоящее время поддерживаются только <flowchartLink>блок-схемы</flowchartLink>, <sequenceLink>диаграммы последовательности</sequenceLink> и <classLink>диаграммы классов</classLink>. Другие типы будут отображаться в виде изображения в Excalidraw.",
-    "syntax": "Синтаксис Mermaid",
-    "preview": "Предпросмотр",
-    "label": "Mermaid",
-    "inputPlaceholder": "Напишите здесь определение диаграммы Mermaid..."
-  },
-  "ttd": {
-    "error": "Ошибка!"
-  },
-  "chat": {
-    "inputPlaceholder": "Начните вводить сюда идею диаграммы... ({{shortcut}} для новой строки)",
-    "inputPlaceholderWithMessages": "Продолжайте доработку диаграммы...",
-    "generating": "",
-    "rateLimitRemaining": "Осталось запросов сегодня: {{count}}",
-    "role": {
-      "user": "Вы",
-      "assistant": "ИИ-помощник",
-      "system": "Система"
-    },
-    "aiBeta": "ИИ-бета",
-    "label": "Чат",
-    "menu": "Меню",
-    "newChat": "Новый чат",
-    "deleteChat": "Удалить чат",
-    "deleteMessage": "Удалить сообщение",
-    "viewAsMermaid": "Просмотреть как Mermaid",
-    "placeholder": {
-      "title": "Давайте создадим вашу диаграмму",
-      "description": "Опишите диаграмму, которую вы хотите создать, и мы сгенерируем её для вас.",
-      "hint": "На данный момент мы знаем диаграммы блок-схемы, последовательности и классов."
-    },
-    "preview": "Предпросмотр",
-    "insert": "Вставить",
-    "retry": "Повторить",
-    "errors": {
-      "promptTooShort": "Подсказка слишком короткая (мин. символов: {{min}})",
-      "promptTooLong": "Подсказка слишком длинная (макс. символов: {{max}})",
-      "generationFailed": "Генерация не удалась",
-      "invalidDiagram": "Сгенерирована неверная диаграмма :(. Вы можете редактировать вручную, повторите с автоисправлением или попробуйте другую подсказку.",
-      "fixInMermaid": "Изменить Mermaid вручную →",
-      "aiRepair": "Перегенерировать (автоисправление) →",
-      "requestAborted": "Запрос отменён",
-      "requestFailed": "Запрос не удался",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "Вы достигли лимита ИИ на бесплатном тарифном плане. Попробуйте Excalidraw+ или вернитесь завтра.",
-      "generalRateLimit": "Подождите, вы слишком быстры для нас! Пожалуйста, подождите немного, прежде чем повторить попытку.",
-      "messageLimitInputPlaceholder": "Вы достигли лимита сообщений"
-    },
-    "upsellBtnLabel": "Перейти на Plus"
   },
   "quickSearch": {
     "placeholder": "Быстрый поиск"

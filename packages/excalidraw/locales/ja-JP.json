@@ -11,8 +11,6 @@
     "copyAsPng": "PNGとしてクリップボードへコピー",
     "copyAsSvg": "SVGとしてクリップボードへコピー",
     "copyText": "テキストとしてクリップボードにコピー",
-    "copySource": "ソースをクリップボードにコピー",
-    "convertToCode": "コードに変換",
     "bringForward": "前面に移動",
     "sendToBack": "最背面に移動",
     "bringToFront": "最前面に移動",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "フレーム内のすべての要素を選択",
     "removeAllElementsFromFrame": "フレーム内のすべての要素を削除",
     "eyeDropper": "キャンバスから色を選択",
-    "textToDiagram": "テキストからダイアグラムを生成",
     "prompt": "プロンプト",
     "followUs": "フォローする",
     "discordChat": "Discord チャット",
@@ -307,12 +304,10 @@
     "link": "",
     "eraser": "消しゴム",
     "frame": "フレームツール",
-    "magicframe": "ワイヤーフレームからコードを生成",
     "embeddable": "Web埋め込み",
     "laser": "レーザーポインター",
     "hand": "手 (パンニングツール)",
     "extraTools": "その他のツール",
-    "mermaidToExcalidraw": "Mermaid を Excalidraw に変換",
     "convertElementType": ""
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "画像",
     "group": "グループ",
     "frame": "フレーム",
-    "magicframe": "ワイヤーフレームからコードを生成",
+    "magicframe": "フレーム",
     "embeddable": "",
     "selection": "",
     "iframe": "IFrame"
@@ -401,10 +396,7 @@
     "disk_button": "ファイルへ保存",
     "link_title": "共有可能なリンク",
     "link_details": "読み取り専用リンクとしてエクスポート",
-    "link_button": "リンクとしてエクスポート",
-    "excalidrawplus_description": "Excalidraw+ ワークスペースにシーンを保存します。",
-    "excalidrawplus_button": "エクスポート",
-    "excalidrawplus_exportError": "Excalidraw+ にエクスポートできませんでした..."
+    "link_button": "リンクとしてエクスポート"
   },
   "helpDialog": {
     "blog": "公式ブログを読む",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "代わりにExcalidraw+を開きますか？",
       "menuHint": "エクスポート、設定、言語..."
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "ディスクに保存",
         "button": "ディスクに保存",
         "description": "シーンデータを後でインポートできるファイルにエクスポートします。"
-      },
-      "excalidrawPlus": {
-        "title": "Excalidraw+",
-        "button": "Excalidraw+にエクスポート",
-        "description": "Excalidraw+ ワークスペースにシーンを保存します。"
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": "外部図面のロードは、<bold>現在の描画内容を置き換えます</bold>。<br></br>その前に、以下の選択肢のいずれかにより描画内容を保存できます。"
       }
     }
-  },
-  "mermaid": {
-    "title": "Mermaid を Excalidraw に変換",
-    "button": "挿入",
-    "description": "現在、<flowchartLink>Flowchart</flowchartLink>、<sequenceLink>Sequence</sequenceLink>、<classLink>Class</classLink> のダイアグラムのみに対応しています。その他の種類は、Excalidraw では画像として描画されます。",
-    "syntax": "Mermaid 構文",
-    "preview": "プレビュー",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": ""

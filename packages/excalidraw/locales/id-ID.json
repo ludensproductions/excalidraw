@@ -11,8 +11,6 @@
     "copyAsPng": "Salin ke papan klip sebagai PNG",
     "copyAsSvg": "Salin ke papan klip sebagai SVG",
     "copyText": "Salin ke papan klip sebagai teks",
-    "copySource": "Salin sumber ke papan klip",
-    "convertToCode": "Konversi ke kode",
     "bringForward": "Bawa maju",
     "sendToBack": "Kirim ke belakang",
     "bringToFront": "Bawa ke depan",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "Pilih semua unsur di bingkai",
     "removeAllElementsFromFrame": "Hapus semua unsur dari bingkai",
     "eyeDropper": "Ambil warna dari kanvas",
-    "textToDiagram": "Teks menjadi diagram",
     "prompt": "Prompt",
     "followUs": "Ikuti kami",
     "discordChat": "Obrolan Discord",
@@ -307,12 +304,10 @@
     "link": "Tambah/Perbarui tautan untuk bentuk yang dipilih",
     "eraser": "Penghapus",
     "frame": "Alat bingkai",
-    "magicframe": "Wireframe menjadi code",
     "embeddable": "Sematan Web",
     "laser": "Penunjuk laser",
     "hand": "Tangan (alat panning)",
     "extraTools": "Alat-alat lain",
-    "mermaidToExcalidraw": "Mermaid menjadi Excalidraw",
     "convertElementType": ""
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "Gambar",
     "group": "Kelompok",
     "frame": "Bingkai",
-    "magicframe": "Wireframe-kan code",
+    "magicframe": "Bingkai",
     "embeddable": "Sematan Web",
     "selection": "Seleksi",
     "iframe": "IFrame"
@@ -401,10 +396,7 @@
     "disk_button": "Simpan ke file",
     "link_title": "Tautan",
     "link_details": "Ekspor sebagai tautan yang hanya dibaca.",
-    "link_button": "Ekspor ke tautan",
-    "excalidrawplus_description": "Simpan pemandangan ke ruang kerja Excalidraw+ Anda.",
-    "excalidrawplus_button": "Ekspor",
-    "excalidrawplus_exportError": "Tidak dapat ekspor ke Excalidraw+ saat ini..."
+    "link_button": "Ekspor ke tautan"
   },
   "helpDialog": {
     "blog": "Baca blog kami",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "Apa Anda ingin berpindah ke Excalidraw+?",
       "menuHint": "Ekspor, preferensi, bahasa, ..."
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "Simpan ke disk",
         "button": "Simpan ke disk",
         "description": "Ekspor data pemandangan ke file yang dapat Anda dapat impor nanti."
-      },
-      "excalidrawPlus": {
-        "title": "Excalidraw+",
-        "button": "Ekspor ke Excalidraw+",
-        "description": "Simpan pemandangan ke ruang kerja Excalidraw+ Anda."
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": "Memuat dari file yang akan <bold>menggantikan konten Anda sekarang</bold>.<br></br>Anda dapat mencadangkan gambar anda dulu menggunakan opsi-opsi ini."
       }
     }
-  },
-  "mermaid": {
-    "title": "Mermaid menjadi Excalidraw",
-    "button": "Sisipkan",
-    "description": "Saat ini hanya <flowchartLink>Flowchart</flowchartLink>, <sequenceLink>Sekuen, </sequenceLink>, dan <classLink>Kelas</classLink>Diagram yang didukung. Jenis lainnya akan dirender sebagai gambar di Excalidraw.",
-    "syntax": "Syntax Mermaid",
-    "preview": "Pratinjau",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": "Pencarian Cepat"

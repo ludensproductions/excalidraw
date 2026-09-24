@@ -1,6 +1,6 @@
 # Excalidraw – Fork ISSIRMAX
 
-Fork de [Excalidraw](https://excalidraw.com) con autenticación de usuarios via **Supabase self-hosted** y dashboard personal de dibujos guardados.
+Fork de [Excalidraw](https://excalidraw.issirmax.mx) con autenticación de usuarios via **Supabase self-hosted** y dashboard personal de dibujos guardados.
 
 ## ¿Qué incluye este fork?
 
@@ -15,9 +15,9 @@ Fork de [Excalidraw](https://excalidraw.com) con autenticación de usuarios via 
 
 ## Requisitos previos
 
-| Herramienta | Versión mínima |
-|---|---|
-| Docker + Docker Compose | 24+ |
+| Herramienta             | Versión mínima |
+| ----------------------- | -------------- |
+| Docker + Docker Compose | 24+            |
 
 > Para desarrollo local sin Docker también necesitas Node.js 18+ y Yarn 1.22+.
 
@@ -40,14 +40,14 @@ También copia `ANON_KEY` como `VITE_APP_SUPABASE_ANON_KEY` en `.env`.
 
 ### Puertos
 
-| Servicio | URL |
-|---|---|
-| App | `http://localhost:3000` |
-| WebSocket collab | `http://localhost:3002` |
-| Supabase API (Kong) | `http://localhost:54321` |
-| Supabase Studio | `http://localhost:54321` (auth basic) |
-| Supavisor (session) | `localhost:5432` |
-| Supavisor (transaction) | `localhost:6543` |
+| Servicio                | URL                                   |
+| ----------------------- | ------------------------------------- |
+| App                     | `http://localhost:3000`               |
+| WebSocket collab        | `http://localhost:3002`               |
+| Supabase API (Kong)     | `http://localhost:54321`              |
+| Supabase Studio         | `http://localhost:54321` (auth basic) |
+| Supavisor (session)     | `localhost:5432`                      |
+| Supavisor (transaction) | `localhost:6543`                      |
 
 ### Emails de autenticación
 
@@ -58,13 +58,12 @@ SYSTEM_EMAIL=correo-del-sistema@gmail.com
 EMAIL_APP_KEY=clave-de-app-de-gmail
 ```
 
-`SYSTEM_EMAIL` se usa como remitente y usuario SMTP. `EMAIL_APP_KEY` debe ser una clave de app de Gmail, no la contraseña normal de la cuenta.
-La plantilla del correo de recuperación vive en `docker/volumes/auth/templates/recovery.html` y solo muestra el enlace de restablecimiento, sin código OTP alternativo.
+`SYSTEM_EMAIL` se usa como remitente y usuario SMTP. `EMAIL_APP_KEY` debe ser una clave de app de Gmail, no la contraseña normal de la cuenta. La plantilla del correo de recuperación vive en `docker/volumes/auth/templates/recovery.html` y solo muestra el enlace de restablecimiento, sin código OTP alternativo.
 
 ### Migraciones (aplicadas automáticamente al iniciar la BD)
 
 | Orden | Archivo | Qué crea |
-|---|---|---|
+| --- | --- | --- |
 | 1 | `supabase/migrations/0001_init.sql` | Tablas `profiles`, `boards`, `share_links`, `collab_rooms` + triggers RLS |
 | 2 | `supabase/migrations/0002_shared_boards.sql` | Tablas `shared_boards`, `shared_board_members` + políticas RLS |
 | 3 | `supabase/migrations/0003_join_existing_shared_board.sql` | Función RPC `join_existing_shared_board` |
@@ -109,10 +108,10 @@ docker compose up -d --build
 
 Al iniciar por primera vez, se crean automáticamente dos usuarios:
 
-| Email | Contraseña | Rol |
-|---|---|---|
-| `admin@admin.com` | `12345` | admin |
-| `test@test.com` | `12345` | usuario normal |
+| Email             | Contraseña | Rol            |
+| ----------------- | ---------- | -------------- |
+| `admin@admin.com` | `12345`    | admin          |
+| `test@test.com`   | `12345`    | usuario normal |
 
 Para resetear la base de datos:
 
@@ -150,7 +149,7 @@ yarn fix              # Auto-fix de formato y linting
 ## Servicios del stack
 
 | Servicio | Imagen | Rol | ¿Usado por la app? |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `db` | `supabase/postgres:15` | PostgreSQL con schemas de auth, storage, API y migraciones de la app. | **Crítico** — toda la persistencia |
 | `kong` | `kong:3.9` | API Gateway. Enruta `/auth/v1`, `/rest/v1`, `/storage/v1`. Escucha en `:54321`. | **Crítico** — punto de entrada de la API |
 | `auth` | `supabase/gotrue` | GoTrue: registro, login, sesiones JWT, password reset y envío de emails por Gmail SMTP. | **Crítico** — autenticación de usuarios |

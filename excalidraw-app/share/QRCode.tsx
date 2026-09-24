@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useI18n } from "@excalidraw/excalidraw";
 import Spinner from "@excalidraw/excalidraw/components/Spinner";
 
 interface QRCodeProps {
@@ -6,6 +7,7 @@ interface QRCodeProps {
 }
 
 export const QRCode = ({ value }: QRCodeProps) => {
+  const { t } = useI18n();
   const [svgData, setSvgData] = useState<string | null>(null);
   const [error, setError] = useState<boolean>(false);
 
@@ -49,7 +51,7 @@ export const QRCode = ({ value }: QRCodeProps) => {
     <div
       className="ShareDialog__active__qrcode"
       role="img"
-      aria-label="QR code for collaboration link"
+      aria-label={t("shareDialog.qrCodeLabel")}
       dangerouslySetInnerHTML={{ __html: svgData }}
     />
   );

@@ -2,26 +2,16 @@ import { getFeatureFlag } from "@excalidraw/common";
 import * as Sentry from "@sentry/browser";
 import callsites from "callsites";
 
-const SentryEnvHostnameMap: { [key: string]: string } = {
-  "excalidraw.com": "production",
-  "staging.excalidraw.com": "staging",
-  "vercel.app": "staging",
-};
-
-const SENTRY_DISABLED = import.meta.env.VITE_APP_DISABLE_SENTRY === "true";
+import { getSentryEnvironment } from "./sentryConfig";
 
 // Disable Sentry locally or inside the Docker to avoid noise/respect privacy
-const onlineEnv =
-  !SENTRY_DISABLED &&
-  Object.keys(SentryEnvHostnameMap).find(
-    (item) => window.location.hostname.indexOf(item) >= 0,
-  );
+const onlineEnv = getSentryEnvironment();
 
 Sentry.init({
   dsn: onlineEnv
     ? "https://7bfc596a5bf945eda6b660d3015a5460@sentry.io/5179260"
     : undefined,
-  environment: onlineEnv ? SentryEnvHostnameMap[onlineEnv] : undefined,
+  environment: onlineEnv,
   release: import.meta.env.VITE_APP_GIT_SHA,
   ignoreErrors: [
     "undefined is not an object (evaluating 'window.__pad.performLoop')", // Only happens on Safari, but spams our servers. Doesn't break anything
@@ -92,3 +82,17 @@ if (flagsIntegration) {
     getFeatureFlag("COMPLEX_BINDINGS"),
   );
 }
+
+export const captureTopLevelError = (
+  error: Error,
+  errorInfo: Record<string, unknown>,
+) => {
+  let eventId = "";
+
+  Sentry.withScope((scope) => {
+    scope.setExtras(errorInfo);
+    eventId = Sentry.captureException(error);
+  });
+
+  return eventId;
+};

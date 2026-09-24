@@ -9,8 +9,6 @@ import { t } from "../i18n";
 
 import { isHandToolActive } from "../appState";
 
-import { useTunnels } from "../context/tunnels";
-
 import { HandButton } from "./HandButton";
 import { ToolButton } from "./ToolButton";
 import DropdownMenu from "./dropdownMenu/DropdownMenu";
@@ -32,8 +30,6 @@ import {
   EmbedIcon,
   laserPointerToolIcon,
   LassoIcon,
-  mermaidLogoIcon,
-  MagicIcon,
 } from "./icons";
 
 import "./ToolIcon.scss";
@@ -123,8 +119,6 @@ export const MobileToolBar = ({
   const laserToolSelected = activeTool.type === "laser";
   const embeddableToolSelected = activeTool.type === "embeddable";
 
-  const { TTDDialogTriggerTunnel } = useTunnels();
-
   const handleToolChange = (toolType: string, pointerType?: string) => {
     if (app.state.activeTool.type !== toolType) {
       trackEvent("toolbar", toolType, "ui");
@@ -155,13 +149,7 @@ export const MobileToolBar = ({
   const showImageToolOutside = toolbarWidth >= MIN_WIDTH + 2 * ADDITIONAL_WIDTH;
   const showFrameToolOutside = toolbarWidth >= MIN_WIDTH + 3 * ADDITIONAL_WIDTH;
 
-  const extraTools = [
-    "text",
-    "frame",
-    "embeddable",
-    "laser",
-    "magicframe",
-  ].filter((tool) => {
+  const extraTools = ["text", "frame", "embeddable", "laser"].filter((tool) => {
     if (showTextToolOutside && tool === "text") {
       return false;
     }
@@ -185,8 +173,6 @@ export const MobileToolBar = ({
       ? EmbedIcon
       : activeTool.type === "laser"
       ? laserPointerToolIcon
-      : activeTool.type === "magicframe"
-      ? MagicIcon
       : extraToolsIcon
     : extraToolsIcon;
 
@@ -455,29 +441,6 @@ export const MobileToolBar = ({
           >
             {t("toolBar.laser")}
           </DropdownMenu.Item>
-          <div style={{ margin: "6px 0", fontSize: 14, fontWeight: 600 }}>
-            Generate
-          </div>
-          {app.props.aiEnabled !== false && <TTDDialogTriggerTunnel.Out />}
-          <DropdownMenu.Item
-            onSelect={() => app.setOpenDialog({ name: "ttd", tab: "mermaid" })}
-            icon={mermaidLogoIcon}
-            data-testid="toolbar-embeddable"
-          >
-            {t("toolBar.mermaidToExcalidraw")}
-          </DropdownMenu.Item>
-          {app.props.aiEnabled !== false && app.plugins.diagramToCode && (
-            <>
-              <DropdownMenu.Item
-                onSelect={() => app.onMagicframeToolSelect()}
-                icon={MagicIcon}
-                data-testid="toolbar-magicframe"
-                badge={<DropdownMenu.Item.Badge>AI</DropdownMenu.Item.Badge>}
-              >
-                {t("toolBar.magicframe")}
-              </DropdownMenu.Item>
-            </>
-          )}
         </DropdownMenu.Content>
       </DropdownMenu>
     </div>

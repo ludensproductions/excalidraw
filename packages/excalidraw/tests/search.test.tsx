@@ -21,13 +21,26 @@ import { act, render, waitFor } from "./test-utils";
 
 const { h } = window;
 
+const openSearchMenu = () => {
+  Keyboard.withModifierKeys({ ctrl: true }, () => {
+    Keyboard.keyPress(KEYS.F);
+  });
+
+  expect(h.app.state.openSidebar).not.toBeNull();
+  expect(h.app.state.openSidebar?.name).toBe(DEFAULT_SIDEBAR.name);
+  expect(h.app.state.openSidebar?.tab).toBe(CANVAS_SEARCH_TAB);
+};
+
 const querySearchInput = async () => {
-  const input =
-    h.app.excalidrawContainerValue.container?.querySelector<HTMLInputElement>(
-      `.${CLASSES.SEARCH_MENU_INPUT_WRAPPER} input`,
-    )!;
-  await waitFor(() => expect(input).not.toBeNull());
-  return input;
+  let input: HTMLInputElement | null | undefined;
+  await waitFor(() => {
+    input =
+      h.app.excalidrawContainerValue.container?.querySelector<HTMLInputElement>(
+        `.${CLASSES.SEARCH_MENU_INPUT_WRAPPER} input`,
+      );
+    expect(input).not.toBeNull();
+  });
+  return input!;
 };
 
 describe("search", () => {
@@ -41,26 +54,16 @@ describe("search", () => {
   it("should toggle search on cmd+f", async () => {
     expect(h.app.state.openSidebar).toBeNull();
 
-    Keyboard.withModifierKeys({ ctrl: true }, () => {
-      Keyboard.keyPress(KEYS.F);
-    });
-    expect(h.app.state.openSidebar).not.toBeNull();
-    expect(h.app.state.openSidebar?.name).toBe(DEFAULT_SIDEBAR.name);
-    expect(h.app.state.openSidebar?.tab).toBe(CANVAS_SEARCH_TAB);
+    openSearchMenu();
 
     const searchInput = await querySearchInput();
     expect(searchInput.matches(":focus")).toBe(true);
   });
 
   it("should refocus search input with cmd+f when search sidebar is still open", async () => {
-    Keyboard.withModifierKeys({ ctrl: true }, () => {
-      Keyboard.keyPress(KEYS.F);
-    });
+    openSearchMenu();
 
-    const searchInput =
-      h.app.excalidrawContainerValue.container?.querySelector<HTMLInputElement>(
-        `.${CLASSES.SEARCH_MENU_INPUT_WRAPPER} input`,
-      );
+    const searchInput = await querySearchInput();
 
     act(() => {
       searchInput?.blur();
@@ -69,9 +72,7 @@ describe("search", () => {
     expect(h.app.state.openSidebar).not.toBeNull();
     expect(searchInput?.matches(":focus")).toBe(false);
 
-    Keyboard.withModifierKeys({ ctrl: true }, () => {
-      Keyboard.keyPress(KEYS.F);
-    });
+    openSearchMenu();
     expect(searchInput?.matches(":focus")).toBe(true);
   });
 
@@ -86,12 +87,7 @@ describe("search", () => {
 
     expect(h.app.state.openSidebar).toBeNull();
 
-    Keyboard.withModifierKeys({ ctrl: true }, () => {
-      Keyboard.keyPress(KEYS.F);
-    });
-    expect(h.app.state.openSidebar).not.toBeNull();
-    expect(h.app.state.openSidebar?.name).toBe(DEFAULT_SIDEBAR.name);
-    expect(h.app.state.openSidebar?.tab).toBe(CANVAS_SEARCH_TAB);
+    openSearchMenu();
 
     const searchInput = await querySearchInput();
 
@@ -131,12 +127,7 @@ describe("search", () => {
 
     expect(h.app.state.openSidebar).toBeNull();
 
-    Keyboard.withModifierKeys({ ctrl: true }, () => {
-      Keyboard.keyPress(KEYS.F);
-    });
-    expect(h.app.state.openSidebar).not.toBeNull();
-    expect(h.app.state.openSidebar?.name).toBe(DEFAULT_SIDEBAR.name);
-    expect(h.app.state.openSidebar?.tab).toBe(CANVAS_SEARCH_TAB);
+    openSearchMenu();
 
     const searchInput = await querySearchInput();
 
@@ -177,12 +168,7 @@ describe("search", () => {
 
     expect(h.app.state.openSidebar).toBeNull();
 
-    Keyboard.withModifierKeys({ ctrl: true }, () => {
-      Keyboard.keyPress(KEYS.F);
-    });
-    expect(h.app.state.openSidebar).not.toBeNull();
-    expect(h.app.state.openSidebar?.name).toBe(DEFAULT_SIDEBAR.name);
-    expect(h.app.state.openSidebar?.tab).toBe(CANVAS_SEARCH_TAB);
+    openSearchMenu();
 
     const searchInput = await querySearchInput();
 

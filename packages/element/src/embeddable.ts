@@ -137,7 +137,7 @@ const ALLOWED_DOMAINS = new Set([
   "player.vimeo.com",
   "drive.google.com",
   "figma.com",
-  "link.excalidraw.com",
+  "excalidraw.issirmax.mx",
   "gist.github.com",
   "twitter.com",
   "x.com",

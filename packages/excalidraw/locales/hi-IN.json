@@ -11,8 +11,6 @@
     "copyAsPng": "क्लिपबोर्ड पर पीएनजी के रूप में प्रतिलिपि बनायें",
     "copyAsSvg": "क्लिपबोर्ड पर एसवीजी के रूप में प्रतिलिपि बनायें",
     "copyText": "पाठ के रूप में क्लिपबोर्ड पर प्रतिलिपि बनायें",
-    "copySource": "स्त्रोत रूप में क्लिपबोर्ड पर प्रतिलिपि बनाएँ",
-    "convertToCode": "सांकेतिक लिपि में परिवर्तित करे",
     "bringForward": "सबसे सामने लाएं",
     "sendToBack": "पीछे भेजें",
     "bringToFront": "सामने लायें",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "चौखट के सर्व अवयव चुने",
     "removeAllElementsFromFrame": "चौखट से सर्व अवयव हटायें",
     "eyeDropper": "चित्रफलक से रंग चुने",
-    "textToDiagram": "पाठ से रेखाचित्र",
     "prompt": "प्रश्न",
     "followUs": "हमारा अनुकरण करें",
     "discordChat": "डिस्कॉर्ड संवाद",
@@ -307,12 +304,10 @@
     "link": "चयनित आकृति की कड़ी जोड़े/अद्यतन करें",
     "eraser": "रबड़",
     "frame": "चौखट उपकरण",
-    "magicframe": "तारिक ढाँचें को सांकेतिक लिपि में",
     "embeddable": "वेब जड़ायें",
     "laser": "लेसर टॉर्च",
     "hand": "हाथ ( खिसका के देखने का औज़ार)",
     "extraTools": "अधिक उपकरण",
-    "mermaidToExcalidraw": "मर्मेड से एक्सकाली में",
     "convertElementType": "आकार प्रकार टॉगल करें"
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "छवि",
     "group": "समूह",
     "frame": "ढांचा",
-    "magicframe": "तारिक ढाँचें को सांकेतिक लिपि में",
+    "magicframe": "ढांचा",
     "embeddable": "वेब जडें",
     "selection": "चयन",
     "iframe": "आईफ्रेम"
@@ -401,10 +396,7 @@
     "disk_button": "फ़ाइल में सुरक्षित करें",
     "link_title": "साझा करने योग्य कड़ी",
     "link_details": "केवल पढ़ी जा सके ऐसी कड़ी में निर्यात करें",
-    "link_button": "कड़ी स्वरूप में निर्यात करे",
-    "excalidrawplus_description": "दृश्य को एक्सकालीड्रॉप्लस कार्यस्थल में सुरक्षित रखें",
-    "excalidrawplus_button": "निर्यात",
-    "excalidrawplus_exportError": "इस वक्त एक्सकालीड्रॉप्लस में निर्यात नहीं किया जा सका..."
+    "link_button": "कड़ी स्वरूप में निर्यात करे"
   },
   "helpDialog": {
     "blog": "हमारा ब्लॉग पढे",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "बजाय आपको एक्स-काली-ड्रॉ-प्लस पर जाना है?",
       "menuHint": "निर्यात, पसंद, भाषायें, ..."
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "डिस्क में सम्हाले",
         "button": "डिस्क में सम्हाले",
         "description": "दृष्य डेटा बाहरी फ़ाइल में निर्यात करे, जहाँसे आप उसे पुनः आयात कर सकते हो"
-      },
-      "excalidrawPlus": {
-        "title": "एक्स-काली-ड्रॉ-प्लस",
-        "button": "एकस-काल-ड्रॉ-प्लस में निर्यात करे",
-        "description": "दृष्य को आपके एक्स-काली-ड्रॉ-प्लस के कर्यस्थल में सम्हाले"
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": "बाहर का चित्र लोड करने पर <bold>यह आपके कार्य की जगह लेलेगा </bold><br></br>आप आपकी ड्रॉइंग पहले निम्न दर्शित विकल्पो में से एक चुनके और उपयोग करके सहेज सकते हों."
       }
     }
-  },
-  "mermaid": {
-    "title": "मर्मेड से एक्सकाली में",
-    "button": "सन्निवेश करे",
-    "description": "वर्तमान में केवल <flowchartLink>बहाव चित्र</flowchartLink>, <sequenceLink> अनुक्रम चित्र </sequenceLink> और <classLink>वर्ग चित्र</classLink> का चित्रिकरण संभव हैं. अन्य चित्र प्रकार एक्सकाली प्रतिमा जैसे चित्रित किए जायेंगे.",
-    "syntax": "मर्मेड विन्यास",
-    "preview": "पूर्वावलोकन",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": "त्वरित खोज"

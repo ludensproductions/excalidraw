@@ -2,13 +2,13 @@ import type { ActionManager } from "../../actions/manager";
 import type { Action } from "../../actions/types";
 
 export const DEFAULT_CATEGORIES = {
-  app: "Aplicación",
-  export: "Exportar",
-  tools: "Herramientas",
+  app: "App",
+  export: "Export",
+  tools: "Tools",
   editor: "Editor",
-  elements: "Elementos",
-  links: "Enlaces",
-  library: "Biblioteca",
+  elements: "Elements",
+  links: "Links",
+  library: "Library",
 };
 
 export type CommandPaletteItem = {

@@ -11,8 +11,6 @@
     "copyAsPng": "Kopiatu arbelera PNG gisa",
     "copyAsSvg": "Kopiatu arbelera SVG gisa",
     "copyText": "Kopiatu arbelera testu gisa",
-    "copySource": "Kopiatu jatorria arbelean",
-    "convertToCode": "Kodera bihurtu",
     "bringForward": "Ekarri aurrerago",
     "sendToBack": "Eraman atzera",
     "bringToFront": "Ekarri aurrera",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "Hautatu markoko elementu guztiak",
     "removeAllElementsFromFrame": "Kendu markoko elementu guztiak",
     "eyeDropper": "Aukeratu kolorea oihaletik",
-    "textToDiagram": "Testutik diagramara",
     "prompt": "Galdetu",
     "followUs": "Jarraitu gaitzazu",
     "discordChat": "Discord txata",
@@ -307,12 +304,10 @@
     "link": "Gehitu / Eguneratu esteka hautatutako forma baterako",
     "eraser": "Borragoma",
     "frame": "Marko tresna",
-    "magicframe": "Wireframetik kodera",
     "embeddable": "Web kapsulatzea",
     "laser": "Laser punteroa",
     "hand": "Eskua (panoratze tresna)",
     "extraTools": "Tresna gehiago",
-    "mermaidToExcalidraw": "Mermaid-etik Excalidraw-ra",
     "convertElementType": ""
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "",
     "group": "",
     "frame": "",
-    "magicframe": "",
+    "magicframe": "Frame",
     "embeddable": "",
     "selection": "",
     "iframe": ""
@@ -401,10 +396,7 @@
     "disk_button": "Gorde fitxategian",
     "link_title": "Partekatzeko esteka",
     "link_details": "Esportatu irakurtzeko soilik moduko esteka.",
-    "link_button": "Esportatu esteka",
-    "excalidrawplus_description": "Gorde eszena zure Excalidraw+ laneko areara.",
-    "excalidrawplus_button": "Esportatu",
-    "excalidrawplus_exportError": "Une honetan ezin izan da esportatu Excalidraw+era..."
+    "link_button": "Esportatu esteka"
   },
   "helpDialog": {
     "blog": "Irakurri gure bloga",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "Horren ordez Excalidraw+-era joan nahi al zenuen?",
       "menuHint": "Esportatu, hobespenak, hizkuntzak..."
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "Gorde diskoan",
         "button": "Gorde diskoan",
         "description": "Esportatu eszenaren datuak geroago inportatu ahal izango duzun fitxategi batan."
-      },
-      "excalidrawPlus": {
-        "title": "Excalidraw+",
-        "button": "Esportatu Excalidraw+ra",
-        "description": "Gorde eszena zure Excalidraw+ laneko areara."
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": "Kanpoko irudi bat kargatzeak <bold>lehendik duzun edukia ordezkatuko du</bold>.<br></br>. Zure marrazkiaren babeskopia egin dezakezu lehenik beheko aukeretako bat erabiliz."
       }
     }
-  },
-  "mermaid": {
-    "title": "Mermaid-etik Excalidraw-ra",
-    "button": "Txertatu",
-    "description": "Momentu honetan <flowchartLink>Flowchart</flowchartLink>, <sequenceLink> Sequence, </sequenceLink> eta <classLink>Class </classLink>Diagramak onartzen dira. Beste motak irudi gisa errendatuko dira Excalidrawn.",
-    "syntax": "Mermaid sintaxia",
-    "preview": "Aurrebista",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": ""

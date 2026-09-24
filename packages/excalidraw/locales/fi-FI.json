@@ -11,8 +11,6 @@
     "copyAsPng": "Kopioi leikepöydälle PNG-tiedostona",
     "copyAsSvg": "Kopioi leikepöydälle SVG-tiedostona",
     "copyText": "Kopioi tekstinä",
-    "copySource": "Kopioi lähde leikepöydälle",
-    "convertToCode": "Muunna koodiksi",
     "bringForward": "Tuo eteenpäin",
     "sendToBack": "Vie taakse",
     "bringToFront": "Tuo eteen",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "",
     "removeAllElementsFromFrame": "",
     "eyeDropper": "",
-    "textToDiagram": "Teksti kaavioksi",
     "prompt": "",
     "followUs": "Seuraa meitä",
     "discordChat": "Discord-keskustelu",
@@ -307,12 +304,10 @@
     "link": "",
     "eraser": "Poistotyökalu",
     "frame": "",
-    "magicframe": "",
     "embeddable": "Verkkoupote",
     "laser": "Laserosoitin",
     "hand": "Käsi (panning-työkalu)",
     "extraTools": "Lisää työkaluja",
-    "mermaidToExcalidraw": "Mermaid Excalidrawiksi",
     "convertElementType": ""
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "",
     "group": "",
     "frame": "",
-    "magicframe": "",
+    "magicframe": "Frame",
     "embeddable": "",
     "selection": "",
     "iframe": ""
@@ -401,10 +396,7 @@
     "disk_button": "Tallenna tiedostoon",
     "link_title": "Jaettava linkki",
     "link_details": "Vie vain luku -linkkinä.",
-    "link_button": "Vie linkkinä",
-    "excalidrawplus_description": "Tallenna teos Excalidraw+ tilaan.",
-    "excalidrawplus_button": "Vie",
-    "excalidrawplus_exportError": "Ei voitu viedä Excalidraw+-palveluun tällä hetkellä..."
+    "link_button": "Vie linkkinä"
   },
   "helpDialog": {
     "blog": "Lue blogiamme",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "Haluatko sen sijaan mennä Excalidraw+:aan?",
       "menuHint": "Vie, asetukset, kielet, ..."
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "Tallenna levylle",
         "button": "Tallenna levylle",
         "description": ""
-      },
-      "excalidrawPlus": {
-        "title": "Excalidraw+",
-        "button": "Vie Excalidraw+:aan",
-        "description": ""
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": ""
       }
     }
-  },
-  "mermaid": {
-    "title": "",
-    "button": "",
-    "description": "",
-    "syntax": "",
-    "preview": "Esikatsele",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "",
-      "assistant": "",
-      "system": ""
-    },
-    "aiBeta": "",
-    "label": "",
-    "menu": "",
-    "newChat": "",
-    "deleteChat": "",
-    "deleteMessage": "",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "",
-    "insert": "",
-    "retry": "",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": ""
   },
   "quickSearch": {
     "placeholder": ""

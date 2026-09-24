@@ -11,8 +11,6 @@
     "copyAsPng": "Vágólapra másolás mint PNG",
     "copyAsSvg": "Vágólapra másolás mint SVG",
     "copyText": "Vágólapra másolás szövegként",
-    "copySource": "Forrás másolása a vágólapra",
-    "convertToCode": "Kód generálás",
     "bringForward": "Előrébb hozás",
     "sendToBack": "Hátraküldés",
     "bringToFront": "Előrehozás",
@@ -156,7 +154,6 @@
     "selectAllElementsInFrame": "",
     "removeAllElementsFromFrame": "",
     "eyeDropper": "",
-    "textToDiagram": "Szövegből diagram",
     "prompt": "Egyéb",
     "followUs": "Kövess minket",
     "discordChat": "Discord chat",
@@ -307,12 +304,10 @@
     "link": "Hivatkozás hozzáadása/frissítése a kiválasztott alakzathoz",
     "eraser": "Radír",
     "frame": "",
-    "magicframe": "",
     "embeddable": "",
     "laser": "Lézermutató",
     "hand": "",
     "extraTools": "További eszközök",
-    "mermaidToExcalidraw": "",
     "convertElementType": ""
   },
   "element": {
@@ -326,7 +321,7 @@
     "image": "Kép",
     "group": "Csoport",
     "frame": "Keret",
-    "magicframe": "",
+    "magicframe": "Keret",
     "embeddable": "Weblap beágyazása",
     "selection": "Kijelölés",
     "iframe": ""
@@ -401,10 +396,7 @@
     "disk_button": "Mentés fájlba",
     "link_title": "Megosztható hivatkozás",
     "link_details": "Exportálás csak olvasható hivatkozásként.",
-    "link_button": "Exportálás hivatkozásba",
-    "excalidrawplus_description": "Mentse el a jelenetet az Excalidraw+ munkaterületére.",
-    "excalidrawplus_button": "Exportálás",
-    "excalidrawplus_exportError": "Jelenleg nem lehet exportálni az Excalidraw+-ba..."
+    "link_button": "Exportálás hivatkozásba"
   },
   "helpDialog": {
     "blog": "Olvasd a blogunkat",
@@ -560,7 +552,6 @@
       "center_heading": "",
       "center_heading_line2": "",
       "center_heading_line3": "",
-      "center_heading_plus": "",
       "menuHint": ""
     },
     "defaults": {
@@ -589,11 +580,6 @@
         "title": "",
         "button": "",
         "description": ""
-      },
-      "excalidrawPlus": {
-        "title": "",
-        "button": "",
-        "description": ""
       }
     },
     "modal": {
@@ -608,61 +594,6 @@
         "description": ""
       }
     }
-  },
-  "mermaid": {
-    "title": "",
-    "button": "",
-    "description": "",
-    "syntax": "",
-    "preview": "",
-    "label": "",
-    "inputPlaceholder": ""
-  },
-  "ttd": {
-    "error": ""
-  },
-  "chat": {
-    "inputPlaceholder": "",
-    "inputPlaceholderWithMessages": "",
-    "generating": "",
-    "rateLimitRemaining": "",
-    "role": {
-      "user": "Te",
-      "assistant": "AI asszisztens",
-      "system": "Rendszer"
-    },
-    "aiBeta": "",
-    "label": "Csevegés",
-    "menu": "Menü",
-    "newChat": "Új csevegés",
-    "deleteChat": "Csevegés törlése",
-    "deleteMessage": "Üzenet törlése",
-    "viewAsMermaid": "",
-    "placeholder": {
-      "title": "",
-      "description": "",
-      "hint": ""
-    },
-    "preview": "Előnézet",
-    "insert": "Beszúrás",
-    "retry": "Újra",
-    "errors": {
-      "promptTooShort": "",
-      "promptTooLong": "",
-      "generationFailed": "",
-      "invalidDiagram": "",
-      "fixInMermaid": "",
-      "aiRepair": "",
-      "requestAborted": "",
-      "requestFailed": "",
-      "mermaidParseError": ""
-    },
-    "rateLimit": {
-      "messageLimit": "",
-      "generalRateLimit": "",
-      "messageLimitInputPlaceholder": ""
-    },
-    "upsellBtnLabel": "Frissítés Plus csomagra"
   },
   "quickSearch": {
     "placeholder": "Gyorskeresés"

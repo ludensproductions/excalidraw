@@ -1,16 +1,20 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Recuperar contraseña</title>
   </head>
-  <body style="font-family: Arial, sans-serif; color: #1f1f1f; line-height: 1.5">
+  <body
+    style="font-family: Arial, sans-serif; color: #1f1f1f; line-height: 1.5"
+  >
     <h2>Recuperar contraseña</h2>
     <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta.</p>
     <p>Haz clic en el siguiente enlace para crear una nueva contraseña:</p>
     <p>
-      <a href="{{ .SiteURL }}?type=recovery&amp;token_hash={{ .TokenHash }}">Restablecer contraseña</a>
+      <a href="{{ .SiteURL }}?type=recovery&amp;token_hash={{ .TokenHash }}"
+        >Restablecer contraseña</a
+      >
     </p>
     <p>Si no solicitaste este cambio, puedes ignorar este correo.</p>
   </body>
