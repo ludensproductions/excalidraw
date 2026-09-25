@@ -77,7 +77,7 @@ export const CommentsStore = {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      throw new Error("No autenticado");
+      throw new Error("Not authenticated");
     }
 
     const payload = {

@@ -397,9 +397,9 @@
   },
   "shareDialog": {
     "or": "O",
-    "editLink": "Enlace de edicion",
+    "editLink": "Enlace de edición",
     "viewOnlyLink": "Enlace de solo lectura",
-    "qrCodeLabel": "Codigo QR del enlace de colaboracion"
+    "qrCodeLabel": "Código QR del enlace de colaboración"
   },
   "roomDialog": {
     "desc_intro": "Invita a gente a colaborar en tu dibujo.",
@@ -449,7 +449,7 @@
     "tools": "Herramientas",
     "shortcuts": "Atajos del teclado",
     "textFinish": "Finalizar edición (editor de texto)",
-    "textNewLine": "Añadir nueva linea (editor de texto)",
+    "textNewLine": "Añadir nueva línea (editor de texto)",
     "title": "Ayuda",
     "view": "Vista",
     "zoomToFit": "Ajustar la vista para mostrar todos los elementos",
@@ -510,7 +510,7 @@
       "padding": "Espaciado"
     },
     "tooltip": {
-      "embedScene": "Los datos de la escena se guardarán en el archivo PNG/SVG exportado, así la escena puede ser restaurada desde la misma. Esto acción aumentará el tamaño del archivo exportado."
+      "embedScene": "Los datos de la escena se guardarán en el archivo PNG/SVG exportado, así la escena puede ser restaurada desde la misma. Esta acción aumentará el tamaño del archivo exportado."
     },
     "title": {
       "exportToPng": "Exportar a PNG",
@@ -551,7 +551,7 @@
     "copyStyles": "Estilos copiados.",
     "copyToClipboard": "Copiado en el portapapeles.",
     "copyToClipboardAsPng": "Copiado {{exportSelection}} al portapapeles como PNG\n({{exportColorScheme}})",
-    "copyToClipboardAsSvg": "Copiado {{exportSelection}} al portapapeles como PNG\n({{exportColorScheme}})",
+    "copyToClipboardAsSvg": "Copiado {{exportSelection}} al portapapeles como SVG\n({{exportColorScheme}})",
     "fileSaved": "Archivo guardado.",
     "fileSavedToFilename": "Guardado en {filename}",
     "canvas": "lienzo",
@@ -809,7 +809,23 @@
     "userStatusBanned": "Baneado",
     "userJoined": "Registro",
     "userLastUpdate": "Última actualización",
-    "userEmailReadOnlyHint": "El correo se muestra solo como referencia. Los cambios del email de acceso deben hacerse desde el flujo de cuenta/auth."
+    "userEmailReadOnlyHint": "El correo se muestra solo como referencia. Los cambios del email de acceso deben hacerse desde el flujo de cuenta/auth.",
+    "copiedBoardName": "{{name}} (de {{creator}})",
+    "defaultBoardName": "Tablero",
+    "defaultCreatorName": "usuario",
+    "sharedDraftName": "Borrador compartido",
+    "sharedBoardName": "Tablero compartido",
+    "loadingImages": "Cargando imágenes ({{loaded}}/{{total}})...",
+    "preparingExport": "Preparando exportación...",
+    "onlyOwnerCanRename": "Solo el dueño puede renombrar",
+    "onlyOwnerCanRenameText": "Este tablero compartido pertenece a otro usuario. Solo el dueño puede renombrar el tablero guardado.",
+    "onlyOwnerCanSave": "Solo el dueño puede guardar",
+    "onlyOwnerCanSaveText": "Este tablero compartido pertenece a otro usuario. Tus cambios se sincronizan en la colaboración; para guardarlo en tus tableros, exporta una copia o pide al dueño que finalice la sesión.",
+    "enterBoardNameToSave": "Escribe un nombre para guardar el tablero.",
+    "couldNotCreateBoard": "No se pudo crear el tablero",
+    "couldNotCreateBoardText": "No se pudo crear el tablero. Intenta otra vez.",
+    "couldNotSaveBoard": "No se pudo guardar el tablero.",
+    "documentTitle": "Excalidraw | Pizarra colaborativa"
   },
   "auth": {
     "title": {
@@ -889,11 +905,47 @@
       "verificationLinkExpired": "El enlace de verificación caducó. Solicita un nuevo correo de verificación.",
       "verificationLinkInvalid": "Este enlace ya no es válido. Revisa tu correo más reciente o solicita uno nuevo.",
       "verificationResendTooSoon": "Espera {{seconds}} segundos antes de solicitar otro correo de verificación.",
-      "passwordResetResendTooSoon": "Espera {{seconds}} segundos antes de solicitar otro correo de recuperacion.",
+      "passwordResetResendTooSoon": "Espera {{seconds}} segundos antes de solicitar otro correo de recuperación.",
       "invalidRecoveryLink": "El enlace de recuperación no es válido o expiró.",
       "passwordUpdatedButLoginFailed": "Contraseña actualizada, pero no se pudo iniciar sesión.",
-      "accountDisabled": "Esta cuenta esta deshabilitada.",
+      "accountDisabled": "Esta cuenta está deshabilitada.",
       "accountBanned": "Esta cuenta fue baneada."
     }
+  },
+  "serverErrors": {
+    "unexpected": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+    "technical": "Ocurrió un error técnico. Inténtalo de nuevo o contacta al administrador.",
+    "cannotChangeOwnRole": "No puedes cambiar tu propio rol o estado.",
+    "onlyAdminsCanChangeRole": "Solo los administradores pueden cambiar roles o estados.",
+    "onlyOwnerCanClose": "Solo el dueño puede cerrar este tablero compartido.",
+    "notSharedBoardMember": "No eres miembro de este tablero compartido.",
+    "invalidEmail": "El correo electrónico no tiene un formato válido.",
+    "invalidCredentials": "Correo o contraseña incorrectos.",
+    "emailNotConfirmed": "Verifica tu correo antes de iniciar sesión.",
+    "emailAlreadyVerified": "Este correo ya fue verificado. Inicia sesión para continuar.",
+    "alreadyRegistered": "Ya existe un registro con esos datos.",
+    "weakPassword": "La contraseña no cumple con los requisitos mínimos.",
+    "signupDisabled": "El registro está deshabilitado.",
+    "rateLimited": "Demasiados intentos. Espera un momento e inténtalo de nuevo.",
+    "linkExpired": "El enlace de verificación caducó. Solicita un nuevo correo de verificación.",
+    "linkInvalid": "Este enlace ya no es válido. Revisa tu correo más reciente o solicita uno nuevo.",
+    "sessionExpired": "Tu sesión expiró. Inicia sesión de nuevo.",
+    "sessionInvalid": "La sesión no es válida. Inicia sesión de nuevo.",
+    "noSession": "No hay una sesión activa. Inicia sesión de nuevo.",
+    "network": "No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.",
+    "permissionDenied": "No tienes permisos para realizar esta acción.",
+    "notAuthenticated": "No has iniciado sesión.",
+    "notFound": "No se encontró el recurso solicitado.",
+    "invalidFormat": "Los datos enviados no tienen un formato válido.",
+    "constraintViolation": "No se puede completar la acción porque los datos relacionados no son válidos.",
+    "missingData": "Faltan datos obligatorios.",
+    "storageNotFound": "No se encontró el almacenamiento de archivos configurado.",
+    "fileTooLarge": "El archivo es demasiado grande.",
+    "requestAborted": "La solicitud fue cancelada.",
+    "invalidOrigin": "El origen de la solicitud no es válido.",
+    "missingToken": "Falta el token de autorización.",
+    "tokenVerifyFailed": "No se pudo validar la autorización.",
+    "exportFailed": "No se pudo exportar la escena.",
+    "createAccountFailed": "No se pudo crear la cuenta. Si este correo ya está registrado, inicia sesión o recupera tu contraseña."
   }
 }

@@ -1,3 +1,7 @@
+import { isLocalizedText, t } from "./i18n";
+
+import type fallbackLangData from "./locales/en.json";
+
 type CANVAS_ERROR_NAMES = "CANVAS_ERROR" | "CANVAS_POSSIBLY_TOO_BIG";
 
 export class CanvasError extends Error {
@@ -89,113 +93,86 @@ export class RequestError extends Error {
   }
 }
 
-const DEFAULT_ERROR_MESSAGE =
-  "Ocurrió un error inesperado. Inténtalo de nuevo.";
+type ServerErrorKey = keyof typeof fallbackLangData.serverErrors;
 
-const TECHNICAL_ERROR_MESSAGE =
-  "Ocurrió un error técnico. Inténtalo de nuevo o contacta al administrador.";
-
-const SPANISH_TEXT_REGEX =
-  /[áéíóúüñ¿¡]|\b(?:acción|archivo|cargar|comentario|conexión|correo|datos|eliminar|error|guardar|inicia|intenta|no|permiso|recurso|sesión|tablero|usuario|válido)\b/i;
-
-const ERROR_TRANSLATIONS: Array<[RegExp, string]> = [
+const ERROR_TRANSLATIONS: Array<[RegExp, ServerErrorKey]> = [
+  [/cannot change your own role/i, "cannotChangeOwnRole"],
+  [/only administrators can change/i, "onlyAdminsCanChangeRole"],
+  [/only the owner can close/i, "onlyOwnerCanClose"],
+  [/not a member of this shared board/i, "notSharedBoardMember"],
   [
     /unable to validate email address|email address.*invalid|invalid.*email/i,
-    "El correo electrónico no tiene un formato válido.",
+    "invalidEmail",
   ],
   [
     /invalid login|invalid credentials|invalid grant|bad credentials/i,
-    "Correo o contraseña incorrectos.",
+    "invalidCredentials",
   ],
-  [
-    /email not confirmed|not confirmed/i,
-    "Verifica tu correo antes de iniciar sesión.",
-  ],
+  [/email not confirmed|not confirmed/i, "emailNotConfirmed"],
   [
     /already.*(verified|confirmed)|user.*already.*confirmed/i,
-    "Este correo ya fue verificado. Inicia sesión para continuar.",
+    "emailAlreadyVerified",
   ],
   [
     /user already registered|already registered|already exists|duplicate/i,
-    "Ya existe un registro con esos datos.",
+    "alreadyRegistered",
   ],
   [
     /password.*(at least|minimum|too short)|weak password|password should/i,
-    "La contraseña no cumple con los requisitos mínimos.",
+    "weakPassword",
   ],
   [
     /signup disabled|signups? not allowed|registration disabled/i,
-    "El registro está deshabilitado.",
+    "signupDisabled",
   ],
   [
     /rate limit|too many requests|security purposes|over_email_send_rate_limit/i,
-    "Demasiados intentos. Espera un momento e inténtalo de nuevo.",
+    "rateLimited",
   ],
-  [
-    /otp_expired|token.*expired|link.*expired|expired.*link/i,
-    "El enlace de verificación caducó. Solicita un nuevo correo de verificación.",
-  ],
-  [
-    /invalid.*token|invalid.*link|email.*link.*invalid/i,
-    "Este enlace ya no es válido. Revisa tu correo más reciente o solicita uno nuevo.",
-  ],
+  [/otp_expired|token.*expired|link.*expired|expired.*link/i, "linkExpired"],
+  [/invalid.*token|invalid.*link|email.*link.*invalid/i, "linkInvalid"],
   [
     /jwt.*expired|token.*expired|expired jwt|session.*expired/i,
-    "Tu sesión expiró. Inicia sesión de nuevo.",
+    "sessionExpired",
   ],
-  [
-    /invalid jwt|invalid token|jwt.*invalid|malformed jwt/i,
-    "La sesión no es válida. Inicia sesión de nuevo.",
-  ],
+  [/invalid jwt|invalid token|jwt.*invalid|malformed jwt/i, "sessionInvalid"],
   [
     /auth session missing|session not found|no session|missing session/i,
-    "No hay una sesión activa. Inicia sesión de nuevo.",
+    "noSession",
   ],
   [
     /failed to fetch|networkerror|network request failed|load failed|fetch failed/i,
-    "No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.",
+    "network",
   ],
   [
     /permission denied|row-level security|row level security|not allowed|unauthorized|forbidden|access denied/i,
-    "No tienes permisos para realizar esta acción.",
+    "permissionDenied",
   ],
   [
     /not authenticated|unauthenticated|authentication required/i,
-    "No has iniciado sesión.",
+    "notAuthenticated",
   ],
-  [
-    /not found|does not exist|resource missing|object not found/i,
-    "No se encontró el recurso solicitado.",
-  ],
+  [/not found|does not exist|resource missing|object not found/i, "notFound"],
   [
     /invalid input syntax|invalid format|malformed|syntax error/i,
-    "Los datos enviados no tienen un formato válido.",
+    "invalidFormat",
   ],
-  [
-    /foreign key constraint|violates.*constraint/i,
-    "No se puede completar la acción porque los datos relacionados no son válidos.",
-  ],
-  [/not-null constraint|null value/i, "Faltan datos obligatorios."],
-  [
-    /bucket not found|storage bucket/i,
-    "No se encontró el almacenamiento de archivos configurado.",
-  ],
+  [/foreign key constraint|violates.*constraint/i, "constraintViolation"],
+  [/not-null constraint|null value/i, "missingData"],
+  [/bucket not found|storage bucket/i, "storageNotFound"],
   [
     /file.*too large|payload too large|size exceeded|is longer than.*bytes/i,
-    "El archivo es demasiado grande.",
+    "fileTooLarge",
   ],
-  [/request aborted|aborted/i, "La solicitud fue cancelada."],
-  [/invalid origin/i, "El origen de la solicitud no es válido."],
-  [/jwt is missing|missing jwt/i, "Falta el token de autorización."],
-  [/failed to verify jwt/i, "No se pudo validar la autorización."],
-  [/failed to export scene data/i, "No se pudo exportar la escena."],
-  [
-    /database error saving new user/i,
-    "No se pudo crear la cuenta. Si este correo ya está registrado, inicia sesión o recupera tu contraseña.",
-  ],
+  [/request aborted|aborted/i, "requestAborted"],
+  [/invalid origin/i, "invalidOrigin"],
+  [/jwt is missing|missing jwt/i, "missingToken"],
+  [/failed to verify jwt/i, "tokenVerifyFailed"],
+  [/failed to export scene data/i, "exportFailed"],
+  [/database error saving new user/i, "createAccountFailed"],
   [
     /something went wrong|unexpected error|internal server error/i,
-    DEFAULT_ERROR_MESSAGE,
+    "unexpected",
   ],
 ];
 
@@ -240,7 +217,7 @@ const stringifyError = (error: unknown): string => {
 
 export const translateErrorMessage = (
   message: string | null | undefined,
-  fallback = DEFAULT_ERROR_MESSAGE,
+  fallback = t("serverErrors.unexpected"),
 ): string => {
   const normalizedMessage = (message ?? "").trim();
 
@@ -248,20 +225,21 @@ export const translateErrorMessage = (
     return fallback;
   }
 
-  for (const [pattern, translatedMessage] of ERROR_TRANSLATIONS) {
+  for (const [pattern, key] of ERROR_TRANSLATIONS) {
     if (pattern.test(normalizedMessage)) {
-      return translatedMessage;
+      return t(`serverErrors.${key}`);
     }
   }
 
-  if (SPANISH_TEXT_REGEX.test(normalizedMessage)) {
+  // already produced by t() in the current language
+  if (isLocalizedText(normalizedMessage)) {
     return normalizedMessage;
   }
 
-  return TECHNICAL_ERROR_MESSAGE;
+  return t("serverErrors.technical");
 };
 
 export const getErrorMessage = (
   error: unknown,
-  fallback = DEFAULT_ERROR_MESSAGE,
+  fallback = t("serverErrors.unexpected"),
 ): string => translateErrorMessage(stringifyError(error), fallback);

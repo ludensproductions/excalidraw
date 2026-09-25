@@ -421,7 +421,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     const appState = this.excalidrawAPI.getAppState();
     const record = await DrawingsStore.save(
       {
-        name: activeBoard?.name || "Borrador compartido",
+        name: activeBoard?.name || t("app.sharedDraftName"),
         elements: this.excalidrawAPI.getSceneElements(),
         files: this.excalidrawAPI.getFiles(),
         appState: {
@@ -864,7 +864,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       await SharedBoardsStore.joinOrCreate({
         roomId,
         roomKey,
-        name: activeBoard?.name || "Tablero compartido",
+        name: activeBoard?.name || t("app.sharedBoardName"),
         username,
       });
       if (activeBoard?.id) {

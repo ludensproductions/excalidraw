@@ -1,4 +1,5 @@
 import { isInitializedImageElement } from "@excalidraw/element";
+import { t } from "@excalidraw/excalidraw/i18n";
 
 import type { ExcalidrawElement } from "@excalidraw/element/types";
 import type { BinaryFiles } from "@excalidraw/excalidraw/types";
@@ -146,7 +147,7 @@ export const DrawingsStore = {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      throw new Error("No autenticado");
+      throw new Error("Not authenticated");
     }
 
     const hasFiles = data.files !== undefined;
@@ -214,7 +215,7 @@ export const DrawingsStore = {
         throwStoreError(insertError.message);
       }
       if (!insertedRow) {
-        throw new Error("No se pudo guardar el tablero");
+        throw new Error(t("app.couldNotSaveBoard"));
       }
       return rowToRecord(insertedRow);
     };

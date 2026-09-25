@@ -100,8 +100,8 @@ export const AppMainMenu: React.FC<{
   const handleRenameBoard = async () => {
     if (!permissions.renameBoard) {
       await appDialog.alert({
-        title: "Solo el dueño puede renombrar",
-        text: "Este tablero compartido pertenece a otro usuario. Solo el dueño puede renombrar el tablero guardado.",
+        title: t("app.onlyOwnerCanRename"),
+        text: t("app.onlyOwnerCanRenameText"),
         icon: "info",
       });
       return;

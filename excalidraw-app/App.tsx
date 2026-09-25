@@ -208,9 +208,14 @@ const buildCopiedBoardName = (
   sourceName: string | null,
   creatorName: string | null,
 ) => {
-  const normalizedSource = (sourceName || "").trim() || "Tablero";
-  const normalizedCreator = (creatorName || "").trim() || "usuario";
-  return `${normalizedSource} (de ${normalizedCreator})`;
+  const normalizedSource =
+    (sourceName || "").trim() || t("app.defaultBoardName");
+  const normalizedCreator =
+    (creatorName || "").trim() || t("app.defaultCreatorName");
+  return t("app.copiedBoardName", {
+    name: normalizedSource,
+    creator: normalizedCreator,
+  });
 };
 
 const initializeScene = async (opts: {
@@ -896,7 +901,10 @@ const ExcalidrawWrapper = () => {
       yield {
         type: "progress",
         progress: (total - pending) / total,
-        message: `Cargando imagenes (${total - pending}/${total})...`,
+        message: t("app.loadingImages", {
+          loaded: total - pending,
+          total,
+        }),
       };
 
       // Wait for all pending images to finish
@@ -908,16 +916,17 @@ const ExcalidrawWrapper = () => {
         yield {
           type: "progress",
           progress: (nowTotal - nowPending) / nowTotal,
-          message: `Cargando imagenes (${
-            nowTotal - nowPending
-          }/${nowTotal})...`,
+          message: t("app.loadingImages", {
+            loaded: nowTotal - nowPending,
+            total: nowTotal,
+          }),
         };
 
         if (nowPending === 0) {
           await new Promise((r) => setTimeout(r, 500));
           yield {
             type: "progress",
-            message: "Preparando exportacion...",
+            message: t("app.preparingExport"),
           };
           return;
         }

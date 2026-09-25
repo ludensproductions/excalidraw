@@ -116,7 +116,7 @@ const AppRoot: React.FC = () => {
       return;
     }
 
-    // Restaurar tablero si la URL contiene /board/{id}
+    // Restore board if the URL contains /board/{id}
     const boardMatch = window.location.pathname.match(
       /^\/board\/([a-zA-Z0-9_-]+)$/,
     );
@@ -214,10 +214,10 @@ const AppRoot: React.FC = () => {
       setView({ type: "editor", boardId: record.id, key: Date.now() });
     } catch (error) {
       await appDialog.error(
-        "No se pudo crear el tablero",
+        t("app.couldNotCreateBoard"),
         error instanceof Error
           ? error.message
-          : "No se pudo crear el tablero. Intenta otra vez.",
+          : t("app.couldNotCreateBoardText"),
       );
     } finally {
       setIsCreatingBoard(false);
@@ -289,6 +289,7 @@ const bootstrap = async () => {
   }
 
   await setLanguage({ code: getPreferredLanguage(), label: "" });
+  document.title = t("app.documentTitle");
   registerSW();
   root.render(
     <StrictMode>

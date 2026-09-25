@@ -159,6 +159,38 @@ export const t = (
   return translation;
 };
 
+let localizedTextCache: { data: object; patterns: RegExp[] } | null = null;
+
+const collectStrings = (data: any): string[] =>
+  Object.values(data ?? {}).flatMap((value) =>
+    typeof value === "string"
+      ? [value]
+      : typeof value === "object"
+      ? collectStrings(value)
+      : [],
+  );
+
+/** true if `text` is a (possibly interpolated) string of the current language */
+export const isLocalizedText = (text: string) => {
+  if (localizedTextCache?.data !== currentLangData) {
+    const data = Object.keys(currentLangData).length
+      ? currentLangData
+      : fallbackLangData;
+    localizedTextCache = {
+      data: currentLangData,
+      patterns: [...new Set(collectStrings(data))].map(
+        (value) =>
+          new RegExp(
+            `^${value
+              .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+              .replace(/\\\{\\\{\w+\\\}\\\}/g, "[\\s\\S]*?")}$`,
+          ),
+      ),
+    };
+  }
+  return localizedTextCache.patterns.some((pattern) => pattern.test(text));
+};
+
 /** @private atom used solely to rerender components using `useI18n` hook */
 const editorLangCodeAtom = atom(defaultLang.code);
 

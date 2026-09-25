@@ -1,4 +1,5 @@
 import { exportToBlob, useExcalidrawAPI } from "@excalidraw/excalidraw";
+import { t } from "@excalidraw/excalidraw/i18n";
 import { useCallback, useEffect, useRef } from "react";
 
 import {
@@ -162,7 +163,7 @@ export const useAutoSaveBoard = () => {
 
       const record = await DrawingsStore.save(
         {
-          name: board.name ?? "Sin titulo",
+          name: board.name ?? t("labels.untitled"),
           elements,
           files,
           appState: { viewBackgroundColor: appState.viewBackgroundColor },

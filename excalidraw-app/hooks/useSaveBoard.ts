@@ -43,8 +43,8 @@ export const useSaveBoard = () => {
 
       if (isCollaborating && (!isCollaborationOwner || isReadOnlySession)) {
         await appDialog.alert({
-          title: "Solo el dueño puede guardar",
-          text: "Este tablero compartido pertenece a otro usuario. Tus cambios se sincronizan en la colaboracion; para guardarlo en tus tableros, exporta una copia o pide al dueño que finalice la sesion.",
+          title: t("app.onlyOwnerCanSave"),
+          text: t("app.onlyOwnerCanSaveText"),
           icon: "info",
         });
         return null;
@@ -53,11 +53,11 @@ export const useSaveBoard = () => {
       let name = options?.name?.trim() || activeBoard.name;
       if (!name) {
         const input = await appDialog.promptText({
-          title: "Guardar tablero",
-          label: "Nombre del tablero",
-          placeholder: "Ej. Wireframe principal",
-          confirmButtonText: "Guardar",
-          requiredMessage: "Escribe un nombre para guardar el tablero.",
+          title: t("app.saveBoard"),
+          label: t("app.boardName"),
+          placeholder: t("app.boardNamePlaceholder"),
+          confirmButtonText: t("app.save"),
+          requiredMessage: t("app.enterBoardNameToSave"),
         });
         if (!input) {
           return null;
