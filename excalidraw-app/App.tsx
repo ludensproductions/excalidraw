@@ -105,7 +105,7 @@ import {
   importFromBackend,
   isCollaborationLink,
 } from "./data";
-import { getCurrentUser } from "./auth/authStore";
+import { getCurrentUser, waitForAuthHydration } from "./auth/authStore";
 import { DrawingsStore } from "./data/DrawingsStore";
 
 import { updateStaleImageStatuses } from "./data/FileManager";
@@ -188,18 +188,20 @@ if (window.self !== window.top) {
   }
 }
 
-const shareableLinkConfirmDialog = {
-  title: t("overwriteConfirm.modal.shareableLink.title"),
-  description: (
-    <Trans
-      i18nKey="overwriteConfirm.modal.shareableLink.description"
-      bold={(text) => <strong>{text}</strong>}
-      br={() => <br />}
-    />
-  ),
-  actionLabel: t("overwriteConfirm.modal.shareableLink.button"),
-  color: "danger",
-} as const;
+// built lazily so t() runs after the language has loaded
+const getShareableLinkConfirmDialog = () =>
+  ({
+    title: t("overwriteConfirm.modal.shareableLink.title"),
+    description: (
+      <Trans
+        i18nKey="overwriteConfirm.modal.shareableLink.description"
+        bold={(text) => <strong>{text}</strong>}
+        br={() => <br />}
+      />
+    ),
+    actionLabel: t("overwriteConfirm.modal.shareableLink.button"),
+    color: "danger",
+  } as const);
 
 const COPY_IMPORT_DEDUP_WINDOW_MS = 5000;
 const importedCopyTokenTimes = new Map<string, number>();
@@ -273,13 +275,29 @@ const initializeScene = async (opts: {
     }
   }
   if (isExternalScene) {
+    // copy links are saved as a new board, so only prompt when a board with
+    // the same name already exists (it gets overwritten)
+    let currentUser: ReturnType<typeof getCurrentUser> = null;
+    let copiedName = "";
+    let existingCopyId: string | undefined;
+    if (jsonBackendMatch) {
+      await waitForAuthHydration();
+      currentUser = getCurrentUser();
+      copiedName = buildCopiedBoardName(copyBoard, copyFrom);
+      if (currentUser) {
+        existingCopyId = await DrawingsStore.findIdByName(copiedName).catch(
+          () => undefined,
+        );
+      }
+    }
     if (
       // don't prompt if scene is empty
       !(scene.elements?.length ?? 0) ||
       // don't prompt for collab scenes because we don't override local storage
       roomLinkData ||
+      (currentUser && !existingCopyId) ||
       // otherwise, prompt whether user wants to override current scene
-      (await openConfirmModal(shareableLinkConfirmDialog))
+      (await openConfirmModal(getShareableLinkConfirmDialog()))
     ) {
       if (jsonBackendMatch) {
         const imported = await importFromBackend(
@@ -305,25 +323,26 @@ const initializeScene = async (opts: {
           ),
         };
 
-        const currentUser = getCurrentUser();
         if (currentUser) {
           const token = `${currentUser.id}:${jsonBackendMatch[1]}:${jsonBackendMatch[2]}`;
           const lastImportTs = importedCopyTokenTimes.get(token) ?? 0;
           if (Date.now() - lastImportTs > COPY_IMPORT_DEDUP_WINDOW_MS) {
             importedCopyTokenTimes.set(token, Date.now());
             try {
-              const copiedName = buildCopiedBoardName(copyBoard, copyFrom);
-              const copiedBoard = await DrawingsStore.save({
-                name: copiedName,
-                elements: importedElements,
-                files: imported.files ?? {},
-                appState: {
-                  viewBackgroundColor: scene.appState?.viewBackgroundColor,
+              const copiedBoard = await DrawingsStore.save(
+                {
+                  name: copiedName,
+                  elements: importedElements,
+                  files: imported.files ?? {},
+                  appState: {
+                    viewBackgroundColor: scene.appState?.viewBackgroundColor,
+                  },
+                  thumbnail: null,
+                  collabLink: null,
+                  userId: currentUser.id,
                 },
-                thumbnail: null,
-                collabLink: null,
-                userId: currentUser.id,
-              });
+                existingCopyId,
+              );
               appJotaiStore.set(activeBoardAtom, {
                 id: copiedBoard.id,
                 name: copiedBoard.name,
@@ -366,7 +385,7 @@ const initializeScene = async (opts: {
       const data = await loadFromBlob(await request.blob(), null, null);
       if (
         !(scene.elements?.length ?? 0) ||
-        (await openConfirmModal(shareableLinkConfirmDialog))
+        (await openConfirmModal(getShareableLinkConfirmDialog()))
       ) {
         return { scene: data, isExternalScene };
       }

@@ -325,33 +325,29 @@ export const DrawingsStore = {
     }
   },
 
-  async isNameTaken(name: string, excludeId?: string): Promise<boolean> {
+  async findIdByName(name: string): Promise<string | undefined> {
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      return false;
+      return undefined;
     }
 
-    const trimmed = name.trim();
     const { data, error } = await supabase
       .from("boards")
       .select("id")
-      .ilike("name", trimmed)
+      .ilike("name", name.trim())
       .limit(1);
 
     if (error) {
       throwStoreError(error.message);
     }
 
-    if (!data || data.length === 0) {
-      return false;
-    }
+    return data?.[0]?.id;
+  },
 
-    if (excludeId && data[0].id === excludeId) {
-      return false;
-    }
-
-    return true;
+  async isNameTaken(name: string, excludeId?: string): Promise<boolean> {
+    const id = await this.findIdByName(name);
+    return !!id && id !== excludeId;
   },
 };
