@@ -11,7 +11,6 @@ import { t } from "@excalidraw/excalidraw/i18n";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowsRotate,
-  faBan,
   faCheck,
   faCopy,
   faLinkSlash,
@@ -150,7 +149,7 @@ const getRolePalette = (
 };
 
 const getActionButtonStyle = (
-  tone: "primary" | "neutral" | "danger",
+  tone: "primary" | "neutral" | "danger" | "success",
   isDark: boolean,
 ): React.CSSProperties => {
   if (tone === "primary") {
@@ -169,6 +168,14 @@ const getActionButtonStyle = (
     };
   }
 
+  if (tone === "success") {
+    return {
+      background: isDark ? "#132a1c" : "#f0fdf4",
+      color: isDark ? "#86efac" : "#15803d",
+      border: `1px solid ${isDark ? "#14532d" : "#bbf7d0"}`,
+    };
+  }
+
   return {
     background: "transparent",
     color: isDark ? "#d1d5db" : "#374151",
@@ -177,7 +184,7 @@ const getActionButtonStyle = (
 };
 
 const getActionIconButtonStyle = (
-  tone: "primary" | "neutral" | "danger",
+  tone: "primary" | "neutral" | "danger" | "success",
   isDark: boolean,
 ): React.CSSProperties => ({
   ...getActionButtonStyle(tone, isDark),
@@ -1251,7 +1258,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       title: titleByStatus[nextStatus],
       text: `${t("app.user")}: ${profile.username}`,
       confirmButtonText: t("app.confirm"),
-      danger: nextStatus === "banned",
+      danger: nextStatus !== "active",
     });
 
     if (!confirmed) {
@@ -1789,7 +1796,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           title={t("app.activateUser")}
                           aria-label={t("app.activateUser")}
                           style={{
-                            ...getActionIconButtonStyle("neutral", isDark),
+                            ...getActionIconButtonStyle("success", isDark),
                           }}
                         >
                           <FontAwesomeIcon icon={faCheck} />
@@ -1808,29 +1815,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           title={t("app.disableUser")}
                           aria-label={t("app.disableUser")}
                           style={{
-                            ...getActionIconButtonStyle("neutral", isDark),
-                          }}
-                        >
-                          <FontAwesomeIcon icon={faUserSlash} />
-                        </button>
-                      )}
-
-                      {selectedManagedUser.status !== "banned" && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            void handleManagedStatusChange(
-                              selectedManagedUser,
-                              "banned",
-                            );
-                          }}
-                          title={t("app.banUser")}
-                          aria-label={t("app.banUser")}
-                          style={{
                             ...getActionIconButtonStyle("danger", isDark),
                           }}
                         >
-                          <FontAwesomeIcon icon={faBan} />
+                          <FontAwesomeIcon icon={faUserSlash} />
                         </button>
                       )}
                     </div>
