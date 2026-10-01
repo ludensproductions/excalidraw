@@ -443,7 +443,9 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
                   setPassword(
                     shouldConstrainPassword
                       ? sanitizePasswordInput(e.target.value)
-                      : e.target.value,
+                      : Array.from(e.target.value)
+                          .slice(0, AUTH_FIELD_LIMITS.password.max)
+                          .join(""),
                   )
                 }
                 onBeforeInput={
@@ -462,11 +464,7 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
                     ? AUTH_FIELD_LIMITS.password.min
                     : undefined
                 }
-                maxLength={
-                  shouldConstrainPassword
-                    ? AUTH_FIELD_LIMITS.password.max
-                    : undefined
-                }
+                maxLength={AUTH_FIELD_LIMITS.password.max}
                 autoComplete={
                   mode === "login" ? "current-password" : "new-password"
                 }

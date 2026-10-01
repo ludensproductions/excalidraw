@@ -45,7 +45,6 @@ const homeIcon = (
 );
 
 export const AppMainMenu: React.FC<{
-  onCollabDialogOpen: () => any;
   isCollaborating: boolean;
   isCollabEnabled: boolean;
   theme: Theme | "system";
@@ -214,13 +213,6 @@ export const AppMainMenu: React.FC<{
           <MainMenu.Item icon={usersIcon} onSelect={handleLeaveCollaboration}>
             {t("roomDialog.button_leaveSession")}
           </MainMenu.Item>
-        )}
-      {permissions.liveCollaboration &&
-        (!props.isCollaborating || isCollaborationOwner) && (
-          <MainMenu.DefaultItems.LiveCollaborationTrigger
-            isCollaborating={props.isCollaborating}
-            onSelect={() => props.onCollabDialogOpen()}
-          />
         )}
       {permissions.commandPalette && (
         <MainMenu.DefaultItems.CommandPalette className="highlighted" />

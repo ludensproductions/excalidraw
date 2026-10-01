@@ -260,10 +260,7 @@ export const DrawingsStore = {
     }
   },
 
-  async normalizeAfterStoppingRoom(
-    roomId: string,
-    preferredBoardId?: string | null,
-  ): Promise<string | null> {
+  async getIdsByRoom(roomId: string): Promise<string[]> {
     const { data, error } = await supabase
       .from("boards")
       .select("id, updated_at")
@@ -272,20 +269,23 @@ export const DrawingsStore = {
     if (error) {
       throwStoreError(error.message);
     }
+    return ((data ?? []) as Array<{ id: string }>).map((row) => row.id);
+  },
 
-    const rows = (data ?? []) as Array<{ id: string; updated_at: string }>;
-    if (rows.length === 0) {
-      return null;
+  async normalizeAfterStoppingRoom(
+    roomId: string,
+    preferredBoardId?: string | null,
+  ): Promise<string | null> {
+    const linkedIds = await this.getIdsByRoom(roomId);
+    if (linkedIds.length === 0) {
+      return preferredBoardId ?? null;
     }
 
-    const keepId =
-      preferredBoardId && rows.some((row) => row.id === preferredBoardId)
-        ? preferredBoardId
-        : rows[0].id;
-
-    const duplicateIds = rows
-      .map((row) => row.id)
-      .filter((id) => id !== keepId);
+    // the preferred board (the one the editor just saved) always wins, even
+    // when it isn't linked to the room yet: any other linked board is a stale
+    // copy of the same session and would show up as a duplicate
+    const keepId = preferredBoardId ?? linkedIds[0];
+    const duplicateIds = linkedIds.filter((id) => id !== keepId);
 
     if (duplicateIds.length) {
       const { error: deleteError } = await supabase

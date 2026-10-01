@@ -89,6 +89,11 @@ const createBoardBuilder = () => {
     }),
     maybeSingle: vi.fn(resolveMaybeSingle),
     single: vi.fn(resolveMaybeSingle),
+    delete: vi.fn(() => builder),
+    in: vi.fn(async (_column: string, ids: string[]) => {
+      ids.forEach((id) => storeMocks.rows.delete(id));
+      return { error: null };
+    }),
   };
 
   return builder;
@@ -196,5 +201,35 @@ describe("DrawingsStore", () => {
 
     expect(storeMocks.updatePayloads[0]).not.toHaveProperty("files");
     expect(record.files).toEqual({ [fileId]: existingFile });
+  });
+
+  it("keeps only the saved draft when stopping a room with stale linked boards", async () => {
+    const { DrawingsStore } = await import("../data/DrawingsStore");
+    for (const id of ["stale-1", "stale-2", "draft"]) {
+      storeMocks.rows.set(id, {
+        id,
+        owner_id: "user-1",
+        name: "Tablero de prueba",
+        elements: [],
+        app_state: {},
+        thumbnail: null,
+        collab_link: null,
+        created_at: nowIso(),
+        updated_at: nowIso(),
+      });
+    }
+    // the draft isn't linked to the room yet, only the stale copies are
+    vi.spyOn(DrawingsStore, "getIdsByRoom").mockResolvedValue([
+      "stale-1",
+      "stale-2",
+    ]);
+
+    const keptId = await DrawingsStore.normalizeAfterStoppingRoom(
+      "room-1",
+      "draft",
+    );
+
+    expect(keptId).toBe("draft");
+    expect([...storeMocks.rows.keys()]).toEqual(["draft"]);
   });
 });

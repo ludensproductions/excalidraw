@@ -7,7 +7,7 @@ import { t } from "../i18n";
 import { calculateScrollCenter } from "../scene";
 import { SCROLLBAR_WIDTH, SCROLLBAR_MARGIN } from "../scene/scrollbars";
 
-import { ExitViewModeButton, MobileShapeActions } from "./Actions";
+import { ExitViewModeButton, MobileShapeActions, ZoomActions } from "./Actions";
 import { MobileToolBar } from "./MobileToolBar";
 import { FixedSideContainer } from "./FixedSideContainer";
 
@@ -72,11 +72,14 @@ export const MobileMenu = ({
       return null;
     }
 
+    const hostTopRightUI = renderTopRightUI?.(true, appState) ?? null;
+
     const topRightUI = (
       <div className="excalidraw-ui-top-right">
-        {renderTopRightUI?.(true, appState) ??
-          (!appState.viewModeEnabled && (
-            <>
+        {hostTopRightUI}
+        {!appState.viewModeEnabled && (
+          <>
+            {!hostTopRightUI && (
               <PenModeButton
                 checked={appState.penMode}
                 onChange={() => onPenModeToggle(null)}
@@ -84,9 +87,10 @@ export const MobileMenu = ({
                 isMobile
                 penDetected={appState.penDetected}
               />
-              <DefaultSidebarTriggerTunnel.Out />
-            </>
-          ))}
+            )}
+            <DefaultSidebarTriggerTunnel.Out />
+          </>
+        )}
         {appState.viewModeEnabled && (
           <ExitViewModeButton actionManager={actionManager} />
         )}
@@ -95,8 +99,8 @@ export const MobileMenu = ({
 
     const topLeftUI = (
       <div className="excalidraw-ui-top-left">
-        {renderTopLeftUI?.(true, appState)}
         <MainMenuTunnel.Out />
+        {renderTopLeftUI?.(true, appState)}
       </div>
     );
 
@@ -141,18 +145,13 @@ export const MobileMenu = ({
             marginBottom: SCROLLBAR_WIDTH + SCROLLBAR_MARGIN,
           }}
         >
-          <MobileShapeActions
-            appState={appState}
-            elementsMap={app.scene.getNonDeletedElementsMap()}
-            renderAction={actionManager.renderAction}
-            app={app}
-            setAppState={setAppState}
-          />
-
-          <Island className="App-toolbar">
-            {!appState.viewModeEnabled &&
-              appState.openDialog?.name !== "elementLinkSelector" &&
-              renderToolbar()}
+          <div className="mobile-zoom-row">
+            <Island className="mobile-zoom-actions" padding={1}>
+              <ZoomActions
+                renderAction={actionManager.renderAction}
+                zoom={appState.zoom}
+              />
+            </Island>
             {appState.scrolledOutside &&
               !appState.openMenu &&
               !appState.openSidebar && (
@@ -168,6 +167,19 @@ export const MobileMenu = ({
                   {t("buttons.scrollBackToContent")}
                 </button>
               )}
+          </div>
+          <MobileShapeActions
+            appState={appState}
+            elementsMap={app.scene.getNonDeletedElementsMap()}
+            renderAction={actionManager.renderAction}
+            app={app}
+            setAppState={setAppState}
+          />
+
+          <Island className="App-toolbar">
+            {!appState.viewModeEnabled &&
+              appState.openDialog?.name !== "elementLinkSelector" &&
+              renderToolbar()}
           </Island>
         </div>
       )}

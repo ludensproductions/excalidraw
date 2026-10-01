@@ -46,6 +46,8 @@
 
   &__tab {
     padding: 0.4rem 1rem;
+    white-space: nowrap;
+    flex-shrink: 0;
     border: none;
     background: transparent;
     border-radius: 6px;
@@ -199,6 +201,66 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 1.25rem;
+  }
+
+  // tabs don't fit next to logo + user controls: move them to their own row
+  @media (max-width: 1024px) {
+    &__header {
+      flex-wrap: wrap;
+      height: auto;
+      row-gap: 0.5rem;
+      padding: 0.75rem 1.25rem 0.5rem;
+    }
+
+    &__tabs {
+      order: 3;
+      width: 100%;
+      margin: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    &__user {
+      max-width: none;
+    }
+
+    &__main {
+      padding: 1.5rem 1.25rem;
+    }
+  }
+
+  @media (max-width: 600px) {
+    &__header {
+      padding: 0.6rem 0.75rem 0.4rem;
+    }
+
+    &__logo span {
+      display: none;
+    }
+
+    &__user {
+      gap: 0.4rem;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    &__tab {
+      padding: 0.4rem 0.75rem;
+      font-size: 0.85rem;
+    }
+
+    &__main {
+      padding: 1rem 0.75rem;
+    }
+
+    &__section-header {
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    &__grid {
+      grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
+    }
   }
 
   &__card {

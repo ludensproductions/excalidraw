@@ -287,6 +287,24 @@ body.excalidraw-cursor-resize * {
       flex-direction: column;
       pointer-events: var(--ui-pointerEvents);
     }
+
+    > .mobile-zoom-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 4px;
+
+      > .mobile-zoom-actions {
+        padding: 4px;
+        pointer-events: var(--ui-pointerEvents);
+      }
+
+      > .scroll-back-to-content {
+        position: static;
+        transform: none;
+        white-space: nowrap;
+      }
+    }
   }
 
   .App-toolbar {
@@ -358,6 +376,12 @@ body.excalidraw-cursor-resize * {
 
     & > * {
       pointer-events: var(--ui-pointerEvents);
+    }
+
+    // 1fr 2fr 1fr squeezes the toolbar into the right column on narrow
+    // desktops, so let the side columns take only what they need
+    @media (max-width: 1180px) {
+      grid-template-columns: auto 1fr auto;
     }
 
     @media (min-width: 1536px) {

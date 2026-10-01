@@ -30,13 +30,18 @@ import {
   preventUnload,
   resolvablePromise,
   isRunningInIframe,
+  getFormFactor,
 } from "@excalidraw/common";
 import polyfill from "@excalidraw/excalidraw/polyfill";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { loadFromBlob } from "@excalidraw/excalidraw/data/blob";
 import { t } from "@excalidraw/excalidraw/i18n";
 
-import { usersIcon, share } from "@excalidraw/excalidraw/components/icons";
+import {
+  usersIcon,
+  share,
+  copyIcon,
+} from "@excalidraw/excalidraw/components/icons";
 import { isElementLink } from "@excalidraw/element";
 import {
   bumpElementVersions,
@@ -988,6 +993,10 @@ const ExcalidrawWrapper = () => {
         onPointerUpdate={collabAPI?.onPointerUpdate}
         viewModeEnabled={isReadOnlySession ? true : undefined}
         UIOptions={{
+          // the desktop top bar (back + toolbar + share buttons) needs ~930px,
+          // below that switch to the phone layout instead of overflowing
+          getFormFactor: (width, height) =>
+            width < 960 ? "phone" : getFormFactor(width, height),
           canvasActions: {
             toggleTheme: true,
             export: {
@@ -1020,20 +1029,19 @@ const ExcalidrawWrapper = () => {
           );
         }}
         renderTopRightUI={(isMobile) => {
-          if (isMobile) {
-            return null;
-          }
-
           return (
             <div className="excalidraw-ui-top-right">
               <button
-                className="board-copy-btn"
+                className={clsx("board-copy-btn", {
+                  "board-copy-btn--icon": isMobile,
+                })}
                 onClick={() =>
                   setShareDialogState({ isOpen: true, type: "copyOnly" })
                 }
                 title={t("app.sendCopyTitle")}
+                aria-label={t("app.sendCopy")}
               >
-                {t("app.sendCopy")}
+                {isMobile ? copyIcon : t("app.sendCopy")}
               </button>
               {!isCollabDisabled && collabAPI && (
                 <>
@@ -1063,7 +1071,6 @@ const ExcalidrawWrapper = () => {
         }}
       >
         <AppMainMenu
-          onCollabDialogOpen={onCollabDialogOpen}
           isCollaborating={isCollaborating}
           isCollabEnabled={!isCollabDisabled}
           theme={appTheme}

@@ -1,15 +1,18 @@
+// max characters for any user-typed text field (auth, usernames, board names)
+export const MAX_FIELD_LENGTH = 50;
+
 export const AUTH_FIELD_LIMITS = {
   username: {
     min: 2,
-    max: 60,
+    max: MAX_FIELD_LENGTH,
   },
   email: {
     min: 5,
-    max: 254,
+    max: MAX_FIELD_LENGTH,
   },
   password: {
     min: 8,
-    max: 128,
+    max: MAX_FIELD_LENGTH,
   },
 } as const;
 

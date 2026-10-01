@@ -3,6 +3,7 @@ import "sweetalert2/dist/sweetalert2.min.css";
 
 import { t } from "@excalidraw/excalidraw/i18n";
 
+import { MAX_FIELD_LENGTH } from "./auth/authValidation";
 import { translateErrorMessage } from "./errorMessages";
 import "./appDialog.scss";
 
@@ -171,6 +172,7 @@ export const appDialog = {
     requiredMessage?: string;
     maxLength?: number;
   }): Promise<string | null> {
+    const maxLength = options.maxLength ?? MAX_FIELD_LENGTH;
     const result = await Swal.fire({
       ...baseOptions(),
       title: options.title,
@@ -183,12 +185,15 @@ export const appDialog = {
       confirmButtonText: options.confirmButtonText ?? t("app.save"),
       cancelButtonText: options.cancelButtonText ?? t("app.cancel"),
       inputAttributes: {
-        maxlength: String(options.maxLength ?? 120),
+        maxlength: String(maxLength),
         autocapitalize: "sentences",
       },
       inputValidator: (value) => {
         if (!value.trim()) {
           return options.requiredMessage ?? t("app.fieldRequired");
+        }
+        if (Array.from(value.trim()).length > maxLength) {
+          return t("app.fieldTooLong", { max: maxLength });
         }
         return undefined;
       },

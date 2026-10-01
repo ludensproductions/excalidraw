@@ -461,6 +461,24 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     const wasOwnerSession = this.isOwnerSession;
     let didStop = false;
     let didCloseSharedBoard = false;
+    let discardBoard = false;
+
+    if (keepRemoteState) {
+      const choice = await appDialog.choose({
+        title: t("roomDialog.button_stopSession"),
+        text: t("alerts.collabStopChoicePrompt"),
+        confirmButtonText: t("app.stopAndSave"),
+        denyButtonText: t("app.stopAndDelete"),
+        icon: "warning",
+        confirmButtonVariant: "primary",
+        denyButtonVariant: "danger",
+      });
+      if (choice === "cancel") {
+        return false;
+      }
+      saveDraft = choice === "confirm";
+      discardBoard = choice === "deny";
+    }
 
     this.queueBroadcastAllElements.cancel();
     this.queueSaveToFirebase.cancel();
@@ -516,21 +534,14 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       await this.notifyCollaboratorsCollaborationClosed();
       this.destroySocketClient();
       didStop = true;
-    } else if (
-      await appDialog.confirm({
-        title: t("roomDialog.button_stopSession"),
-        text: t("alerts.collabStopOverridePrompt"),
-        confirmButtonText: t("roomDialog.button_stopSession"),
-        danger: true,
-      })
-    ) {
+    } else {
       // hack to ensure that we prefer we disregard any new browser state
       // that could have been saved in other tabs while we were collaborating
       resetBrowserStateVersions();
 
-      if (!this.isOwnerSession && !saveDraft) {
-        dashboardState.setAutoSaveSuppressed(true);
-      }
+      // keep autosave off until the draft below has a board id, otherwise it
+      // can race us and create a second board
+      dashboardState.setAutoSaveSuppressed(true);
       if (!(await saveRemoteStateBeforeStop())) {
         return true;
       }
@@ -570,6 +581,11 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       try {
         const draftRecord = await this.saveCurrentSceneAsDraft(activeBoard?.id);
         draftRecordId = draftRecord.id;
+        if (keepRemoteState) {
+          dashboardState.setAutoSaveSuppressed(false);
+          // regular autosave also regenerates the dashboard thumbnail
+          void dashboardState.flushAutoSave();
+        }
       } catch (error) {
         console.error("Failed to save shared board draft on stop:", error);
       }
@@ -591,6 +607,36 @@ class Collab extends PureComponent<CollabProps, CollabState> {
         console.error("Failed to close shared board on stop:", error);
       }
     }
+    if (didStop && discardBoard) {
+      // "stop and delete": drop every private copy of this session and leave
+      // the editor, since there's no board left to keep working on
+      const boardIdsToDelete = new Set<string>();
+      if (wasOwnerSession) {
+        if (roomId) {
+          const linkedIds = await DrawingsStore.getIdsByRoom(roomId).catch(
+            (error) => {
+              console.error("Failed to resolve boards linked to room:", error);
+              return [];
+            },
+          );
+          linkedIds.forEach((id) => boardIdsToDelete.add(id));
+        }
+        if (activeBoard?.id) {
+          boardIdsToDelete.add(activeBoard.id);
+        }
+      }
+      await Promise.all(
+        [...boardIdsToDelete].map((id) =>
+          DrawingsStore.delete(id).catch((error) => {
+            console.error("Failed to delete board on stop:", error);
+          }),
+        ),
+      );
+      appJotaiStore.set(activeBoardAtom, { id: null, name: null });
+      dashboardState.getOnBack()?.();
+      return didStop;
+    }
+
     if (didStop && saveDraft && roomId) {
       DrawingsStore.normalizeAfterStoppingRoom(
         roomId,
@@ -1100,6 +1146,25 @@ class Collab extends PureComponent<CollabProps, CollabState> {
         }
       } catch {
         // keep non-owner state on error
+      }
+    }
+
+    // Owner reopening their room from the dashboard arrives without a board
+    // id. Re-attach the private board linked to this room, otherwise autosave
+    // creates a second board once the session is stopped.
+    const currentBoard = appJotaiStore.get(activeBoardAtom);
+    if (this.isOwnerSession && !currentBoard.id) {
+      const [linkedBoardId] = await DrawingsStore.getIdsByRoom(roomId).catch(
+        (error) => {
+          console.error("Failed to resolve board linked to room:", error);
+          return [];
+        },
+      );
+      if (linkedBoardId && !appJotaiStore.get(activeBoardAtom).id) {
+        appJotaiStore.set(activeBoardAtom, {
+          id: linkedBoardId,
+          name: appJotaiStore.get(activeBoardAtom).name,
+        });
       }
     }
 

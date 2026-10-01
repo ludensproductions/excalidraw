@@ -81,10 +81,12 @@
   gap: 0.35rem;
   height: var(--lg-button-size, 2.25rem);
   padding: 0 0.8rem;
+  // same colors as .collab-button
   background: var(--color-primary, #6965db);
-  color: #ffffff;
-  border: none;
-  border-radius: var(--border-radius-md, 8px);
+  color: var(--color-surface-lowest);
+  border: 1px solid var(--color-primary, #6965db);
+  box-shadow: 0 0 0 1px var(--color-surface-lowest);
+  border-radius: var(--border-radius-lg, 8px);
   font-size: 0.8125rem;
   font-weight: 600;
   font-family: inherit;
@@ -99,5 +101,23 @@
 
   &:active {
     transform: scale(0.97);
+  }
+}
+
+// phone top bar: copy, share and sidebar buttons share one size
+.excalidraw.excalidraw--mobile .excalidraw-ui-top-right {
+  .board-copy-btn--icon,
+  .collab-button,
+  .default-sidebar-trigger {
+    width: var(--lg-button-size);
+    height: var(--lg-button-size);
+    padding: 0;
+    box-sizing: border-box;
+    flex-shrink: 0;
+
+    svg {
+      width: var(--lg-icon-size);
+      height: var(--lg-icon-size);
+    }
   }
 }

@@ -20,7 +20,10 @@ import {
   faUserShield,
   faUserSlash,
 } from "@fortawesome/free-solid-svg-icons";
-import { isInitializedImageElement } from "@excalidraw/element";
+import {
+  getNonDeletedElements,
+  isInitializedImageElement,
+} from "@excalidraw/element";
 
 import type { FileId } from "@excalidraw/element/types";
 
@@ -31,6 +34,7 @@ import { appDialog } from "../appDialog";
 import { FIREBASE_STORAGE_PREFIXES } from "../app_constants";
 import {
   AUTH_FIELD_LIMITS,
+  MAX_FIELD_LENGTH,
   normalizeUsername,
   validateUsername,
 } from "../auth/authValidation";
@@ -233,20 +237,25 @@ const blobToDataURL = async (blob: Blob): Promise<string> =>
     reader.readAsDataURL(blob);
   });
 
-const getSharedBoardPreviewKey = (board: SharedBoard): string =>
-  `${board.roomId}:${board.updatedAt}`;
+// shared_boards.updated_at doesn't change when the scene is edited (the scene
+// lives in collab_rooms), so previews are keyed by room and regenerated on
+// every board-list fetch instead
+const getSharedBoardPreviewKey = (board: SharedBoard): string => board.roomId;
 
 const createDashboardThumbnail = async (
   elements: DrawingRecord["elements"],
   files: BinaryFiles,
   viewBackgroundColor = "#ffffff",
 ): Promise<string | null> => {
-  if (!elements.length) {
+  // room scenes keep recently deleted elements (isDeleted) so deletions sync
+  // between peers; the exporter doesn't filter them, so drop them here
+  const visibleElements = getNonDeletedElements(elements);
+  if (!visibleElements.length) {
     return null;
   }
 
   const blob = await exportToBlob({
-    elements,
+    elements: visibleElements,
     appState: { viewBackgroundColor, exportBackground: true },
     files,
     maxWidthOrHeight: 200,
@@ -259,13 +268,14 @@ const createSharedBoardThumbnail = async (
   board: SharedBoard,
 ): Promise<string | null> => {
   const elements = await loadFromFirebase(board.roomId, board.roomKey, null);
+  const visibleElements = getNonDeletedElements(elements ?? []);
 
-  if (!elements?.length) {
+  if (!visibleElements.length) {
     return null;
   }
 
-  const files = await loadSharedBoardFiles(board, elements);
-  return createDashboardThumbnail(elements, files);
+  const files = await loadSharedBoardFiles(board, visibleElements);
+  return createDashboardThumbnail(visibleElements, files);
 };
 
 interface BoardCardProps {
@@ -302,7 +312,9 @@ const BoardCard: React.FC<BoardCardProps> = ({
   };
 
   const commitRename = async () => {
-    const trimmed = draftName.trim();
+    const trimmed = Array.from(draftName.trim())
+      .slice(0, MAX_FIELD_LENGTH)
+      .join("");
     setIsEditing(false);
     if (trimmed && trimmed !== board.name) {
       await onRename(board.id, trimmed);
@@ -387,7 +399,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
                 cancelRename();
               }
             }}
-            maxLength={120}
+            maxLength={MAX_FIELD_LENGTH}
           />
         ) : (
           <span
@@ -635,6 +647,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
   >({});
   const sharedBoardPreviewsRef = useRef<Record<string, string | null>>({});
   const sharedPreviewRequestsRef = useRef<Set<string>>(new Set());
+  // bumped on every fetch; a preview is stale when generated for an older one
+  const previewGenerationRef = useRef(0);
+  const previewGenerationByKeyRef = useRef<Record<string, number>>({});
   const isMountedRef = useRef(true);
 
   const { editorTheme, setAppTheme } = useHandleAppTheme();
@@ -655,20 +670,26 @@ export const Dashboard: React.FC<DashboardProps> = ({
     }
   }, [activeTab, isAdmin]);
 
-  const fetchBoards = useCallback(async () => {
-    setLoading(true);
-    setSharedError(null);
-    const [all, shared] = await Promise.all([
-      DrawingsStore.getAllForUser(user.id),
-      SharedBoardsStore.getAll().catch((err: unknown) => {
-        setSharedError(getErrorMessage(err));
-        return [] as SharedBoard[];
-      }),
-    ]);
-    setBoards(all);
-    setSharedBoards(shared);
-    setLoading(false);
-  }, [user.id]);
+  const fetchBoards = useCallback(
+    async (silent = false) => {
+      if (!silent) {
+        setLoading(true);
+      }
+      setSharedError(null);
+      const [all, shared] = await Promise.all([
+        DrawingsStore.getAllForUser(user.id),
+        SharedBoardsStore.getAll().catch((err: unknown) => {
+          setSharedError(getErrorMessage(err));
+          return [] as SharedBoard[];
+        }),
+      ]);
+      previewGenerationRef.current += 1;
+      setBoards(all);
+      setSharedBoards(shared);
+      setLoading(false);
+    },
+    [user.id],
+  );
 
   const fetchUsers = useCallback(async () => {
     if (!isAdmin) {
@@ -786,29 +807,39 @@ export const Dashboard: React.FC<DashboardProps> = ({
     void fetchBoards();
   }, [fetchBoards]);
 
+  // others may have edited a shared board while this tab was in background
   useEffect(() => {
+    const onVisibilityChange = () => {
+      if (!document.hidden) {
+        void fetchBoards(true);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [fetchBoards]);
+
+  useEffect(() => {
+    const generation = previewGenerationRef.current;
     visibleSharedBoards.forEach((board) => {
       const previewKey = getSharedBoardPreviewKey(board);
       if (
-        Object.prototype.hasOwnProperty.call(
-          sharedBoardPreviewsRef.current,
-          previewKey,
-        ) ||
+        previewGenerationByKeyRef.current[previewKey] === generation ||
         sharedPreviewRequestsRef.current.has(previewKey)
       ) {
         return;
       }
 
+      previewGenerationByKeyRef.current[previewKey] = generation;
       sharedPreviewRequestsRef.current.add(previewKey);
       createSharedBoardThumbnail(board)
         .then((thumbnail) => {
           if (!isMountedRef.current) {
             return;
           }
+          // replace the old preview only once the new one is ready
           setSharedBoardPreviews((prev) => {
-            if (Object.prototype.hasOwnProperty.call(prev, previewKey)) {
-              return prev;
-            }
             const next = { ...prev, [previewKey]: thumbnail };
             sharedBoardPreviewsRef.current = next;
             return next;
@@ -819,6 +850,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           if (!isMountedRef.current) {
             return;
           }
+          // keep the last good preview, if any
           setSharedBoardPreviews((prev) => {
             if (Object.prototype.hasOwnProperty.call(prev, previewKey)) {
               return prev;
@@ -927,7 +959,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
       initialValue: board.name,
       confirmButtonText: t("app.rename"),
       requiredMessage: t("app.fieldRequired"),
-      maxLength: 120,
     });
 
     if (!nextName || nextName === board.name) {
@@ -956,11 +987,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const handleLeaveSharedBoard = async (board: SharedBoard) => {
     const isOwner = board.createdBy === user.id;
     const choice = await appDialog.choose({
-      title: isOwner ? t("app.deleteSharedBoard") : t("app.leaveSharedBoard"),
-      text: t("app.leaveSharedSaveDraftText"),
-      confirmButtonText: t("app.saveDraft"),
+      title: isOwner
+        ? t("roomDialog.button_stopSession")
+        : t("app.leaveSharedBoard"),
+      text: isOwner
+        ? t("alerts.collabStopChoicePrompt")
+        : t("app.leaveSharedSaveDraftText"),
+      confirmButtonText: isOwner ? t("app.stopAndSave") : t("app.saveDraft"),
       denyButtonText: isOwner
-        ? t("app.finalizeWithoutSaving")
+        ? t("app.stopAndDelete")
         : t("app.leaveWithoutSaving"),
       cancelButtonText: t("app.cancel"),
       icon: "question",
@@ -1472,7 +1507,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                  gridTemplateColumns:
+                    "repeat(auto-fit, minmax(min(320px, 100%), 1fr))",
                   gap: "1.25rem",
                   alignItems: "start",
                 }}
