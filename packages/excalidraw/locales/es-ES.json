@@ -683,6 +683,9 @@
   },
   "app": {
     "saveBoard": "Guardar tablero",
+    "saveLocalCopy": "Guardar copia local",
+    "localCopyName": "{{name}} (copia)",
+    "localCopySavedSuccessfully": "Copia local guardada en tus tableros",
     "saving": "Guardando...",
     "saved": "Listo",
     "boardSavedSuccessfully": "Guardado correctamente",
@@ -857,7 +860,7 @@
       "username": "Tu nombre",
       "email": "correo@ejemplo.com",
       "password": "Tu contraseña",
-      "newPassword": "Mínimo 8 caracteres, mayúscula, minúscula, número y símbolo",
+      "newPassword": "8+ caracteres: Aa, número y símbolo",
       "confirmPassword": "Repite la contraseña"
     },
     "actions": {

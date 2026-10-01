@@ -85,6 +85,19 @@
   color: #ffffff;
 }
 
+// SweetAlert focuses the confirm button on open and draws a light ring;
+// tint the ring with the button's own color instead
+.app-swal__button:focus,
+.app-swal__button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(105, 101, 219, 0.35);
+}
+
+.app-swal__button--danger:focus,
+.app-swal__button--danger:focus-visible {
+  box-shadow: 0 0 0 3px rgba(212, 63, 58, 0.4);
+}
+
 .app-swal__validation {
   border-radius: 8px;
   font-size: 0.85rem;

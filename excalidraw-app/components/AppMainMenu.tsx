@@ -1,4 +1,7 @@
-import { usersIcon } from "@excalidraw/excalidraw/components/icons";
+import {
+  DuplicateIcon,
+  usersIcon,
+} from "@excalidraw/excalidraw/components/icons";
 import { MainMenu, useI18n } from "@excalidraw/excalidraw/index";
 import React from "react";
 
@@ -52,7 +55,11 @@ export const AppMainMenu: React.FC<{
   refresh: () => void;
 }> = React.memo((props) => {
   const currentUser = getCurrentUser();
-  const { save: saveBoard, status: saveBoardStatus } = useSaveBoard();
+  const {
+    save: saveBoard,
+    saveLocalCopy,
+    status: saveBoardStatus,
+  } = useSaveBoard();
   const [activeBoard, setActiveBoard] = useAtom(activeBoardAtom);
   const activeRoomLink = useAtomValue(activeRoomLinkAtom);
   const collabAPI = useAtomValue(collabAPIAtom);
@@ -194,6 +201,11 @@ export const AppMainMenu: React.FC<{
             : saveBoardStatus === "saved"
             ? t("app.saved")
             : t("app.saveBoard")}
+        </MainMenu.Item>
+      )}
+      {permissions.saveLocalCopy && (
+        <MainMenu.Item icon={DuplicateIcon} onSelect={() => saveLocalCopy()}>
+          {t("app.saveLocalCopy")}
         </MainMenu.Item>
       )}
       {permissions.renameBoard && (

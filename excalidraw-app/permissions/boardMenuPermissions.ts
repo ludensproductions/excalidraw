@@ -8,6 +8,7 @@ export type BoardMenuRole =
 export type BoardMenuAction =
   | "home"
   | "saveBoard"
+  | "saveLocalCopy"
   | "renameBoard"
   | "loadScene"
   | "saveToActiveFile"
@@ -68,6 +69,8 @@ export const getBoardMenuPermissions = (
     role,
     home: context.hasHomeNavigation && canUseUtilityActions,
     saveBoard: canManagePrivateBoard,
+    // private copy of a shared board; local boards just use saveBoard
+    saveLocalCopy: role.startsWith("collaboration_"),
     renameBoard: canManagePrivateBoard,
     loadScene: canManagePrivateBoard,
     saveToActiveFile: canUseUtilityActions,

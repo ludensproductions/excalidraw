@@ -683,6 +683,9 @@
   },
   "app": {
     "saveBoard": "Save board",
+    "saveLocalCopy": "Save local copy",
+    "localCopyName": "{{name}} (copy)",
+    "localCopySavedSuccessfully": "Local copy saved to your boards",
     "saving": "Saving...",
     "saved": "Ready",
     "boardSavedSuccessfully": "Saved successfully",
@@ -857,7 +860,7 @@
       "username": "Your name",
       "email": "email@example.com",
       "password": "Your password",
-      "newPassword": "Minimum 8 characters, uppercase, lowercase, number, and symbol",
+      "newPassword": "8+ characters: Aa, number & symbol",
       "confirmPassword": "Repeat your password"
     },
     "actions": {

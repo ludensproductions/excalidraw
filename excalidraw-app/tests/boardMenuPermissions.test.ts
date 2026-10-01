@@ -19,6 +19,7 @@ describe("board menu permissions", () => {
 
     expect(getBoardMenuRole(baseContext)).toBe("personal_owner");
     expect(permissions.saveBoard).toBe(true);
+    expect(permissions.saveLocalCopy).toBe(false);
     expect(permissions.renameBoard).toBe(true);
     expect(permissions.clearCanvas).toBe(true);
   });
@@ -32,6 +33,7 @@ describe("board menu permissions", () => {
 
     expect(permissions.role).toBe("collaboration_owner");
     expect(permissions.saveBoard).toBe(true);
+    expect(permissions.saveLocalCopy).toBe(true);
     expect(permissions.renameBoard).toBe(true);
   });
 
@@ -44,6 +46,7 @@ describe("board menu permissions", () => {
 
     expect(permissions.role).toBe("collaboration_editor");
     expect(permissions.saveBoard).toBe(false);
+    expect(permissions.saveLocalCopy).toBe(true);
     expect(permissions.renameBoard).toBe(false);
     expect(permissions.loadScene).toBe(false);
     expect(permissions.clearCanvas).toBe(true);
@@ -58,6 +61,7 @@ describe("board menu permissions", () => {
 
     expect(permissions.role).toBe("collaboration_viewer");
     expect(permissions.saveBoard).toBe(false);
+    expect(permissions.saveLocalCopy).toBe(true);
     expect(permissions.renameBoard).toBe(false);
     expect(permissions.loadScene).toBe(false);
     expect(permissions.clearCanvas).toBe(false);
