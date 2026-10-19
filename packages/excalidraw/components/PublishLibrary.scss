@@ -31,9 +31,13 @@
     }
 
     &__buttons {
-      display: flex;
+      // equal-width buttons sized to the longest label, right-aligned
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: 1fr;
+      width: fit-content;
+      margin-left: auto;
       padding: 0.2rem 0;
-      justify-content: flex-end;
       gap: 0.5rem;
 
       .ToolIcon__icon {

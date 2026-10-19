@@ -657,6 +657,10 @@
     min-width: 0;
     padding: 0.45rem 0.65rem;
     border: 1.5px solid transparent;
+    // one line each so a long label never makes the pair taller
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   &__shared-card-join {
@@ -677,8 +681,9 @@
 
   &__shared-card-leave {
     background: transparent;
-    color: #9ca3af;
-    border-color: #e5e7eb;
+    color: #6b7280;
+    // visible border so it reads as the same size as the filled "Abrir"
+    border-color: #c7c9d1;
     border-radius: 6px;
     font-size: 0.8125rem;
     font-weight: 500;
@@ -976,8 +981,8 @@
   }
 
   .dashboard__shared-card-leave {
-    border-color: #2e2e4a;
-    color: #9ca3af;
+    border-color: #4b4b6e;
+    color: #c4c4d4;
 
     &:hover {
       border-color: #7f1d1d;

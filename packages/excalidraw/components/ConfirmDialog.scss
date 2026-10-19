@@ -3,9 +3,13 @@
 .excalidraw {
   .confirm-dialog {
     &-buttons {
-      display: flex;
+      // equal-width columns sized to the longest label, right-aligned
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: 1fr;
       column-gap: 0.5rem;
-      justify-content: flex-end;
+      width: fit-content;
+      margin-left: auto;
     }
   }
 }

@@ -162,9 +162,6 @@ const ElementLinkDialog = ({
           onClick={() => {
             onClose?.();
           }}
-          style={{
-            marginRight: 10,
-          }}
         />
 
         <DialogActionButton

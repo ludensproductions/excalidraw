@@ -74,9 +74,13 @@
     }
 
     .ElementLinkDialog__actions {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 1.5rem;
+      // equal-width buttons sized to the longest label, right-aligned
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: 1fr;
+      column-gap: 10px;
+      width: fit-content;
+      margin: 1.5rem 0 0 auto;
 
       @include isMobile {
         font-size: 0.875rem;
