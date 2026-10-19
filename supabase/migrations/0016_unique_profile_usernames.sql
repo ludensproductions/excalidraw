@@ -1,6 +1,18 @@
 -- Usernames are unique again (case-insensitive), reverting 0010.
--- Fails if duplicates already exist: resolve them first with
---   select lower(btrim(username)), count(*) from public.profiles group by 1 having count(*) > 1;
+-- Duplicates created while 0010 allowed them: the oldest profile keeps the
+-- name, the others get the same id suffix 0017 uses for OAuth sign-ups.
+update public.profiles p
+set username = left(btrim(p.username), 40) || '-' || left(replace(p.id::text, '-', ''), 6)
+from (
+  select id,
+         row_number() over (
+           partition by lower(btrim(username))
+           order by created_at, id
+         ) as n
+  from public.profiles
+) d
+where d.id = p.id
+  and d.n > 1;
 
 create unique index if not exists profiles_username_lower_key
   on public.profiles (lower(btrim(username)));
