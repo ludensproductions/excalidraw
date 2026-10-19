@@ -9,9 +9,6 @@ import {
   pencilIcon,
   playerPlayIcon,
   playerStopFilledIcon,
-  share,
-  shareIOS,
-  shareWindows,
 } from "@excalidraw/excalidraw/components/icons";
 import { useUIAppState } from "@excalidraw/excalidraw/context/ui-appState";
 import { useCopyStatus } from "@excalidraw/excalidraw/hooks/useCopiedIndicator";
@@ -47,20 +44,6 @@ export const shareDialogStateAtom = atom<
   { isOpen: false } | { isOpen: true; type: ShareDialogType }
 >({ isOpen: false });
 
-const getShareIcon = () => {
-  const navigator = window.navigator as any;
-  const isAppleBrowser = /Apple/.test(navigator.vendor);
-  const isWindowsBrowser = navigator.appVersion.indexOf("Win") !== -1;
-
-  if (isAppleBrowser) {
-    return shareIOS;
-  } else if (isWindowsBrowser) {
-    return shareWindows;
-  }
-
-  return share;
-};
-
 export type ShareDialogProps = {
   collabAPI: CollabAPI | null;
   handleClose: () => void;
@@ -82,7 +65,6 @@ const ActiveRoomDialog = ({
   const timerRef = useRef<number>(0);
   const ref = useRef<HTMLInputElement>(null);
   const readOnlyRef = useRef<HTMLInputElement>(null);
-  const isShareSupported = "share" in navigator;
   const { onCopy, copyStatus } = useCopyStatus();
   const { onCopy: onCopyReadOnly, copyStatus: copyStatusReadOnly } =
     useCopyStatus();
@@ -167,18 +149,6 @@ const ActiveRoomDialog = ({
     }
   };
 
-  const shareRoomLink = async () => {
-    try {
-      await navigator.share({
-        title: t("roomDialog.shareTitle"),
-        text: t("roomDialog.shareTitle"),
-        url: activeRoomLink,
-      });
-    } catch (error: any) {
-      // Just ignore.
-    }
-  };
-
   return (
     <>
       <h3 className="ShareDialog__active__header">
@@ -211,16 +181,6 @@ const ActiveRoomDialog = ({
               fullWidth
               value={activeRoomLink}
             />
-            {isShareSupported && (
-              <FilledButton
-                size="large"
-                variant="icon"
-                label={t("labels.share")}
-                icon={getShareIcon()}
-                className="ShareDialog__active__share"
-                onClick={shareRoomLink}
-              />
-            )}
             <FilledButton
               size="large"
               label={t("buttons.copyLink")}
@@ -316,6 +276,7 @@ const ActiveRoomDialog = ({
 
 const ShareDialogPicker = (props: ShareDialogProps) => {
   const { t } = useI18n();
+  const [isStartingSession, setIsStartingSession] = useState(false);
 
   const { collabAPI } = props;
 
@@ -338,9 +299,15 @@ const ShareDialogPicker = (props: ShareDialogProps) => {
             size="large"
             label={t("roomDialog.button_startSession")}
             icon={playerPlayIcon}
+            // spinner + disabled until the room link arrives and the dialog
+            // switches to the active-room view
+            status={isStartingSession ? "loading" : null}
             onClick={() => {
               trackEvent("share", "room creation", `ui (${getFrame()})`);
-              collabAPI.startCollaboration(null);
+              setIsStartingSession(true);
+              void collabAPI.startCollaboration(null).catch(() => {
+                setIsStartingSession(false);
+              });
             }}
           />
         </div>
@@ -387,7 +354,12 @@ const ShareDialogInner = (props: ShareDialogProps) => {
   const activeRoomLink = useAtomValue(activeRoomLinkAtom);
 
   return (
-    <Dialog size="small" onCloseRequest={props.handleClose} title={false}>
+    <Dialog
+      size="small"
+      onCloseRequest={props.handleClose}
+      title={false}
+      className="ShareDialog-modal"
+    >
       <div className="ShareDialog">
         {props.collabAPI && activeRoomLink && props.type !== "copyOnly" ? (
           <ActiveRoomDialog

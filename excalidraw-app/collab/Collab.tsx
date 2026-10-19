@@ -160,6 +160,7 @@ export interface CollabAPI {
   onPointerUpdate: CollabInstance["onPointerUpdate"];
   startCollaboration: CollabInstance["startCollaboration"];
   stopCollaboration: CollabInstance["stopCollaboration"];
+  deleteSharedBoard: CollabInstance["deleteSharedBoard"];
   leaveCollaboration: CollabInstance["leaveCollaboration"];
   flushCollaboration: CollabInstance["flushCollaboration"];
   syncElements: CollabInstance["syncElements"];
@@ -288,6 +289,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       syncImageFiles: this.syncImageFiles,
       fetchImageFilesFromFirebase: this.fetchImageFilesFromFirebase,
       stopCollaboration: this.stopCollaboration,
+      deleteSharedBoard: this.deleteSharedBoard,
       leaveCollaboration: this.leaveCollaboration,
       flushCollaboration: this.flushCollaboration,
       setUsername: this.setUsername,
@@ -455,30 +457,59 @@ class Collab extends PureComponent<CollabProps, CollabState> {
   };
 
   stopCollaboration = async (keepRemoteState = true, saveDraft = false) => {
+    if (keepRemoteState) {
+      // deleting lives in the main menu ("Eliminar tablero") with its own
+      // confirmation, so stopping always keeps a copy
+      const confirmed = await appDialog.confirm({
+        title: t("roomDialog.button_stopSession"),
+        text: t("alerts.collabStopChoicePrompt"),
+        confirmButtonText: t("app.stopAndSave"),
+        icon: "warning",
+      });
+      if (!confirmed) {
+        return false;
+      }
+      saveDraft = true;
+    }
+
+    const closeLoading = keepRemoteState
+      ? appDialog.loading(
+          t(this.isOwnerSession ? "app.stoppingSession" : "app.leavingSession"),
+        )
+      : undefined;
+    try {
+      return await this.performStopCollaboration(
+        keepRemoteState,
+        saveDraft,
+        false,
+      );
+    } finally {
+      closeLoading?.();
+    }
+  };
+
+  // owner only: closes the room for everyone and deletes the board.
+  // The caller confirms first.
+  deleteSharedBoard = async () => {
+    const closeLoading = appDialog.loading(t("app.stoppingSession"));
+    try {
+      return await this.performStopCollaboration(true, false, true);
+    } finally {
+      closeLoading();
+    }
+  };
+
+  private performStopCollaboration = async (
+    keepRemoteState: boolean,
+    saveDraft: boolean,
+    discardBoard: boolean,
+  ) => {
     const roomId = this.portal.roomId;
     const roomKey = this.portal.roomKey;
     const activeBoard = appJotaiStore.get(activeBoardAtom);
     const wasOwnerSession = this.isOwnerSession;
     let didStop = false;
     let didCloseSharedBoard = false;
-    let discardBoard = false;
-
-    if (keepRemoteState) {
-      const choice = await appDialog.choose({
-        title: t("roomDialog.button_stopSession"),
-        text: t("alerts.collabStopChoicePrompt"),
-        confirmButtonText: t("app.stopAndSave"),
-        denyButtonText: t("app.stopAndDelete"),
-        icon: "warning",
-        confirmButtonVariant: "primary",
-        denyButtonVariant: "danger",
-      });
-      if (choice === "cancel") {
-        return false;
-      }
-      saveDraft = choice === "confirm";
-      discardBoard = choice === "deny";
-    }
 
     this.queueBroadcastAllElements.cancel();
     this.queueSaveToFirebase.cancel();
@@ -486,6 +517,11 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     this.resetErrorIndicator(true);
 
     const saveRemoteStateBeforeStop = async (): Promise<boolean> => {
+      // close_shared_board deletes the owner's room right after, so saving it
+      // first only delays everyone leaving
+      if (wasOwnerSession) {
+        return true;
+      }
       await this.saveCollabRoomToFirebase(
         getSyncableElements(
           this.excalidrawAPI.getSceneElementsIncludingDeleted(),

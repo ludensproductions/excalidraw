@@ -1,5 +1,6 @@
 import {
   DuplicateIcon,
+  TrashIcon,
   usersIcon,
 } from "@excalidraw/excalidraw/components/icons";
 import { MainMenu, useI18n } from "@excalidraw/excalidraw/index";
@@ -79,7 +80,9 @@ export const AppMainMenu: React.FC<{
     if (!collabAPI) {
       return;
     }
-    const didLeave = await collabAPI.leaveCollaboration();
+    const didLeave = await appDialog.withLoading(t("app.leavingSession"), () =>
+      collabAPI.leaveCollaboration(),
+    );
     if (didLeave) {
       dashboardState.getOnBack()?.();
       void appDialog.toast({ title: t("app.sharedBoardLeftSuccessfully") });
@@ -148,6 +151,50 @@ export const AppMainMenu: React.FC<{
     if (record) {
       await renameSharedBoardIfNeeded(trimmed);
     }
+  };
+
+  const handleDeleteBoard = async () => {
+    const confirmed = await appDialog.confirm({
+      title: t("app.deleteBoard"),
+      text: t(
+        props.isCollaborating
+          ? "app.deleteSharedBoardConfirm"
+          : "app.deleteBoardConfirm",
+      ),
+      confirmButtonText: t("app.delete"),
+      danger: true,
+    });
+    if (!confirmed) {
+      return;
+    }
+
+    if (props.isCollaborating) {
+      // closes the room for everyone, deletes the board and goes home
+      if (!(await collabAPI?.deleteSharedBoard())) {
+        return;
+      }
+    } else {
+      // otherwise leaving the editor would autosave the board again
+      dashboardState.setAutoSaveSuppressed(true);
+      const boardId = activeBoard.id;
+      if (boardId) {
+        try {
+          await appDialog.withLoading(t("app.deletingBoard"), () =>
+            DrawingsStore.delete(boardId),
+          );
+        } catch (error) {
+          dashboardState.setAutoSaveSuppressed(false);
+          await appDialog.error(
+            t("app.userActionFailed"),
+            error instanceof Error ? error.message : undefined,
+          );
+          return;
+        }
+      }
+      appJotaiStore.set(activeBoardAtom, { id: null, name: null });
+      dashboardState.getOnBack()?.();
+    }
+    void appDialog.toast({ title: t("app.boardDeletedSuccessfully") });
   };
 
   const saveBoardIcon = (
@@ -230,6 +277,11 @@ export const AppMainMenu: React.FC<{
         <MainMenu.DefaultItems.CommandPalette className="highlighted" />
       )}
       {permissions.clearCanvas && <MainMenu.DefaultItems.ClearCanvas />}
+      {permissions.deleteBoard && (activeBoard.id || props.isCollaborating) && (
+        <MainMenu.Item icon={TrashIcon} onSelect={handleDeleteBoard}>
+          {t("app.deleteBoard")}
+        </MainMenu.Item>
+      )}
       <MainMenu.Separator />
       {permissions.preferences && <MainMenu.DefaultItems.Preferences />}
       <MainMenu.ItemCustom>

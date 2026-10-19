@@ -34,7 +34,6 @@ import { appDialog } from "../appDialog";
 import { FIREBASE_STORAGE_PREFIXES } from "../app_constants";
 import {
   AUTH_FIELD_LIMITS,
-  MAX_FIELD_LENGTH,
   normalizeUsername,
   validateUsername,
 } from "../auth/authValidation";
@@ -293,37 +292,21 @@ const BoardCard: React.FC<BoardCardProps> = ({
   onRename,
   onClearCollabLink,
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [draftName, setDraftName] = useState(board.name);
   const [copied, setCopied] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (isEditing) {
-      inputRef.current?.focus();
-      inputRef.current?.select();
-    }
-  }, [isEditing]);
-
-  const startRename = (e: React.MouseEvent) => {
+  // same modal as "Renombrar tablero" in the editor menu
+  const startRename = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setDraftName(board.name);
-    setIsEditing(true);
-  };
-
-  const commitRename = async () => {
-    const trimmed = Array.from(draftName.trim())
-      .slice(0, MAX_FIELD_LENGTH)
-      .join("");
-    setIsEditing(false);
-    if (trimmed && trimmed !== board.name) {
-      await onRename(board.id, trimmed);
+    const nextName = await appDialog.promptText({
+      title: t("app.renameBoard"),
+      label: t("app.newName"),
+      initialValue: board.name,
+      confirmButtonText: t("app.rename"),
+      requiredMessage: t("app.enterBoardName"),
+    });
+    if (nextName && nextName !== board.name) {
+      await onRename(board.id, nextName);
     }
-  };
-
-  const cancelRename = () => {
-    setDraftName(board.name);
-    setIsEditing(false);
   };
 
   const copyCollabLink = async (e: React.MouseEvent) => {
@@ -364,14 +347,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
   };
 
   return (
-    <div
-      className="dashboard__card"
-      onClick={() => {
-        if (!isEditing) {
-          void onOpen(board);
-        }
-      }}
-    >
+    <div className="dashboard__card" onClick={() => void onOpen(board)}>
       <div className="dashboard__card-thumb">
         {board.thumbnail ? (
           <img src={board.thumbnail} alt={board.name} />
@@ -382,34 +358,13 @@ const BoardCard: React.FC<BoardCardProps> = ({
         )}
       </div>
       <div className="dashboard__card-info">
-        {isEditing ? (
-          <input
-            ref={inputRef}
-            className="dashboard__card-name-input"
-            value={draftName}
-            onChange={(e) => setDraftName(e.target.value)}
-            onClick={(e) => e.stopPropagation()}
-            onBlur={commitRename}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                void commitRename();
-              } else if (e.key === "Escape") {
-                e.preventDefault();
-                cancelRename();
-              }
-            }}
-            maxLength={MAX_FIELD_LENGTH}
-          />
-        ) : (
-          <span
-            className="dashboard__card-name"
-            title={board.name}
-            onDoubleClick={startRename}
-          >
-            {board.name}
-          </span>
-        )}
+        <span
+          className="dashboard__card-name"
+          title={board.name}
+          onDoubleClick={startRename}
+        >
+          {board.name}
+        </span>
         <span className="dashboard__card-date">
           {formatDate(board.updatedAt)}
         </span>
@@ -713,7 +668,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     }
   }, [isAdmin]);
 
-  const { privateBoards, recentItems, displayedBoards, visibleSharedBoards } =
+  const { ownBoards, recentItems, displayedBoards, visibleSharedBoards } =
     useMemo(() => {
       const sharedRoomIds = new Set(sharedBoards.map((board) => board.roomId));
       const canTrustSharedBoardList = !loading && !sharedError;
@@ -723,6 +678,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
           ? { ...board, collabLink: null }
           : board;
       });
+      // recents already show the shared card for a board in an active room,
+      // so only they skip it; "Mis tableros" lists every own board
       const privateBoards = boardsForDisplay.filter(
         (board) => !getRoomIdFromCollabLink(board.collabLink),
       );
@@ -753,9 +710,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
           : [];
 
       return {
-        privateBoards,
+        ownBoards: boardsForDisplay,
         recentItems,
-        displayedBoards: activeTab === "all" ? privateBoards : [],
+        displayedBoards: activeTab === "all" ? boardsForDisplay : [],
         visibleSharedBoards,
       };
     }, [activeTab, boards, loading, sharedBoards, sharedError]);
@@ -914,7 +871,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
     if (!confirmed) {
       return;
     }
-    await DrawingsStore.delete(id);
+    try {
+      await appDialog.withLoading(t("app.deletingBoard"), () =>
+        DrawingsStore.delete(id),
+      );
+    } catch (error) {
+      await appDialog.error(t("app.userActionFailed"), getErrorMessage(error));
+      return;
+    }
     setBoards((prev) => prev.filter((board) => board.id !== id));
     void appDialog.toast({ title: t("app.boardDeletedSuccessfully") });
   };
@@ -986,22 +950,26 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   const handleLeaveSharedBoard = async (board: SharedBoard) => {
     const isOwner = board.createdBy === user.id;
-    const choice = await appDialog.choose({
-      title: isOwner
-        ? t("roomDialog.button_stopSession")
-        : t("app.leaveSharedBoard"),
-      text: isOwner
-        ? t("alerts.collabStopChoicePrompt")
-        : t("app.leaveSharedSaveDraftText"),
-      confirmButtonText: isOwner ? t("app.stopAndSave") : t("app.saveDraft"),
-      denyButtonText: isOwner
-        ? t("app.stopAndDelete")
-        : t("app.leaveWithoutSaving"),
-      cancelButtonText: t("app.cancel"),
-      icon: "question",
-      confirmButtonVariant: "primary",
-      denyButtonVariant: isOwner ? "danger" : "default",
-    });
+    // owners always keep a copy; deleting is the board's own delete action
+    const choice = isOwner
+      ? (await appDialog.confirm({
+          title: t("roomDialog.button_stopSession"),
+          text: t("alerts.collabStopChoicePrompt"),
+          confirmButtonText: t("app.stopAndSave"),
+          icon: "warning",
+        }))
+        ? "confirm"
+        : "cancel"
+      : await appDialog.choose({
+          title: t("app.leaveSharedBoard"),
+          text: t("app.leaveSharedSaveDraftText"),
+          confirmButtonText: t("app.saveDraft"),
+          denyButtonText: t("app.leaveWithoutSaving"),
+          cancelButtonText: t("app.cancel"),
+          icon: "question",
+          confirmButtonVariant: "primary",
+          denyButtonVariant: "default",
+        });
     if (choice === "cancel") {
       return;
     }
@@ -1150,13 +1118,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const handleOpenBoard = async (board: DrawingRecord) => {
+    // a board in an active room reopens the room, not a detached local copy
+    const roomId = getRoomIdFromCollabLink(board.collabLink);
+    const sharedBoard =
+      roomId && sharedBoards.find((item) => item.roomId === roomId);
+    if (sharedBoard) {
+      await handleOpenSharedBoard(sharedBoard);
+      return;
+    }
     await onOpenBoard(board);
   };
 
   const handleOpenSharedBoard = async (board: SharedBoard) => {
-    const stillExists = await SharedBoardsStore.isVisibleByRoom(
-      board.roomId,
-      board.roomKey,
+    const stillExists = await appDialog.withLoading(t("app.openingBoard"), () =>
+      SharedBoardsStore.isVisibleByRoom(board.roomId, board.roomKey),
     );
 
     if (!stillExists) {
@@ -1954,7 +1929,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 {!loading &&
                   (activeTab === "recent"
                     ? recentItems.length > 0
-                    : privateBoards.length > 0) && (
+                    : ownBoards.length > 0) && (
                     <span
                       style={{
                         fontSize: "0.875rem",
@@ -1965,7 +1940,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     >
                       {activeTab === "recent"
                         ? `(${recentItems.length})`
-                        : `(${privateBoards.length})`}
+                        : `(${ownBoards.length})`}
                     </span>
                   )}
               </h2>

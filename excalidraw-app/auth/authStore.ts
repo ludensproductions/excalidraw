@@ -1,6 +1,6 @@
 import { t } from "@excalidraw/excalidraw/i18n";
 
-import { supabase } from "../data/supabase";
+import { anonKey, supabase, supabaseUrl } from "../data/supabase";
 import { translateErrorMessage } from "../errorMessages";
 
 import {
@@ -37,6 +37,7 @@ export type AuthEmailFlowResult =
   | { type: "none" }
   | { type: "passwordRecovery" }
   | { type: "emailVerified"; user: AuthUser }
+  | { type: "oauthSignedIn"; user: AuthUser }
   | { type: "verificationExpired" }
   | { type: "verificationInvalid" }
   | { type: "emailAlreadyVerified" };
@@ -52,6 +53,29 @@ const EMAIL_VERIFICATION_RESEND_STORAGE_KEY =
   "excalidraw-email-verification-resend";
 const PASSWORD_RESET_RESEND_COOLDOWN_MS = 120_000;
 const PASSWORD_RESET_RESEND_STORAGE_KEY = "excalidraw-password-reset-resend";
+// A recovery link signs the user in only so they can set a new password.
+// While this flag is set that session must not be reused to enter the app.
+const PASSWORD_RECOVERY_PENDING_KEY = "excalidraw-password-recovery-pending";
+
+const setPasswordRecoveryPending = (pending: boolean) => {
+  try {
+    if (pending) {
+      localStorage.setItem(PASSWORD_RECOVERY_PENDING_KEY, "1");
+    } else {
+      localStorage.removeItem(PASSWORD_RECOVERY_PENDING_KEY);
+    }
+  } catch {
+    // storage unavailable: nothing to remember
+  }
+};
+
+const isPasswordRecoveryPending = () => {
+  try {
+    return localStorage.getItem(PASSWORD_RECOVERY_PENDING_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
 
 function emit() {
   for (const l of listeners) {
@@ -135,13 +159,14 @@ export function getPasswordResetResendWaitSeconds(email: string): number {
   return remainingMs > 0 ? Math.ceil(remainingMs / 1000) : 0;
 }
 
-async function isEmailRegistered(email: string): Promise<boolean> {
-  const { data, error } = await supabase.rpc("is_email_registered", {
-    p_email: email,
-  });
+async function isRegistered(
+  fn: "is_email_registered" | "is_username_registered",
+  args: Record<string, string>,
+): Promise<boolean> {
+  const { data, error } = await supabase.rpc(fn, args);
 
   if (error) {
-    console.warn("Failed to verify if email is registered:", error.message);
+    console.warn(`Failed to run ${fn}:`, error.message);
     return false;
   }
 
@@ -213,7 +238,15 @@ function ensureHydrated(): Promise<void> {
     hydrationPromise = (async () => {
       try {
         const { data } = await supabase.auth.getSession();
-        await applySession(data.session);
+        if (data.session && isPasswordRecoveryPending()) {
+          // the user left the new-password screen (back, reload, reopened the
+          // link): drop that session instead of letting it into the app
+          setPasswordRecoveryPending(false);
+          await supabase.auth.signOut();
+          await applySession(null);
+        } else {
+          await applySession(data.session);
+        }
         supabase.auth.onAuthStateChange((_event, session) => {
           void applySession(session).catch((error) => {
             console.error("Auth session update failed:", error);
@@ -280,7 +313,11 @@ export async function updateCurrentUsername(
     .single();
 
   if (error) {
-    throw new Error(translateErrorMessage(error.message));
+    throw new Error(
+      /profiles_username/i.test(error.message)
+        ? t("auth.errors.usernameAlreadyRegistered")
+        : translateErrorMessage(error.message),
+    );
   }
 
   currentUser = {
@@ -320,8 +357,16 @@ export async function registerUser(
   const trimmedUsername = normalizeUsername(username);
   const trimmedEmail = normalizeEmail(email);
 
-  if (await isEmailRegistered(trimmedEmail)) {
+  if (await isRegistered("is_email_registered", { p_email: trimmedEmail })) {
     throw new Error(t("auth.errors.emailAlreadyRegistered"));
+  }
+
+  if (
+    await isRegistered("is_username_registered", {
+      p_username: trimmedUsername,
+    })
+  ) {
+    throw new Error(t("auth.errors.usernameAlreadyRegistered"));
   }
 
   const { data, error } = await supabase.auth.signUp({
@@ -337,10 +382,8 @@ export async function registerUser(
     throw new Error(getRegistrationErrorMessage(error.message));
   }
 
-  if (!data.user) {
-    throw new Error(t("auth.errors.createAccountFailed"));
-  }
-
+  // auth-js >= 2.106 returns user: null when GoTrue answers a pending email
+  // confirmation with the bare user object, so no session = pending verification.
   if (data.session) {
     await applySession(data.session);
     if (!currentUser) {
@@ -446,11 +489,31 @@ export async function requestPasswordReset(email: string): Promise<void> {
   setPasswordResetResendTimestamp(trimmedEmail);
 }
 
+// recovery links are single use: a reused or expired one gets its own message
+// instead of the generic "verification link expired"
+const otpErrorMessage = (type: string | null, message: string): string =>
+  type === "recovery"
+    ? t("auth.errors.invalidRecoveryLink")
+    : translateErrorMessage(message);
+
 const clearAuthUrlParams = (): void => {
   window.history.replaceState({}, "", window.location.pathname);
 };
 
-export async function beginAuthEmailFlowFromUrl(): Promise<AuthEmailFlowResult> {
+// email links are single use: concurrent callers (React StrictMode runs effects
+// twice in dev) share one verification instead of the second one failing
+let authEmailFlowInFlight: Promise<AuthEmailFlowResult> | null = null;
+
+export function beginAuthEmailFlowFromUrl(): Promise<AuthEmailFlowResult> {
+  if (!authEmailFlowInFlight) {
+    authEmailFlowInFlight = runAuthEmailFlowFromUrl().finally(() => {
+      authEmailFlowInFlight = null;
+    });
+  }
+  return authEmailFlowInFlight;
+}
+
+async function runAuthEmailFlowFromUrl(): Promise<AuthEmailFlowResult> {
   const hashParams = new URLSearchParams(
     window.location.hash.replace(/^#/, ""),
   );
@@ -487,6 +550,24 @@ export async function beginAuthEmailFlowFromUrl(): Promise<AuthEmailFlowResult> 
     throw new Error(translateErrorMessage(authError));
   }
 
+  // Discord / Microsoft come back with the session tokens and no `type`
+  if (!type && accessToken && refreshToken) {
+    const { error } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+    clearAuthUrlParams();
+    if (error) {
+      throw new Error(translateErrorMessage(error.message));
+    }
+    const { data } = await supabase.auth.getSession();
+    await applySession(data.session);
+    if (!currentUser) {
+      throw new Error(t("auth.errors.loginFailed"));
+    }
+    return { type: "oauthSignedIn", user: currentUser };
+  }
+
   if (type !== "recovery" && type !== "signup" && !code) {
     return { type: "none" };
   }
@@ -510,7 +591,7 @@ export async function beginAuthEmailFlowFromUrl(): Promise<AuthEmailFlowResult> 
       type: type === "signup" ? "signup" : "recovery",
     });
     if (error) {
-      throw new Error(translateErrorMessage(error.message));
+      throw new Error(otpErrorMessage(type, error.message));
     }
   } else if (token && email) {
     const { error } = await supabase.auth.verifyOtp({
@@ -519,7 +600,7 @@ export async function beginAuthEmailFlowFromUrl(): Promise<AuthEmailFlowResult> 
       type: type === "signup" ? "signup" : "recovery",
     });
     if (error) {
-      throw new Error(translateErrorMessage(error.message));
+      throw new Error(otpErrorMessage(type, error.message));
     }
   } else {
     throw new Error(
@@ -542,6 +623,7 @@ export async function beginAuthEmailFlowFromUrl(): Promise<AuthEmailFlowResult> 
     return { type: "emailVerified", user: currentUser };
   }
 
+  setPasswordRecoveryPending(true);
   return { type: "passwordRecovery" };
 }
 
@@ -560,6 +642,7 @@ export async function updatePassword(password: string): Promise<AuthUser> {
   if (error) {
     throw new Error(translateErrorMessage(error.message));
   }
+  setPasswordRecoveryPending(false);
 
   const { data } = await supabase.auth.getSession();
   await applySession(data.session);
@@ -571,7 +654,46 @@ export async function updatePassword(password: string): Promise<AuthUser> {
   return currentUser;
 }
 
+export type OAuthProvider = "discord" | "azure";
+
+// providers turned on in GoTrue (needs their client id/secret in .env);
+// the login only shows buttons for these
+export async function getEnabledOAuthProviders(): Promise<OAuthProvider[]> {
+  try {
+    const response = await fetch(
+      new URL("auth/v1/settings", supabaseUrl).toString(),
+      { headers: { apikey: anonKey ?? "" } },
+    );
+    const settings = (await response.json()) as {
+      external?: Partial<Record<OAuthProvider, boolean>>;
+    };
+    return (["discord", "azure"] as const).filter(
+      (provider) => settings.external?.[provider],
+    );
+  } catch {
+    return [];
+  }
+}
+
+// leaves the app for the provider; it comes back to this page with the session
+export async function signInWithProvider(
+  provider: OAuthProvider,
+): Promise<void> {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: getAuthRedirectTo(),
+      // Microsoft only returns the email with this scope
+      scopes: provider === "azure" ? "email" : undefined,
+    },
+  });
+  if (error) {
+    throw new Error(translateErrorMessage(error.message));
+  }
+}
+
 export function logoutUser(): void {
+  setPasswordRecoveryPending(false);
   void supabase.auth.signOut().then(() => {
     currentUser = null;
     emit();

@@ -26,3 +26,6 @@ dev-dist
 html
 meta*.json
 .claude
+
+# database backups from scripts/update-prod.sh
+/backups

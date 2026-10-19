@@ -162,6 +162,21 @@ describe("auth store password reset", () => {
     expect(supabaseMocks.signUp).not.toHaveBeenCalled();
   });
 
+  it("rejects taken usernames before calling signup", async () => {
+    supabaseMocks.rpc
+      .mockResolvedValueOnce({ data: false, error: null })
+      .mockResolvedValueOnce({ data: true, error: null });
+
+    await expect(
+      registerUser("Paloma", "nueva@example.com", "Password1!"),
+    ).rejects.toThrow("auth.errors.usernameAlreadyRegistered");
+
+    expect(supabaseMocks.rpc).toHaveBeenCalledWith("is_username_registered", {
+      p_username: "Paloma",
+    });
+    expect(supabaseMocks.signUp).not.toHaveBeenCalled();
+  });
+
   it("keeps new signups pending until email verification", async () => {
     supabaseMocks.signUp.mockResolvedValueOnce({
       data: {
@@ -185,6 +200,20 @@ describe("auth store password reset", () => {
         data: { username: "Paloma" },
         emailRedirectTo: "http://localhost:3000/",
       },
+    });
+  });
+
+  it("keeps signups pending when auth-js returns no user nor session", async () => {
+    supabaseMocks.signUp.mockResolvedValueOnce({
+      data: { user: null, session: null },
+      error: null,
+    });
+
+    await expect(
+      registerUser("Paloma", "paloma@example.com", "Password1!"),
+    ).resolves.toEqual({
+      status: "pendingVerification",
+      email: "paloma@example.com",
     });
   });
 

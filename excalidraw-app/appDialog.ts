@@ -11,7 +11,7 @@ type DialogIcon = "success" | "error" | "warning" | "info" | "question";
 
 const baseOptions = () => ({
   background: document.documentElement.classList.contains("dark")
-    ? "#1f1f26"
+    ? "#232329"
     : "#ffffff",
   color: document.documentElement.classList.contains("dark")
     ? "#f4f4f5"
@@ -56,6 +56,41 @@ export const appDialog = {
         title: "app-swal__toast-title",
       },
     });
+  },
+
+  // non-dismissable spinner; the returned function closes it unless another
+  // dialog has replaced it in the meantime
+  loading(title: string): () => void {
+    const popupClass = "app-swal--loading";
+    void Swal.fire({
+      ...baseOptions(),
+      title,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      customClass: {
+        ...baseOptions().customClass,
+        popup: `app-swal ${popupClass}`,
+      },
+      didOpen: () => Swal.showLoading(),
+    });
+
+    return () => {
+      if (Swal.getPopup()?.classList.contains(popupClass)) {
+        Swal.close();
+      }
+    };
+  },
+
+  // runs a slow action behind the blocking spinner so it can't be triggered
+  // twice and the user knows it's in progress
+  async withLoading<T>(title: string, action: () => Promise<T>): Promise<T> {
+    const close = this.loading(title);
+    try {
+      return await action();
+    } finally {
+      close();
+    }
   },
 
   async alert(options: {
@@ -139,6 +174,8 @@ export const appDialog = {
       cancelButtonText: options.cancelButtonText ?? t("app.cancel"),
       customClass: {
         ...baseOptions().customClass,
+        // three labels don't fit side by side at an even width, so stack them
+        actions: "app-swal__actions app-swal__actions--stacked",
         confirmButton: `app-swal__button ${
           confirmButtonVariant === "danger"
             ? "app-swal__button--danger"

@@ -21,6 +21,7 @@ describe("board menu permissions", () => {
     expect(permissions.saveBoard).toBe(true);
     expect(permissions.saveLocalCopy).toBe(false);
     expect(permissions.renameBoard).toBe(true);
+    expect(permissions.deleteBoard).toBe(true);
     expect(permissions.clearCanvas).toBe(true);
   });
 
@@ -35,6 +36,7 @@ describe("board menu permissions", () => {
     expect(permissions.saveBoard).toBe(true);
     expect(permissions.saveLocalCopy).toBe(true);
     expect(permissions.renameBoard).toBe(true);
+    expect(permissions.deleteBoard).toBe(true);
   });
 
   it("hides private-board actions from collaboration guests", () => {
@@ -48,6 +50,7 @@ describe("board menu permissions", () => {
     expect(permissions.saveBoard).toBe(false);
     expect(permissions.saveLocalCopy).toBe(true);
     expect(permissions.renameBoard).toBe(false);
+    expect(permissions.deleteBoard).toBe(false);
     expect(permissions.loadScene).toBe(false);
     expect(permissions.clearCanvas).toBe(true);
   });
@@ -63,6 +66,7 @@ describe("board menu permissions", () => {
     expect(permissions.saveBoard).toBe(false);
     expect(permissions.saveLocalCopy).toBe(true);
     expect(permissions.renameBoard).toBe(false);
+    expect(permissions.deleteBoard).toBe(false);
     expect(permissions.loadScene).toBe(false);
     expect(permissions.clearCanvas).toBe(false);
     expect(permissions.changeCanvasBackground).toBe(false);

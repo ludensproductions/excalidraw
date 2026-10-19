@@ -5,7 +5,7 @@
 
 create table if not exists public.board_comments (
   id         uuid primary key default gen_random_uuid(),
-  board_id   uuid not null references public.drawings (id) on delete cascade,
+  board_id   uuid not null references public.boards (id) on delete cascade,
   owner_id   uuid not null references auth.users (id) on delete cascade,
   author_name text not null default 'Usuario',
   body       text not null,
@@ -26,8 +26,8 @@ create policy "board_comments: board owner read"
   on public.board_comments for select
   using (
     exists (
-      select 1 from public.drawings d
-      where d.id = board_id and d.user_id = auth.uid()
+      select 1 from public.boards d
+      where d.id = board_id and d.owner_id = auth.uid()
     )
   );
 
@@ -37,8 +37,8 @@ create policy "board_comments: board owner insert"
   with check (
     auth.uid() = owner_id
     and exists (
-      select 1 from public.drawings d
-      where d.id = board_id and d.user_id = auth.uid()
+      select 1 from public.boards d
+      where d.id = board_id and d.owner_id = auth.uid()
     )
   );
 

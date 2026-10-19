@@ -97,20 +97,23 @@ export const useSaveBoard = () => {
         const elements = excalidrawAPI.getSceneElements();
         const appState = excalidrawAPI.getAppState();
         const files = excalidrawAPI.getFiles();
-        const thumbnail = await createThumbnail(excalidrawAPI);
 
-        const record: DrawingRecord = await DrawingsStore.save(
-          {
-            name,
-            elements,
-            files,
-            appState: { viewBackgroundColor: appState.viewBackgroundColor },
-            thumbnail,
-            collabLink:
-              isCollaborating && activeRoomLink ? activeRoomLink : null,
-            userId: getCurrentUser()?.id,
-          },
-          activeBoard.id ?? undefined,
+        const record: DrawingRecord = await appDialog.withLoading(
+          t("app.savingBoard"),
+          async () =>
+            DrawingsStore.save(
+              {
+                name,
+                elements,
+                files,
+                appState: { viewBackgroundColor: appState.viewBackgroundColor },
+                thumbnail: await createThumbnail(excalidrawAPI),
+                collabLink:
+                  isCollaborating && activeRoomLink ? activeRoomLink : null,
+                userId: getCurrentUser()?.id,
+              },
+              activeBoard.id ?? undefined,
+            ),
         );
 
         setActiveBoard({ id: record.id, name: record.name });
@@ -118,8 +121,12 @@ export const useSaveBoard = () => {
         void appDialog.toast({ title: t("app.boardSavedSuccessfully") });
         setTimeout(() => setStatus("idle"), 2000);
         return record;
-      } catch {
+      } catch (error) {
         setStatus("idle");
+        await appDialog.error(
+          t("app.couldNotSaveBoard"),
+          error instanceof Error ? error.message : undefined,
+        );
         return null;
       }
     },
@@ -167,17 +174,22 @@ export const useSaveBoard = () => {
     }
 
     try {
-      const record = await DrawingsStore.save({
-        name,
-        elements: excalidrawAPI.getSceneElements(),
-        files: excalidrawAPI.getFiles(),
-        appState: {
-          viewBackgroundColor: excalidrawAPI.getAppState().viewBackgroundColor,
-        },
-        thumbnail: await createThumbnail(excalidrawAPI),
-        collabLink: null,
-        userId: getCurrentUser()?.id,
-      });
+      const record = await appDialog.withLoading(
+        t("app.savingBoard"),
+        async () =>
+          DrawingsStore.save({
+            name,
+            elements: excalidrawAPI.getSceneElements(),
+            files: excalidrawAPI.getFiles(),
+            appState: {
+              viewBackgroundColor:
+                excalidrawAPI.getAppState().viewBackgroundColor,
+            },
+            thumbnail: await createThumbnail(excalidrawAPI),
+            collabLink: null,
+            userId: getCurrentUser()?.id,
+          }),
+      );
       void appDialog.toast({ title: t("app.localCopySavedSuccessfully") });
       return record;
     } catch (error) {

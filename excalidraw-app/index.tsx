@@ -41,6 +41,31 @@ const hasExternalLinkInUrl = (): boolean => {
   );
 };
 
+// Where a signed-in user lands: a shared/copy link, the board in the URL
+// (a reload while editing it), or the dashboard. Used after logging in and
+// when the page loads with a session already open.
+const resolveSignedInView = async (): Promise<AppView> => {
+  if (hasExternalLinkInUrl()) {
+    return { type: "editor", boardId: null, key: Date.now() };
+  }
+
+  const boardMatch = window.location.pathname.match(
+    /^\/board\/([a-zA-Z0-9_-]+)$/,
+  );
+  if (boardMatch) {
+    const record = await DrawingsStore.get(boardMatch[1]).catch(() => null);
+    if (record) {
+      appJotaiStore.set(hasDashboardBackAtom, true);
+      appJotaiStore.set(activeBoardAtom, { id: record.id, name: record.name });
+      dashboardState.setPendingBoard(record);
+      return { type: "editor", boardId: record.id, key: Date.now() };
+    }
+    window.history.replaceState({}, "", "/");
+  }
+
+  return { type: "dashboard" };
+};
+
 const AppRoot: React.FC = () => {
   const [user, setUser] = useState<AuthUser | null>(getCurrentUser);
   const [authReady, setAuthReady] = useState<boolean>(isAuthHydrated);
@@ -67,18 +92,22 @@ const AppRoot: React.FC = () => {
       .catch((error) => {
         console.error("Initial auth hydration failed:", error);
       })
-      .finally(() => {
+      .finally(async () => {
         if (cancelled) {
           return;
         }
         const u = getCurrentUser();
-        setUser(u);
-        setAuthReady(true);
-        if (u && hasExternalLinkInUrl()) {
-          setView({ type: "editor", boardId: null, key: Date.now() });
-        } else {
-          setView(u ? { type: "dashboard" } : { type: "auth" });
+        // ready only once the view is known, so a reload on /board/{id}
+        // doesn't flash the dashboard before reopening the board
+        const nextView: AppView = u
+          ? await resolveSignedInView()
+          : { type: "auth" };
+        if (cancelled) {
+          return;
         }
+        setUser(u);
+        setView(nextView);
+        setAuthReady(true);
       });
     const unsub = subscribeToAuth((u) => {
       setUser(u);
@@ -111,40 +140,7 @@ const AppRoot: React.FC = () => {
 
   const handleAuthenticated = (u: AuthUser) => {
     setUser(u);
-    if (hasExternalLinkInUrl()) {
-      setView({ type: "editor", boardId: null, key: Date.now() });
-      return;
-    }
-
-    // Restore board if the URL contains /board/{id}
-    const boardMatch = window.location.pathname.match(
-      /^\/board\/([a-zA-Z0-9_-]+)$/,
-    );
-    if (boardMatch) {
-      const boardId = boardMatch[1];
-      DrawingsStore.get(boardId)
-        .then((record) => {
-          if (record) {
-            appJotaiStore.set(hasDashboardBackAtom, true);
-            appJotaiStore.set(activeBoardAtom, {
-              id: record.id,
-              name: record.name,
-            });
-            dashboardState.setPendingBoard(record);
-            setView({ type: "editor", boardId: record.id, key: Date.now() });
-          } else {
-            window.history.replaceState({}, "", "/");
-            setView({ type: "dashboard" });
-          }
-        })
-        .catch(() => {
-          window.history.replaceState({}, "", "/");
-          setView({ type: "dashboard" });
-        });
-      return;
-    }
-
-    setView({ type: "dashboard" });
+    void resolveSignedInView().then(setView);
   };
 
   const handleLogout = () => {
@@ -156,7 +152,10 @@ const AppRoot: React.FC = () => {
 
   const openBoard = async (record: DrawingRecord) => {
     dashboardState.setAutoSaveSuppressed(false);
-    const latestRecord = (await DrawingsStore.get(record.id)) ?? record;
+    const latestRecord =
+      (await appDialog
+        .withLoading(t("app.openingBoard"), () => DrawingsStore.get(record.id))
+        .catch(() => null)) ?? record;
 
     appJotaiStore.set(hasDashboardBackAtom, true);
     appJotaiStore.set(activeBoardAtom, {

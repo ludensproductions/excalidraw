@@ -1,8 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 
 const url = import.meta.env.VITE_APP_SUPABASE_URL;
-const anonKey = import.meta.env.VITE_APP_SUPABASE_ANON_KEY;
-const supabaseUrl =
+export const anonKey = import.meta.env.VITE_APP_SUPABASE_ANON_KEY;
+export const supabaseUrl =
   url && url.startsWith("/")
     ? new URL(url, window.location.origin).toString()
     : url;

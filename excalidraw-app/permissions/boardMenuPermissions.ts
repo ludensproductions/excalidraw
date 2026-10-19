@@ -10,6 +10,7 @@ export type BoardMenuAction =
   | "saveBoard"
   | "saveLocalCopy"
   | "renameBoard"
+  | "deleteBoard"
   | "loadScene"
   | "saveToActiveFile"
   | "export"
@@ -72,6 +73,7 @@ export const getBoardMenuPermissions = (
     // private copy of a shared board; local boards just use saveBoard
     saveLocalCopy: role.startsWith("collaboration_"),
     renameBoard: canManagePrivateBoard,
+    deleteBoard: canManagePrivateBoard,
     loadScene: canManagePrivateBoard,
     saveToActiveFile: canUseUtilityActions,
     export: canUseUtilityActions,

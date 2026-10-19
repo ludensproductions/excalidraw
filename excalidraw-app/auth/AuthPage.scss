@@ -96,6 +96,19 @@
     }
   }
 
+  // the placeholder gets cut off once the card shrinks below its 500px width
+  &__hint {
+    display: none;
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: #6b7280;
+
+    @media (max-width: 531px) {
+      display: block;
+    }
+  }
+
   &__error {
     background: #fef2f2;
     border: 1px solid #fecaca;
@@ -114,6 +127,59 @@
     font-size: 0.8125rem;
     color: #047857;
     line-height: 1.45;
+  }
+
+  &__oauth {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 1.1rem;
+  }
+
+  &__oauth-separator {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.8125rem;
+    color: #9ca3af;
+
+    &::before,
+    &::after {
+      content: "";
+      flex: 1;
+      border-top: 1px solid #e5e7eb;
+    }
+  }
+
+  &__oauth-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    height: 2.75rem;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #1a1a2e;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+
+    svg {
+      width: 1.15rem;
+      height: 1.15rem;
+    }
+
+    &:hover:not(:disabled) {
+      border-color: #6965db;
+      background: #f5f3ff;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
   }
 
   &__submit {
@@ -203,6 +269,8 @@
 // Dark mode
 .auth-page--dark {
   background: #121212;
+  // native input controls (e.g. Edge's password reveal eye) follow this
+  color-scheme: dark;
 
   .auth-page__card {
     background: #1e1e2e;
@@ -244,6 +312,10 @@
     }
   }
 
+  .auth-page__hint {
+    color: #9ca3af;
+  }
+
   .auth-page__error {
     background: #2d1515;
     border-color: #7f1d1d;
@@ -276,6 +348,24 @@
       border-color: #6965db;
       color: #a5b4fc;
       background: #1e1e4a;
+    }
+  }
+
+  .auth-page__oauth-separator {
+    &::before,
+    &::after {
+      border-color: #2e2e4a;
+    }
+  }
+
+  .auth-page__oauth-button {
+    border-color: #2e2e4a;
+    background: #242436;
+    color: #e1e1f0;
+
+    &:hover:not(:disabled) {
+      border-color: #6965db;
+      background: #2a2a40;
     }
   }
 }

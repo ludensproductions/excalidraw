@@ -409,6 +409,18 @@ const initializeScene = async (opts: {
   if (roomLinkData && opts.collabAPI) {
     const { excalidrawAPI } = opts;
 
+    // already in a room (hash change, effect re-run): a second
+    // startCollaboration bails out on the open socket, which was reported as
+    // a closed room and wiped the canvas while the session was still live
+    if (opts.collabAPI.isCollaborating()) {
+      return {
+        scene: null,
+        isExternalScene: true,
+        id: roomLinkData.roomId,
+        key: roomLinkData.roomKey,
+      };
+    }
+
     const collabScene = await opts.collabAPI.startCollaboration(roomLinkData);
 
     if (!collabScene) {
@@ -633,6 +645,25 @@ const ExcalidrawWrapper = () => {
       event.preventDefault();
       const libraryUrlTokens = parseLibraryTokensFromUrl();
       if (!libraryUrlTokens) {
+        if (
+          collabAPI?.isCollaborating() &&
+          isCollaborationLink(window.location.href)
+        ) {
+          // same room and mode: nothing to do. another room, or the same
+          // room with other permissions (read-only <-> edit link): rejoin
+          // clean, like opening the link in a new tab
+          const nextRoom = getCollaborationLinkData(window.location.href);
+          const currentRoom = getCollaborationLinkData(
+            collabAPI.getActiveRoomLink(),
+          );
+          if (
+            nextRoom?.roomId !== currentRoom?.roomId ||
+            nextRoom?.readOnly !== appJotaiStore.get(isReadOnlySessionAtom)
+          ) {
+            window.location.reload();
+          }
+          return;
+        }
         if (
           collabAPI?.isCollaborating() &&
           !isCollaborationLink(window.location.href)

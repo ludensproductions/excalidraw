@@ -737,3 +737,61 @@ alter default privileges in schema public
 
 alter default privileges in schema public
   grant all on sequences to anon, authenticated, service_role;
+
+-- 0016_unique_profile_usernames.sql
+create unique index if not exists profiles_username_lower_key
+  on public.profiles (lower(btrim(username)));
+
+create or replace function public.is_username_registered(p_username text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.profiles
+    where lower(btrim(username)) = lower(btrim(p_username))
+  );
+$$;
+
+revoke all on function public.is_username_registered(text) from public;
+grant execute on function public.is_username_registered(text) to anon, authenticated;
+
+-- 0017_oauth_profile_usernames.sql
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_base     text;
+  v_username text;
+begin
+  v_base := left(
+    coalesce(
+      nullif(btrim(new.raw_user_meta_data ->> 'username'), ''),
+      nullif(btrim(new.raw_user_meta_data ->> 'full_name'), ''),
+      nullif(btrim(new.raw_user_meta_data ->> 'name'), ''),
+      split_part(new.email, '@', 1)
+    ),
+    40
+  );
+  v_username := v_base;
+
+  if exists (
+    select 1
+    from public.profiles
+    where lower(btrim(username)) = lower(btrim(v_username))
+  ) then
+    v_username := v_base || '-' || left(replace(new.id::text, '-', ''), 6);
+  end if;
+
+  insert into public.profiles (id, username, email)
+  values (new.id, v_username, new.email)
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;

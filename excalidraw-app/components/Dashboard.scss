@@ -1,7 +1,10 @@
 .dashboard {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  // html/body are overflow: hidden for the editor, so the dashboard has to be
+  // its own scroll container
+  height: 100%;
+  overflow-y: auto;
   background: #f4f5f7;
   font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
 
@@ -318,19 +321,6 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  &__card-name-input {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #1a1a2e;
-    font-family: inherit;
-    width: 100%;
-    padding: 0.15rem 0.35rem;
-    border: 1.5px solid #6965db;
-    border-radius: 4px;
-    background: #ffffff;
-    outline: none;
   }
 
   &__card-date {
@@ -659,12 +649,20 @@
     margin-top: auto;
   }
 
+  // "Abrir" and "Detener sesión"/"Salir" share the row in equal halves; both
+  // need the same padding and border or flex gives the bordered one more room
+  &__shared-card-join,
+  &__shared-card-leave {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0.45rem 0.65rem;
+    border: 1.5px solid transparent;
+  }
+
   &__shared-card-join {
-    flex: 1;
-    padding: 0.45rem 0;
     background: #6965db;
+    border-color: #6965db;
     color: #ffffff;
-    border: none;
     border-radius: 6px;
     font-size: 0.8125rem;
     font-weight: 600;
@@ -673,14 +671,14 @@
 
     &:hover {
       background: #5a57c8;
+      border-color: #5a57c8;
     }
   }
 
   &__shared-card-leave {
-    padding: 0.45rem 0.65rem;
     background: transparent;
     color: #9ca3af;
-    border: 1.5px solid #e5e7eb;
+    border-color: #e5e7eb;
     border-radius: 6px;
     font-size: 0.8125rem;
     font-weight: 500;
@@ -863,11 +861,6 @@
 
   .dashboard__card-name {
     color: #e1e1f0;
-  }
-
-  .dashboard__card-name-input {
-    color: #e1e1f0;
-    background: #1e1e2e;
   }
 
   .dashboard__card-date {

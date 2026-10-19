@@ -5,23 +5,136 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Verifica tu correo</title>
   </head>
-  <body
-    style="font-family: Arial, sans-serif; color: #1f1f1f; line-height: 1.5"
-  >
-    <h2>Verifica tu correo</h2>
-    <p>Gracias por crear tu cuenta en Excalidraw.</p>
-    <p>
-      Haz clic en el siguiente enlace para confirmar que este correo te
-      pertenece:
-    </p>
-    <p>
-      <a href="{{ .SiteURL }}?type=signup&amp;token_hash={{ .TokenHash }}"
-        >Verificar correo</a
-      >
-    </p>
-    <p>
-      Este enlace caduca por seguridad. Si ya solicitaste otro correo, usa el
-      enlace más reciente.
-    </p>
+  <!-- tables and inline styles: email clients ignore <style> and flexbox -->
+  <body style="margin: 0; padding: 0; background: #f4f5f7">
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      style="background: #f4f5f7; padding: 32px 12px"
+    >
+      <tr>
+        <td align="center">
+          <table
+            role="presentation"
+            width="100%"
+            cellpadding="0"
+            cellspacing="0"
+            style="
+              max-width: 520px;
+              background: #ffffff;
+              border-radius: 12px;
+              overflow: hidden;
+              font-family: Arial, Helvetica, sans-serif;
+              color: #1f1f24;
+            "
+          >
+            <tr>
+              <td align="center" style="padding: 28px 24px 20px">
+                <div
+                  style="
+                    font-size: 22px;
+                    font-weight: bold;
+                    color: #6965db;
+                  "
+                >
+                  Excalidraw
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td
+                align="center"
+                style="
+                  background: #6965db;
+                  color: #ffffff;
+                  padding: 14px 24px;
+                  font-size: 18px;
+                  font-weight: bold;
+                "
+              >
+                Verifica tu correo
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  padding: 28px 32px 8px;
+                  font-size: 15px;
+                  line-height: 1.6;
+                "
+              >
+                <p style="margin: 0 0 12px">
+                  Gracias por crear tu cuenta en Excalidraw.
+                </p>
+                <p style="margin: 0">
+                  Haz clic en el botón para confirmar que este correo te
+                  pertenece y activar tu cuenta:
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding: 20px 32px">
+                <a
+                  href="{{ .SiteURL }}?type=signup&amp;token_hash={{ .TokenHash }}"
+                  style="
+                    display: inline-block;
+                    background: #6965db;
+                    color: #ffffff;
+                    text-decoration: none;
+                    font-weight: bold;
+                    font-size: 15px;
+                    padding: 12px 28px;
+                    border-radius: 8px;
+                  "
+                  >Verificar correo</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  padding: 0 32px 24px;
+                  font-size: 13px;
+                  line-height: 1.5;
+                  color: #6b7280;
+                "
+              >
+                <p style="margin: 0 0 8px">
+                  Si el botón no funciona, copia este enlace en tu navegador:
+                </p>
+                <p style="margin: 0 0 16px; word-break: break-all">
+                  <a
+                    href="{{ .SiteURL }}?type=signup&amp;token_hash={{ .TokenHash }}"
+                    style="color: #6965db"
+                    >{{ .SiteURL }}?type=signup&amp;token_hash={{ .TokenHash
+                    }}</a
+                  >
+                </p>
+                <p style="margin: 0">
+                  Este enlace caduca por seguridad. Si solicitaste otro correo,
+                  usa el enlace más reciente. Si no creaste esta cuenta, ignora
+                  este mensaje.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td
+                align="center"
+                style="
+                  background: #f4f5f7;
+                  padding: 14px 24px;
+                  font-size: 12px;
+                  color: #9ca3af;
+                "
+              >
+                Excalidraw · Pizarra colaborativa
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
   </body>
 </html>
