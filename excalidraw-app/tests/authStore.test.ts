@@ -2,6 +2,7 @@ const supabaseMocks = vi.hoisted(() => ({
   getSession: vi.fn(() => Promise.resolve({ data: { session: null } })),
   onAuthStateChange: vi.fn(),
   signOut: vi.fn(() => Promise.resolve({ error: null })),
+  updateUser: vi.fn(),
   resetPasswordForEmail: vi.fn(),
   signUp: vi.fn(),
   resend: vi.fn(),
@@ -24,6 +25,7 @@ vi.mock("../data/supabase", () => ({
       getSession: supabaseMocks.getSession,
       onAuthStateChange: supabaseMocks.onAuthStateChange,
       signOut: supabaseMocks.signOut,
+      updateUser: supabaseMocks.updateUser,
       resetPasswordForEmail: supabaseMocks.resetPasswordForEmail,
       signUp: supabaseMocks.signUp,
       resend: supabaseMocks.resend,
@@ -167,6 +169,20 @@ describe("auth store password reset", () => {
 
     expect(supabaseMocks.signOut).toHaveBeenCalledWith({ scope: "local" });
     expect(store.getCurrentUser()).toBeNull();
+  });
+
+  it("ends the account's other sessions after changing the password", async () => {
+    supabaseMocks.updateUser.mockResolvedValueOnce({ error: null });
+    supabaseMocks.signOut.mockClear();
+    const store = await import("../auth/authStore");
+
+    // no session comes back in this mock, so the final sign-in step fails
+    await expect(store.updatePassword("Password1!")).rejects.toThrow();
+
+    expect(supabaseMocks.updateUser).toHaveBeenCalledWith({
+      password: "Password1!",
+    });
+    expect(supabaseMocks.signOut).toHaveBeenCalledWith({ scope: "others" });
   });
 
   it("rejects registered emails before calling signup", async () => {

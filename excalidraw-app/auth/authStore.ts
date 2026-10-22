@@ -279,6 +279,18 @@ function ensureHydrated(): Promise<void> {
 
 void ensureHydrated();
 
+// a session revoked elsewhere (password changed on another device) keeps a
+// valid JWT until it expires; asking GoTrue for the user gets session_not_found
+// and supabase-js signs this browser out (SIGNED_OUT -> auth page)
+const SESSION_REVOKED_CHECK_MS = 60_000;
+const checkSessionRevoked = () => {
+  if (currentUser && document.visibilityState === "visible") {
+    void supabase.auth.getUser();
+  }
+};
+window.addEventListener("focus", checkSessionRevoked);
+window.setInterval(checkSessionRevoked, SESSION_REVOKED_CHECK_MS);
+
 export function getCurrentUser(): AuthUser | null {
   return currentUser;
 }
@@ -655,6 +667,15 @@ export async function updatePassword(password: string): Promise<AuthUser> {
     throw new Error(translateErrorMessage(error.message));
   }
   setPasswordRecoveryPending(false);
+
+  // a new password ends every other session of this account; this browser
+  // keeps the one it just used to change it
+  const { error: signOutError } = await supabase.auth.signOut({
+    scope: "others",
+  });
+  if (signOutError) {
+    console.warn("Failed to end other sessions:", signOutError.message);
+  }
 
   const { data } = await supabase.auth.getSession();
   await applySession(data.session);
