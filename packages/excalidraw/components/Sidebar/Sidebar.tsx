@@ -99,7 +99,12 @@ export const SidebarInner = forwardRef(
     const editorInterface = useEditorInterface();
 
     const closeLibrary = useCallback(() => {
-      const isDialogOpen = !!document.querySelector(".Dialog");
+      // also the host app's SweetAlert dialogs (e.g. "Eliminar comentario"),
+      // which live outside the editor: confirming one must not close the
+      // sidebar that opened it
+      const isDialogOpen = !!document.querySelector(
+        ".Dialog, .swal2-container",
+      );
 
       // Prevent closing if any dialog is open
       if (isDialogOpen) {

@@ -1,6 +1,7 @@
 const supabaseMocks = vi.hoisted(() => ({
   getSession: vi.fn(() => Promise.resolve({ data: { session: null } })),
   onAuthStateChange: vi.fn(),
+  signOut: vi.fn(() => Promise.resolve({ error: null })),
   resetPasswordForEmail: vi.fn(),
   signUp: vi.fn(),
   resend: vi.fn(),
@@ -22,6 +23,7 @@ vi.mock("../data/supabase", () => ({
     auth: {
       getSession: supabaseMocks.getSession,
       onAuthStateChange: supabaseMocks.onAuthStateChange,
+      signOut: supabaseMocks.signOut,
       resetPasswordForEmail: supabaseMocks.resetPasswordForEmail,
       signUp: supabaseMocks.signUp,
       resend: supabaseMocks.resend,
@@ -147,6 +149,24 @@ describe("auth store password reset", () => {
       type: "recovery",
     });
     expect(window.location.search).toBe("");
+  });
+
+  it("drops another user's session when a recovery link is opened", async () => {
+    window.history.replaceState(
+      {},
+      "",
+      "/?type=recovery&token_hash=recovery-hash",
+    );
+    supabaseMocks.getSession.mockResolvedValueOnce({
+      data: { session: { user: { id: "user-b" } } },
+    } as any);
+    vi.resetModules();
+    const store = await import("../auth/authStore");
+
+    await store.waitForAuthHydration();
+
+    expect(supabaseMocks.signOut).toHaveBeenCalledWith({ scope: "local" });
+    expect(store.getCurrentUser()).toBeNull();
   });
 
   it("rejects registered emails before calling signup", async () => {

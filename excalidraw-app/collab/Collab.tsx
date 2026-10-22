@@ -107,6 +107,9 @@ import type {
   SocketUpdateDataSource,
   SyncableExcalidrawElement,
 } from "../data";
+import type { SharedRoomStatus } from "../data/SharedBoardsStore";
+
+const ROOM_STATUS_CHECK_INTERVAL = 15_000;
 
 export const collabAPIAtom = atom<CollabAPI | null>(null);
 export const isCollaboratingAtom = atom(false);
@@ -192,6 +195,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
   private imageRetryTimeoutId: number | null = null;
 
   private socketInitializationTimer?: number;
+  private roomStatusIntervalId: number | null = null;
   private lastBroadcastedOrReceivedSceneVersion: number = -1;
   private collaborators = new Map<SocketId, Collaborator>();
   private isReadOnly = false;
@@ -726,6 +730,63 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     );
   };
 
+  /**
+   * The owner can close the room (or remove a member) from the dashboard,
+   * where there's no socket to broadcast COLLABORATION_CLOSED, so an idle
+   * participant would never find out. Check the room state periodically and
+   * whenever the tab becomes visible again. Errors are ignored: only a
+   * confirmed closed/no_access status ends the session.
+   */
+  private startRoomStatusWatch = () => {
+    this.stopRoomStatusWatch();
+    this.roomStatusIntervalId = window.setInterval(
+      this.checkRoomStatus,
+      ROOM_STATUS_CHECK_INTERVAL,
+    );
+    document.addEventListener(
+      EVENT.VISIBILITY_CHANGE,
+      this.onRoomStatusVisibilityChange,
+    );
+  };
+
+  private stopRoomStatusWatch = () => {
+    if (this.roomStatusIntervalId) {
+      window.clearInterval(this.roomStatusIntervalId);
+      this.roomStatusIntervalId = null;
+    }
+    document.removeEventListener(
+      EVENT.VISIBILITY_CHANGE,
+      this.onRoomStatusVisibilityChange,
+    );
+  };
+
+  private onRoomStatusVisibilityChange = () => {
+    if (!document.hidden) {
+      void this.checkRoomStatus();
+    }
+  };
+
+  private checkRoomStatus = async () => {
+    const { roomId, roomKey } = this.portal;
+    if (
+      !roomId ||
+      !roomKey ||
+      document.hidden ||
+      !window.navigator.onLine ||
+      this.isHandlingClosedCollaboration
+    ) {
+      return;
+    }
+    try {
+      const status = await SharedBoardsStore.getRoomStatus(roomId, roomKey);
+      if (status !== "active" && this.portal.roomId === roomId) {
+        await this.handleClosedCollaboration();
+      }
+    } catch (error) {
+      console.warn("Shared room status check failed:", error);
+    }
+  };
+
   private handleClosedCollaboration = async () => {
     if (this.isHandlingClosedCollaboration) {
       return;
@@ -735,18 +796,31 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     const roomId = this.portal.roomId;
     const roomKey = this.portal.roomKey;
 
+    // Every "closed" signal is confirmed with the backend first: a failed
+    // request (expired session after the tab slept, network blip, 5xx) used
+    // to be read as a closed room, which showed this modal at random and
+    // removed the user from a board that was still live.
+    if (roomId && roomKey) {
+      let status: SharedRoomStatus | null = null;
+      try {
+        status = await SharedBoardsStore.getRoomStatus(roomId, roomKey);
+      } catch (error) {
+        console.warn(
+          "Could not confirm the shared room state; keeping the session:",
+          error,
+        );
+      }
+      if (status === null || status === "active") {
+        this.isHandlingClosedCollaboration = false;
+        return;
+      }
+    }
+
     dashboardState.setAutoSaveSuppressed(true);
     this.queueBroadcastAllElements.cancel();
     this.queueSaveToFirebase.cancel();
     this.loadImageFiles.cancel();
     this.resetErrorIndicator(true);
-
-    const leaveClosedBoardPromise =
-      roomId && roomKey
-        ? SharedBoardsStore.leaveByRoom(roomId, roomKey).catch((error) => {
-            console.error("Failed to leave closed shared board:", error);
-          })
-        : Promise.resolve();
 
     resetBrowserStateVersions();
     clearCollaborationUrl();
@@ -758,11 +832,16 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       text: t("app.collaborationClosedText"),
       icon: "warning",
     });
-    await leaveClosedBoardPromise;
+    if (roomId) {
+      removeOwnedRoom(roomId);
+    }
     dashboardState.getOnBack()?.();
   };
 
-  private handleUnavailableCollaborationLink = async () => {
+  private handleUnavailableCollaborationLink = async (opts?: {
+    /** the backend couldn't be reached, so the room state is unknown */
+    unreachable?: boolean;
+  }) => {
     if (this.isHandlingClosedCollaboration) {
       return;
     }
@@ -774,11 +853,19 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     LocalData.fileStorage.reset();
     this.destroySocketClient();
     appJotaiStore.set(activeBoardAtom, { id: null, name: null });
-    await appDialog.alert({
-      title: t("app.collaborationClosedTitle"),
-      text: t("app.collaborationClosedText"),
-      icon: "warning",
-    });
+    await appDialog.alert(
+      opts?.unreachable
+        ? {
+            title: t("app.collaborationUnreachableTitle"),
+            text: t("serverErrors.network"),
+            icon: "error",
+          }
+        : {
+            title: t("app.collaborationClosedTitle"),
+            text: t("app.collaborationClosedText"),
+            icon: "warning",
+          },
+    );
     dashboardState.getOnBack()?.();
   };
 
@@ -794,6 +881,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     this.portal.close();
     this.fileManager.reset();
     this.disposeIdleDetector();
+    this.stopRoomStatusWatch();
     if (!opts?.isUnload) {
       this.setIsCollaborating(false);
       if (opts?.skipStateUpdate) {
@@ -941,12 +1029,21 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     // initialization check runs, so a newly-created room isn't mistaken for a
     // previously-closed one while backend records are still being created.
     if (existingRoomLinkData) {
-      const joined = await SharedBoardsStore.joinExisting({
-        roomId,
-        roomKey,
-        username,
-        readOnly: this.isReadOnly,
-      });
+      let joined: boolean;
+      try {
+        joined = await SharedBoardsStore.joinExisting({
+          roomId,
+          roomKey,
+          username,
+          readOnly: this.isReadOnly,
+        });
+      } catch (error) {
+        // couldn't reach the backend: the room may well be open, so say so
+        // instead of reporting it as closed
+        console.error("Failed to join shared board:", error);
+        await this.handleUnavailableCollaborationLink({ unreachable: true });
+        return null;
+      }
       if (!joined) {
         await this.handleUnavailableCollaborationLink();
         return null;
@@ -957,6 +1054,9 @@ class Collab extends PureComponent<CollabProps, CollabState> {
         roomKey,
         name: activeBoard?.name || t("app.sharedBoardName"),
         username,
+      }).catch((error) => {
+        console.error("Failed to publish shared board:", error);
+        return false;
       });
       if (activeBoard?.id) {
         DrawingsStore.setCollabLink(
@@ -1152,6 +1252,8 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       },
     );
 
+    this.startRoomStatusWatch();
+
     this.portal.socket.on("first-in-room", async () => {
       if (this.portal.socket) {
         this.portal.socket.off("first-in-room");
@@ -1261,11 +1363,13 @@ class Collab extends PureComponent<CollabProps, CollabState> {
           };
         }
 
-        const isVisible = await SharedBoardsStore.isVisibleByRoom(
+        // no saved scene yet: only end the session when the backend
+        // confirms the room is gone (handleClosedCollaboration re-checks)
+        const status = await SharedBoardsStore.getRoomStatus(
           roomLinkData.roomId,
           roomLinkData.roomKey,
         );
-        if (!isVisible) {
+        if (status !== "active") {
           await this.handleClosedCollaboration();
         }
       } catch (error: any) {

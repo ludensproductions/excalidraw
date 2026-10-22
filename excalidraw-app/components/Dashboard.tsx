@@ -10,10 +10,13 @@ import { THEME, exportToBlob } from "@excalidraw/excalidraw";
 import { t } from "@excalidraw/excalidraw/i18n";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faArrowDownAZ,
+  faArrowDownWideShort,
+  faArrowDownZA,
+  faArrowUpWideShort,
   faArrowsRotate,
   faCheck,
-  faCopy,
-  faLinkSlash,
+  faMagnifyingGlass,
   faPenToSquare,
   faTrashCan,
   faUser,
@@ -34,6 +37,7 @@ import { appDialog } from "../appDialog";
 import { FIREBASE_STORAGE_PREFIXES } from "../app_constants";
 import {
   AUTH_FIELD_LIMITS,
+  MAX_FIELD_LENGTH,
   normalizeUsername,
   validateUsername,
 } from "../auth/authValidation";
@@ -282,7 +286,6 @@ interface BoardCardProps {
   onOpen: (board: DrawingRecord) => void | Promise<void>;
   onDelete: (id: string, e: React.MouseEvent) => void;
   onRename: (id: string, newName: string) => Promise<void>;
-  onClearCollabLink: (id: string) => Promise<void>;
 }
 
 const BoardCard: React.FC<BoardCardProps> = ({
@@ -290,10 +293,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
   onOpen,
   onDelete,
   onRename,
-  onClearCollabLink,
 }) => {
-  const [copied, setCopied] = useState(false);
-
   // same modal as "Renombrar tablero" in the editor menu
   const startRename = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -307,43 +307,6 @@ const BoardCard: React.FC<BoardCardProps> = ({
     if (nextName && nextName !== board.name) {
       await onRename(board.id, nextName);
     }
-  };
-
-  const copyCollabLink = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!board.collabLink) {
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(board.collabLink);
-    } catch {
-      const ta = document.createElement("textarea");
-      ta.value = board.collabLink;
-      document.body.appendChild(ta);
-      ta.select();
-      try {
-        document.execCommand("copy");
-      } catch {
-        /* noop */
-      }
-      document.body.removeChild(ta);
-    }
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 2000);
-  };
-
-  const clearCollabLink = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const confirmed = await appDialog.confirm({
-      title: t("app.deleteCollabLink"),
-      text: t("app.deleteCollabLinkText"),
-      confirmButtonText: t("app.delete"),
-      danger: true,
-    });
-    if (!confirmed) {
-      return;
-    }
-    await onClearCollabLink(board.id);
   };
 
   return (
@@ -368,28 +331,6 @@ const BoardCard: React.FC<BoardCardProps> = ({
         <span className="dashboard__card-date">
           {formatDate(board.updatedAt)}
         </span>
-        {board.collabLink && (
-          <div className="dashboard__card-collab-row">
-            <button
-              className="dashboard__card-collab"
-              title={t("app.copyCollabLinkTitle")}
-              aria-label={t("app.copyCollabLinkTitle")}
-              onClick={copyCollabLink}
-            >
-              <FontAwesomeIcon icon={faCopy} />
-              <span>{copied ? t("app.copied") : t("app.copyLink")}</span>
-            </button>
-            <button
-              className="dashboard__card-collab dashboard__card-collab--end"
-              title={t("app.deleteCollabLinkTitle")}
-              aria-label={t("app.deleteCollabLinkTitle")}
-              onClick={clearCollabLink}
-            >
-              <FontAwesomeIcon icon={faLinkSlash} />
-              <span>{t("app.endCollaboration")}</span>
-            </button>
-          </div>
-        )}
       </div>
       <div className="dashboard__card-actions">
         <button
@@ -566,17 +507,22 @@ const SharedBoardCard: React.FC<SharedBoardCardProps> = ({
 interface DashboardProps {
   user: AuthUser;
   onOpenBoard: (record: DrawingRecord) => void;
-  onOpenSharedBoard: (board: SharedBoard) => void;
+  onOpenSharedBoard: (board: SharedBoard) => void | Promise<void>;
   onNewBoard: () => void;
   onLogout: () => void;
 }
 
-const RECENT_LIMIT = 8;
+const RECENT_LIMIT = 4;
 
-type Tab = "recent" | "all" | "shared" | "users";
+type Tab = "all" | "shared" | "users";
+type BoardSort = "newest" | "oldest" | "az" | "za";
 type RecentItem =
   | { type: "own"; board: DrawingRecord; updatedAt: number }
   | { type: "shared"; board: SharedBoard; updatedAt: number };
+
+// case- and accent-insensitive, so "diseno" finds "Diseño"
+const normalizeSearchText = (text: string) =>
+  text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().trim();
 
 const getRoomIdFromCollabLink = (link: string | null): string | null => {
   if (!link) {
@@ -596,7 +542,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [sharedBoards, setSharedBoards] = useState<SharedBoard[]>([]);
   const [loading, setLoading] = useState(true);
   const [sharedError, setSharedError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<Tab>("recent");
+  const [activeTab, setActiveTab] = useState<Tab>("all");
+  const [search, setSearch] = useState("");
+  const [boardSort, setBoardSort] = useState<BoardSort>("newest");
   const [managedUsers, setManagedUsers] = useState<ManagedUserProfile[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState<string | null>(null);
@@ -625,7 +573,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   useEffect(() => {
     if (!isAdmin && activeTab === "users") {
-      setActiveTab("recent");
+      setActiveTab("all");
     }
   }, [activeTab, isAdmin]);
 
@@ -672,54 +620,75 @@ export const Dashboard: React.FC<DashboardProps> = ({
     }
   }, [isAdmin]);
 
-  const { ownBoards, recentItems, displayedBoards, visibleSharedBoards } =
-    useMemo(() => {
-      const sharedRoomIds = new Set(sharedBoards.map((board) => board.roomId));
-      const canTrustSharedBoardList = !loading && !sharedError;
-      const boardsForDisplay = boards.map((board) => {
-        const roomId = getRoomIdFromCollabLink(board.collabLink);
-        return canTrustSharedBoardList && roomId && !sharedRoomIds.has(roomId)
-          ? { ...board, collabLink: null }
-          : board;
-      });
-      // recents already show the shared card for a board in an active room,
-      // so only they skip it; "Mis tableros" lists every own board
-      const privateBoards = boardsForDisplay.filter(
-        (board) => !getRoomIdFromCollabLink(board.collabLink),
-      );
-      const recentItems: RecentItem[] = [
-        ...privateBoards.map((board) => ({
-          type: "own" as const,
+  const { recentItems, myBoardItems, visibleSharedBoards } = useMemo(() => {
+    const sharedRoomIds = new Set(sharedBoards.map((board) => board.roomId));
+    const canTrustSharedBoardList = !loading && !sharedError;
+    const boardsForDisplay = boards.map((board) => {
+      const roomId = getRoomIdFromCollabLink(board.collabLink);
+      return canTrustSharedBoardList && roomId && !sharedRoomIds.has(roomId)
+        ? { ...board, collabLink: null }
+        : board;
+    });
+    const privateBoards = boardsForDisplay.filter(
+      (board) => !getRoomIdFromCollabLink(board.collabLink),
+    );
+    // the full list has every own board; one in an active room shows as its
+    // shared card, like in recents (once, even if several link to it)
+    const sharedByRoom = new Map(
+      sharedBoards.map((board) => [board.roomId, board]),
+    );
+    const seenRoomIds = new Set<string>();
+    const myBoardItems: RecentItem[] = [];
+    for (const board of boardsForDisplay) {
+      const roomId = getRoomIdFromCollabLink(board.collabLink);
+      const shared = roomId ? sharedByRoom.get(roomId) : undefined;
+      if (!shared) {
+        myBoardItems.push({
+          type: "own",
           board,
           updatedAt: board.updatedAt,
-        })),
-        ...sharedBoards.map((board) => ({
-          type: "shared" as const,
-          board,
-          updatedAt: board.updatedAt,
-        })),
-      ]
-        .sort((a, b) => b.updatedAt - a.updatedAt)
-        .slice(0, RECENT_LIMIT);
-      const visibleSharedBoards =
-        activeTab === "shared"
-          ? sharedBoards
-          : activeTab === "recent"
-          ? recentItems
-              .filter(
-                (item): item is Extract<RecentItem, { type: "shared" }> =>
-                  item.type === "shared",
-              )
-              .map((item) => item.board)
-          : [];
+        });
+      } else if (!seenRoomIds.has(shared.roomId)) {
+        seenRoomIds.add(shared.roomId);
+        myBoardItems.push({
+          type: "shared",
+          board: shared,
+          updatedAt: shared.updatedAt,
+        });
+      }
+    }
+    const recentItems: RecentItem[] = [
+      ...privateBoards.map((board) => ({
+        type: "own" as const,
+        board,
+        updatedAt: board.updatedAt,
+      })),
+      ...sharedBoards.map((board) => ({
+        type: "shared" as const,
+        board,
+        updatedAt: board.updatedAt,
+      })),
+    ]
+      .sort((a, b) => b.updatedAt - a.updatedAt)
+      .slice(0, RECENT_LIMIT);
+    const visibleSharedBoards =
+      activeTab === "shared"
+        ? sharedBoards
+        : activeTab === "all"
+        ? [
+            ...new Set(
+              [...recentItems, ...myBoardItems]
+                .filter(
+                  (item): item is Extract<RecentItem, { type: "shared" }> =>
+                    item.type === "shared",
+                )
+                .map((item) => item.board),
+            ),
+          ]
+        : [];
 
-      return {
-        ownBoards: boardsForDisplay,
-        recentItems,
-        displayedBoards: activeTab === "all" ? boardsForDisplay : [],
-        visibleSharedBoards,
-      };
-    }, [activeTab, boards, loading, sharedBoards, sharedError]);
+    return { recentItems, myBoardItems, visibleSharedBoards };
+  }, [activeTab, boards, loading, sharedBoards, sharedError]);
 
   const handleEditCurrentUsername = async () => {
     const nextUsername = await appDialog.promptText({
@@ -908,16 +877,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
       appJotaiStore.set(activeBoardAtom, { ...active, name: newName });
     }
     void appDialog.toast({ title: t("app.boardRenamedSuccessfully") });
-  };
-
-  const handleClearCollabLink = async (id: string) => {
-    await DrawingsStore.setCollabLink(id, null);
-    setBoards((prev) =>
-      prev.map((board) =>
-        board.id === id ? { ...board, collabLink: null } : board,
-      ),
-    );
-    void appDialog.toast({ title: t("app.collabLinkDeletedSuccessfully") });
   };
 
   const handleRenameSharedBoard = async (board: SharedBoard) => {
@@ -1164,9 +1123,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const handleOpenSharedBoard = async (board: SharedBoard) => {
-    const stillExists = await appDialog.withLoading(t("app.openingBoard"), () =>
-      SharedBoardsStore.isVisibleByRoom(board.roomId, board.roomKey),
-    );
+    let stillExists: boolean;
+    try {
+      stillExists = await appDialog.withLoading(t("app.openingBoard"), () =>
+        SharedBoardsStore.isVisibleByRoom(board.roomId, board.roomKey),
+      );
+    } catch (error) {
+      // the backend couldn't confirm the state: keep the board in the list
+      // and report the connection problem instead of "closed"
+      await appDialog.error(
+        t("app.collaborationUnreachableTitle"),
+        getErrorMessage(error, t("serverErrors.network")),
+      );
+      return;
+    }
 
     if (!stillExists) {
       setSharedBoards((prev) => prev.filter((item) => item.id !== board.id));
@@ -1325,6 +1295,73 @@ export const Dashboard: React.FC<DashboardProps> = ({
     managedUsers[0] ??
     null;
 
+  const searchQuery = normalizeSearchText(search);
+  const matchesSearch = (name: string) =>
+    normalizeSearchText(name).includes(searchQuery);
+  // while searching, recents and the full list merge into one result list;
+  // recents can hold others' shared boards that the full list doesn't have
+  const searchResults = searchQuery
+    ? [
+        ...new Map(
+          [...myBoardItems, ...recentItems].map((item) => [
+            `${item.type}:${item.board.id}`,
+            item,
+          ]),
+        ).values(),
+      ].filter((item) => matchesSearch(item.board.name))
+    : [];
+  const filteredSharedBoards = sharedBoards.filter((board) =>
+    matchesSearch(board.name),
+  );
+  const sortedMyBoardItems = [...myBoardItems].sort((a, b) => {
+    if (boardSort === "az" || boardSort === "za") {
+      const byName = a.board.name.localeCompare(b.board.name, undefined, {
+        sensitivity: "base",
+        numeric: true,
+      });
+      return boardSort === "az" ? byName : -byName;
+    }
+    return boardSort === "newest"
+      ? b.updatedAt - a.updatedAt
+      : a.updatedAt - b.updatedAt;
+  });
+  const isSortedByName = boardSort === "az" || boardSort === "za";
+
+  const noSearchResults = (
+    <div className="dashboard__empty">
+      <p>{t("app.noSearchResults", { query: search.trim() })}</p>
+    </div>
+  );
+
+  const renderBoardGrid = (items: RecentItem[]) => (
+    <div className="dashboard__grid">
+      {items.map((item) =>
+        item.type === "own" ? (
+          <BoardCard
+            key={`own:${item.board.id}`}
+            board={item.board}
+            onOpen={handleOpenBoard}
+            onDelete={handleDelete}
+            onRename={handleRename}
+          />
+        ) : (
+          <SharedBoardCard
+            key={`shared:${item.board.id}`}
+            board={item.board}
+            currentUserId={user.id}
+            thumbnail={
+              sharedBoardPreviews[getSharedBoardPreviewKey(item.board)] ?? null
+            }
+            onJoin={handleOpenSharedBoard}
+            onLeave={handleLeaveSharedBoard}
+            onDelete={handleDeleteSharedBoard}
+            onRename={handleRenameSharedBoard}
+          />
+        ),
+      )}
+    </div>
+  );
+
   const panelBackground = isDark ? "#1e1e2e" : "#ffffff";
   const panelBorder = isDark ? "#2e2e4a" : "#e5e7eb";
   const secondaryBackground = isDark ? "#242436" : "#f8fafc";
@@ -1364,14 +1401,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         <nav className="dashboard__tabs">
-          <button
-            className={`dashboard__tab${
-              activeTab === "recent" ? " active" : ""
-            }`}
-            onClick={() => setActiveTab("recent")}
-          >
-            {t("app.recent")}
-          </button>
           <button
             className={`dashboard__tab${activeTab === "all" ? " active" : ""}`}
             onClick={() => setActiveTab("all")}
@@ -1462,6 +1491,22 @@ export const Dashboard: React.FC<DashboardProps> = ({
       </header>
 
       <main className="dashboard__main">
+        {activeTab !== "users" && (
+          <label className="dashboard__search">
+            <FontAwesomeIcon
+              icon={faMagnifyingGlass}
+              className="dashboard__search-icon"
+            />
+            <input
+              type="search"
+              placeholder={t("app.searchBoards")}
+              aria-label={t("app.searchBoards")}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              maxLength={MAX_FIELD_LENGTH}
+            />
+          </label>
+        )}
         {activeTab === "users" ? (
           <>
             <div className="dashboard__section-header">
@@ -1889,7 +1934,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <div className="dashboard__section-header">
               <h2>
                 {t("app.sharedBoards")}
-                {!loading && sharedBoards.length > 0 && (
+                {!loading && filteredSharedBoards.length > 0 && (
                   <span
                     style={{
                       fontSize: "0.875rem",
@@ -1898,7 +1943,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       marginLeft: "0.5rem",
                     }}
                   >
-                    ({sharedBoards.length})
+                    ({filteredSharedBoards.length})
                   </span>
                 )}
               </h2>
@@ -1936,9 +1981,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   {t("app.sharedBoardsHint")}
                 </p>
               </div>
+            ) : filteredSharedBoards.length === 0 ? (
+              noSearchResults
             ) : (
               <div className="dashboard__shared-grid">
-                {sharedBoards.map((board) => (
+                {filteredSharedBoards.map((board) => (
                   <SharedBoardCard
                     key={board.id}
                     board={board}
@@ -1960,34 +2007,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <>
             <div className="dashboard__section-header">
               <h2>
-                {activeTab === "recent" ? t("app.recent") : t("app.myBoards")}
-                {!loading &&
-                  (activeTab === "recent"
-                    ? recentItems.length > 0
-                    : ownBoards.length > 0) && (
-                    <span
-                      style={{
-                        fontSize: "0.875rem",
-                        fontWeight: 400,
-                        color: mutedColor,
-                        marginLeft: "0.5rem",
-                      }}
-                    >
-                      {activeTab === "recent"
-                        ? `(${recentItems.length})`
-                        : `(${ownBoards.length})`}
-                    </span>
-                  )}
-                {activeTab === "recent" && (
+                {searchQuery ? t("app.searchResults") : t("app.recent")}
+                {!loading && (searchQuery || recentItems.length > 0) && (
                   <span
                     style={{
-                      fontSize: "0.75rem",
+                      fontSize: "0.875rem",
                       fontWeight: 400,
                       color: mutedColor,
                       marginLeft: "0.5rem",
                     }}
                   >
-                    {t("app.recentLimitHint", { count: RECENT_LIMIT })}
+                    ({searchQuery ? searchResults.length : recentItems.length})
                   </span>
                 )}
               </h2>
@@ -2000,7 +2030,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <div className="dashboard__loading">
                 <p>{t("app.loadingBoards")}</p>
               </div>
-            ) : activeTab === "recent" && recentItems.length === 0 ? (
+            ) : recentItems.length === 0 ? (
               <div className="dashboard__empty">
                 <PencilIcon />
                 <p>{t("app.noBoards")}</p>
@@ -2008,57 +2038,88 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   {t("app.createFirstBoard")}
                 </button>
               </div>
-            ) : activeTab === "all" && displayedBoards.length === 0 ? (
-              <div className="dashboard__empty">
-                <PencilIcon />
-                <p>{t("app.noSavedBoards")}</p>
-                <button className="dashboard__new-btn" onClick={onNewBoard}>
-                  {t("app.createFirstBoard")}
-                </button>
-              </div>
-            ) : activeTab === "recent" ? (
-              <div className="dashboard__grid">
-                {recentItems.map((item) =>
-                  item.type === "own" ? (
-                    <BoardCard
-                      key={`own:${item.board.id}`}
-                      board={item.board}
-                      onOpen={handleOpenBoard}
-                      onDelete={handleDelete}
-                      onRename={handleRename}
-                      onClearCollabLink={handleClearCollabLink}
-                    />
-                  ) : (
-                    <SharedBoardCard
-                      key={`shared:${item.board.id}`}
-                      board={item.board}
-                      currentUserId={user.id}
-                      thumbnail={
-                        sharedBoardPreviews[
-                          getSharedBoardPreviewKey(item.board)
-                        ] ?? null
-                      }
-                      onJoin={handleOpenSharedBoard}
-                      onLeave={handleLeaveSharedBoard}
-                      onDelete={handleDeleteSharedBoard}
-                      onRename={handleRenameSharedBoard}
-                    />
-                  ),
-                )}
-              </div>
+            ) : searchQuery ? (
+              searchResults.length > 0 ? (
+                renderBoardGrid(searchResults)
+              ) : (
+                noSearchResults
+              )
             ) : (
-              <div className="dashboard__grid">
-                {displayedBoards.map((board) => (
-                  <BoardCard
-                    key={board.id}
-                    board={board}
-                    onOpen={handleOpenBoard}
-                    onDelete={handleDelete}
-                    onRename={handleRename}
-                    onClearCollabLink={handleClearCollabLink}
-                  />
-                ))}
-              </div>
+              <>
+                {renderBoardGrid(recentItems)}
+                <div className="dashboard__section-header dashboard__section-header--spaced">
+                  <h2>
+                    {t("app.myBoards")}
+                    <span
+                      style={{
+                        fontSize: "0.875rem",
+                        fontWeight: 400,
+                        color: mutedColor,
+                        marginLeft: "0.5rem",
+                      }}
+                    >
+                      ({myBoardItems.length})
+                    </span>
+                  </h2>
+                  <div className="dashboard__sort">
+                    <button
+                      type="button"
+                      className={`dashboard__shared-refresh dashboard__sort-btn${
+                        isSortedByName ? " active" : ""
+                      }`}
+                      onClick={() =>
+                        setBoardSort(boardSort === "az" ? "za" : "az")
+                      }
+                      title={t("app.sortByName")}
+                      aria-label={t("app.sortByName")}
+                      aria-pressed={isSortedByName}
+                    >
+                      <FontAwesomeIcon
+                        icon={
+                          boardSort === "za" ? faArrowDownZA : faArrowDownAZ
+                        }
+                      />
+                      <span>
+                        {boardSort === "za" ? t("app.sortZA") : t("app.sortAZ")}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`dashboard__shared-refresh dashboard__sort-btn${
+                        isSortedByName ? "" : " active"
+                      }`}
+                      onClick={() =>
+                        setBoardSort(
+                          boardSort === "newest" ? "oldest" : "newest",
+                        )
+                      }
+                      title={t("app.sortByDate")}
+                      aria-label={t("app.sortByDate")}
+                      aria-pressed={!isSortedByName}
+                    >
+                      <FontAwesomeIcon
+                        icon={
+                          boardSort === "oldest"
+                            ? faArrowUpWideShort
+                            : faArrowDownWideShort
+                        }
+                      />
+                      <span>
+                        {boardSort === "oldest"
+                          ? t("app.sortOldest")
+                          : t("app.sortNewest")}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+                {myBoardItems.length > 0 ? (
+                  renderBoardGrid(sortedMyBoardItems)
+                ) : (
+                  <div className="dashboard__empty">
+                    <p>{t("app.noSavedBoards")}</p>
+                  </div>
+                )}
+              </>
             )}
           </>
         )}

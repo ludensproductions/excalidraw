@@ -48,7 +48,12 @@ export const ShareableLinkDialog = ({
   };
   const { onCopy, copyStatus } = useCopyStatus();
   return (
-    <Dialog onCloseRequest={onCloseRequest} title={false} size="small">
+    <Dialog
+      onCloseRequest={onCloseRequest}
+      title={false}
+      size="small"
+      className="ShareableLinkDialog-modal"
+    >
       <div className="ShareableLinkDialog">
         <h3>{t("exportDialog.share_link_title")}</h3>
         <div className="ShareableLinkDialog__linkRow">

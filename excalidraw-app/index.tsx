@@ -223,10 +223,25 @@ const AppRoot: React.FC = () => {
     }
   };
 
-  const openSharedBoard = (board: SharedBoard) => {
+  const openSharedBoard = async (board: SharedBoard) => {
     dashboardState.setAutoSaveSuppressed(false);
     appJotaiStore.set(hasDashboardBackAtom, true);
-    appJotaiStore.set(activeBoardAtom, { id: null, name: board.name });
+    // the owner's private board linked to this room keeps receiving the
+    // autosave (elements + thumbnail); without it "Mis tableros" showed the
+    // shared board with an empty/stale preview
+    const linkedBoardId =
+      board.createdBy === user?.id
+        ? (
+            await DrawingsStore.getIdsByRoom(board.roomId).catch((error) => {
+              console.error("Failed to resolve board linked to room:", error);
+              return [] as string[];
+            })
+          )[0] ?? null
+        : null;
+    appJotaiStore.set(activeBoardAtom, {
+      id: linkedBoardId,
+      name: board.name,
+    });
     // Restore the read-only suffix if this user only has read-only access.
     const currentMember = board.members.find((m) => m.userId === user!.id);
     const isReadOnly = currentMember?.readOnly ?? false;

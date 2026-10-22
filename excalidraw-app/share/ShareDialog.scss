@@ -3,12 +3,16 @@
 .excalidraw {
   // Excalidraw makes every Dialog fullscreen on phones; the share dialogs are
   // short, so they stay a centered card with the page visible around it
-  .Modal.ShareDialog-modal.Dialog--fullscreen {
+  .Modal.ShareDialog-modal.Dialog--fullscreen,
+  .Modal.ShareableLinkDialog-modal.Dialog--fullscreen {
     padding: 1rem;
 
     .Modal__content {
       position: relative;
       inset: auto;
+      // phone layout is also used on portrait tablets (768-820px wide): keep
+      // the dialog's own width (550px) instead of stretching edge to edge
+      max-width: min(var(--max-width, 550px), 100%);
       max-height: 100%;
       overflow-y: auto;
       border-radius: 0.75rem;

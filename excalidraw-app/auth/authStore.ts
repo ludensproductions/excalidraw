@@ -77,6 +77,11 @@ const isPasswordRecoveryPending = () => {
   }
 };
 
+const hasRecoveryLinkInUrl = () =>
+  new URLSearchParams(window.location.hash.replace(/^#/, "")).get("type") ===
+    "recovery" ||
+  new URLSearchParams(window.location.search).get("type") === "recovery";
+
 function emit() {
   for (const l of listeners) {
     l(currentUser);
@@ -238,7 +243,14 @@ function ensureHydrated(): Promise<void> {
     hydrationPromise = (async () => {
       try {
         const { data } = await supabase.auth.getSession();
-        if (data.session && isPasswordRecoveryPending()) {
+        if (data.session && hasRecoveryLinkInUrl()) {
+          // a recovery link wins over whoever is signed in on this browser:
+          // drop that session (only here, other devices keep theirs) so the
+          // auth page runs the link for the account it was sent to
+          setPasswordRecoveryPending(false);
+          await supabase.auth.signOut({ scope: "local" });
+          await applySession(null);
+        } else if (data.session && isPasswordRecoveryPending()) {
           // the user left the new-password screen (back, reload, reopened the
           // link): drop that session instead of letting it into the app
           setPasswordRecoveryPending(false);

@@ -2,8 +2,16 @@
   position: fixed;
   inset: 0;
   display: flex;
-  align-items: center;
   justify-content: center;
+  // the card is centered with `margin: auto` instead of align-items: center,
+  // so when it's taller than the screen (tablets in landscape, the register
+  // form with errors, the on-screen keyboard open) it starts at the top and
+  // the page scrolls instead of being cut off at both ends
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 1rem;
+  box-sizing: border-box;
   background: #f8f9fa;
   font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
   z-index: 10000;
@@ -16,8 +24,10 @@
       0 10px 40px -4px rgba(0, 0, 0, 0.12);
     padding: 2.5rem;
     width: 100%;
-    max-width: 500px;
-    margin: 1rem;
+    // 500px of content + 2.5rem padding each side (same size as before)
+    max-width: 580px;
+    margin: auto;
+    box-sizing: border-box;
   }
 
   &__logo {

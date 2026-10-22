@@ -19,6 +19,9 @@
     position: sticky;
     top: 0;
     z-index: 100;
+    // .dashboard is a scrolling flex column: without this, tabs with more
+    // content than the viewport squeeze the header
+    flex-shrink: 0;
   }
 
   &__logo {
@@ -146,11 +149,60 @@
     box-sizing: border-box;
   }
 
+  // the icon takes the text color, so both follow the theme together
+  &__search {
+    position: relative;
+    display: block;
+    width: 100%;
+    max-width: 24rem;
+    margin-bottom: 1.5rem;
+    color: #1a1a2e;
+
+    input {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.6rem 0.9rem 0.6rem 2.4rem;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      background: #ffffff;
+      color: inherit;
+      font: inherit;
+      font-size: 0.9rem;
+
+      &::placeholder {
+        color: #9ca3af;
+      }
+
+      &:focus {
+        outline: none;
+        border-color: #6965db;
+      }
+    }
+  }
+
+  &__search-icon {
+    position: absolute;
+    top: 50%;
+    left: 0.9rem;
+    transform: translateY(-50%);
+    width: 0.9rem;
+    height: 0.9rem;
+    pointer-events: none;
+  }
+
   &__section-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 1.5rem;
+
+    // "Mis tableros" header below the recents grid
+    &--spaced {
+      margin-top: 2.5rem;
+      padding-top: 2rem;
+      border-top: 1px solid #e5e7eb;
+    }
 
     h2 {
       font-size: 1.25rem;
@@ -326,56 +378,6 @@
   &__card-date {
     font-size: 0.75rem;
     color: #9ca3af;
-  }
-
-  &__card-collab-row {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    margin-top: 0.45rem;
-    flex-wrap: wrap;
-  }
-
-  &__card-collab {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    min-height: 1.6rem;
-    padding: 0.25rem 0.6rem;
-    background: #ede9fe;
-    color: #6965db;
-    border: 1px solid rgba(105, 101, 219, 0.18);
-    border-radius: 999px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    cursor: pointer;
-    line-height: 1;
-    transition: background 0.15s, border-color 0.15s, color 0.15s,
-      transform 0.12s;
-
-    &:hover {
-      background: #ddd6fe;
-      border-color: rgba(105, 101, 219, 0.35);
-      transform: translateY(-1px);
-    }
-
-    svg {
-      width: 0.72rem;
-      height: 0.72rem;
-    }
-  }
-
-  &__card-collab--end {
-    background: #fff1f2;
-    border-color: #fecdd3;
-    color: #be123c;
-
-    &:hover {
-      background: #ffe4e6;
-      border-color: #fda4af;
-      color: #9f1239;
-    }
   }
 
   &__card-actions,
@@ -724,6 +726,33 @@
     }
   }
 
+  &__sort {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  // label + icon variant of the refresh button; the active one is the
+  // criterion currently sorting the list
+  &__sort-btn {
+    gap: 0.45rem;
+    padding: 0.25rem 0.75rem;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+
+    &.active {
+      border-color: #6965db;
+      background: #ede9fe;
+      color: #6965db;
+    }
+
+    &.active:hover:not(:disabled) {
+      background: #ddd6fe;
+      color: #5b57d1;
+    }
+  }
+
   &__shared-refresh-icon {
     font-size: 0.95rem;
   }
@@ -837,6 +866,29 @@
     }
   }
 
+  .dashboard__search {
+    color: #e1e1f0;
+    // light native clear (x) button on the dark input
+    color-scheme: dark;
+
+    input {
+      background: #1e1e2e;
+      border-color: #2e2e4a;
+
+      &::placeholder {
+        color: #6b7280;
+      }
+
+      &:focus {
+        border-color: #6965db;
+      }
+    }
+  }
+
+  .dashboard__section-header--spaced {
+    border-color: #2e2e4a;
+  }
+
   .dashboard__section-header h2 {
     color: #e1e1f0;
   }
@@ -870,29 +922,6 @@
 
   .dashboard__card-date {
     color: #6b7280;
-  }
-
-  .dashboard__card-collab {
-    background: #312e81;
-    border-color: rgba(165, 180, 252, 0.22);
-    color: #a5b4fc;
-
-    &:hover {
-      background: #3730a3;
-      border-color: rgba(165, 180, 252, 0.4);
-    }
-  }
-
-  .dashboard__card-collab--end {
-    background: #3f1d25;
-    border-color: #7f1d1d;
-    color: #fda4af;
-
-    &:hover {
-      background: #4c1d24;
-      border-color: #be123c;
-      color: #fecdd3;
-    }
   }
 
   .dashboard__card-actions,
@@ -998,6 +1027,17 @@
     &:hover:not(:disabled) {
       background: #2e2e4a;
       color: #e1e1f0;
+    }
+  }
+
+  .dashboard__sort-btn.active {
+    border-color: #6965db;
+    background: #1e1e4a;
+    color: #a5b4fc;
+
+    &:hover:not(:disabled) {
+      background: #2a2a5e;
+      color: #c7d2fe;
     }
   }
 

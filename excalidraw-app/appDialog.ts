@@ -18,6 +18,10 @@ const baseOptions = () => ({
     : "#1f1f24",
   buttonsStyling: false,
   reverseButtons: true,
+  // SweetAlert's default sets html/body to height:auto while a dialog is open;
+  // on phones the dashboard is shorter than the screen, so the area below it
+  // showed the dark page background instead of the backdrop
+  heightAuto: false,
   customClass: {
     popup: "app-swal",
     title: "app-swal__title",

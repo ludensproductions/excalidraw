@@ -48,6 +48,26 @@ type StoreRpcError = {
   message: string;
 };
 
+/**
+ * State of a shared room for the current user, as answered by the
+ * `shared_room_status` RPC:
+ * - active: the board exists and the user is its creator or a member
+ * - no_access: the board exists but the user was removed from it
+ * - closed: the owner closed/deleted it (or it never existed)
+ */
+export type SharedRoomStatus = "active" | "no_access" | "closed";
+
+/**
+ * Thrown when the room state can't be determined (network error, expired
+ * session, 5xx). It must never be read as "the room is closed".
+ */
+export class SharedRoomStatusUnknownError extends Error {
+  constructor(message: string, readonly cause?: unknown) {
+    super(message);
+    this.name = "SharedRoomStatusUnknownError";
+  }
+}
+
 const DEFAULT_MEMBER_NAME = "Usuario";
 const SHARED_BOARD_SELECT =
   "id, room_id, room_key, name, created_by, created_at, updated_at, shared_board_members (user_id, username, joined_at, read_only)";
@@ -114,19 +134,78 @@ export const SharedBoardsStore = {
     return data ? rowToBoard(data as SharedBoardRow) : null;
   },
 
-  async isVisibleByRoom(roomId: string, roomKey: string): Promise<boolean> {
-    const { data, error } = await supabase
-      .from("shared_boards")
-      .select("id")
-      .eq("room_id", roomId)
-      .eq("room_key", roomKey)
-      .maybeSingle();
+  /**
+   * Asks the backend whether the room is still open for the current user.
+   * A failed request is retried once after refreshing the session (the most
+   * common cause is a JWT that expired while the tab was in background); if
+   * it still fails it throws SharedRoomStatusUnknownError instead of
+   * reporting the room as closed.
+   */
+  async getRoomStatus(
+    roomId: string,
+    roomKey: string,
+  ): Promise<SharedRoomStatus> {
+    const fetchStatus = async (): Promise<SharedRoomStatus> => {
+      const { data, error } = await supabase.rpc("shared_room_status", {
+        p_room_id: roomId,
+        p_room_key: roomKey,
+      });
 
-    if (error) {
-      logQueryError("isVisibleByRoom", error);
-      return false;
+      if (!error) {
+        if (data === "active" || data === "no_access" || data === "closed") {
+          return data;
+        }
+        throw new SharedRoomStatusUnknownError(
+          `Unexpected shared_room_status: ${String(data)}`,
+        );
+      }
+
+      // backend without migration 0018 yet: fall back to the RLS-filtered
+      // select, but still treat errors as unknown, never as closed
+      if (error.code === "PGRST202") {
+        const { data: row, error: selectError } = await supabase
+          .from("shared_boards")
+          .select("id")
+          .eq("room_id", roomId)
+          .eq("room_key", roomKey)
+          .maybeSingle();
+        if (selectError) {
+          throw new SharedRoomStatusUnknownError(
+            selectError.message,
+            selectError,
+          );
+        }
+        return row?.id ? "active" : "closed";
+      }
+
+      throw new SharedRoomStatusUnknownError(error.message, error);
+    };
+
+    const runSafely = () =>
+      fetchStatus().catch((error: unknown) => {
+        throw error instanceof SharedRoomStatusUnknownError
+          ? error
+          : new SharedRoomStatusUnknownError(
+              error instanceof Error ? error.message : String(error),
+              error,
+            );
+      });
+
+    try {
+      return await runSafely();
+    } catch (firstError) {
+      logQueryError("getRoomStatus", firstError);
+      await supabase.auth.refreshSession().catch(() => undefined);
+      return runSafely();
     }
-    return !!data?.id;
+  },
+
+  /**
+   * True when the room is open for the current user. Throws
+   * SharedRoomStatusUnknownError when that can't be determined.
+   */
+  async isVisibleByRoom(roomId: string, roomKey: string): Promise<boolean> {
+    return (await this.getRoomStatus(roomId, roomKey)) === "active";
   },
 
   async getAll(): Promise<SharedBoard[]> {

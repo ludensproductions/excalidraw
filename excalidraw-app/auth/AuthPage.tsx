@@ -237,6 +237,9 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
         if (validationError) {
           throw new Error(t(validationError));
         }
+        if (password !== confirmPassword) {
+          throw new Error(t("auth.errors.passwordsDoNotMatch"));
+        }
         const result = await registerUser(
           normalizeUsername(username),
           normalizeEmail(email),
@@ -528,7 +531,7 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
               )}
             </div>
           )}
-          {mode === "reset" && (
+          {(mode === "reset" || mode === "register") && (
             <div className="auth-page__field">
               <label htmlFor="auth-confirm-password">
                 {t("auth.fields.confirmPassword")}

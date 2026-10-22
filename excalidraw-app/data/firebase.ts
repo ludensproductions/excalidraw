@@ -27,6 +27,7 @@ import {
 } from "../app_constants";
 import { translateErrorMessage } from "../errorMessages";
 
+import { SharedBoardsStore } from "./SharedBoardsStore";
 import { supabase } from "./supabase";
 
 import { getSyncableElements } from ".";
@@ -153,18 +154,10 @@ const ensureCollaborationRoomActive = async (
   roomId: string,
   roomKey: string,
 ): Promise<void> => {
-  const { data, error } = await supabase
-    .from("shared_boards")
-    .select("id")
-    .eq("room_id", roomId)
-    .eq("room_key", roomKey)
-    .maybeSingle();
-
-  if (error) {
-    throw error;
-  }
-
-  if (!data?.id) {
+  // throws SharedRoomStatusUnknownError on network/session errors, which
+  // callers report as a save/load failure, not as a closed room
+  const status = await SharedBoardsStore.getRoomStatus(roomId, roomKey);
+  if (status !== "active") {
     throw new CollaborationClosedError();
   }
 };

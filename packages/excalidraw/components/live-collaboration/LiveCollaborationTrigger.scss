@@ -16,6 +16,9 @@
 
     box-shadow: 0 0 0 1px var(--color-surface-lowest);
 
+    // same weight as the "Enviar copia" button next to it
+    font-weight: 600;
+
     flex-shrink: 0;
 
     // double .active to force specificity
