@@ -726,6 +726,7 @@
     "you": "Tú",
     "yours": "Tuyo",
     "recent": "Recientes",
+    "recentLimitHint": "Se muestran los últimos {{count}}",
     "myBoards": "Mis tableros",
     "shared": "Compartidos",
     "loadingBoards": "Cargando tableros...",

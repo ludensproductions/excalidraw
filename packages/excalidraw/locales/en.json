@@ -726,6 +726,7 @@
     "you": "You",
     "yours": "Yours",
     "recent": "Recent",
+    "recentLimitHint": "Showing the last {{count}}",
     "myBoards": "My boards",
     "shared": "Shared",
     "loadingBoards": "Loading boards...",

@@ -419,6 +419,7 @@ interface SharedBoardCardProps {
   thumbnail: string | null;
   onJoin: (board: SharedBoard) => void;
   onLeave: (board: SharedBoard) => void;
+  onDelete: (board: SharedBoard) => void;
   onRename: (board: SharedBoard) => void;
 }
 
@@ -428,6 +429,7 @@ const SharedBoardCard: React.FC<SharedBoardCardProps> = ({
   thumbnail,
   onJoin,
   onLeave,
+  onDelete,
   onRename,
 }) => {
   const isOwner = board.createdBy === currentUserId;
@@ -470,11 +472,11 @@ const SharedBoardCard: React.FC<SharedBoardCardProps> = ({
           </button>
           <button
             className="dashboard__card-action dashboard__card-delete"
-            title={t("app.finalizeSession")}
-            aria-label={t("app.finalizeSession")}
+            title={t("app.deleteBoard")}
+            aria-label={t("app.deleteBoard")}
             onClick={(e) => {
               e.stopPropagation();
-              onLeave(board);
+              onDelete(board);
             }}
           >
             <FontAwesomeIcon icon={faTrashCan} />
@@ -568,6 +570,8 @@ interface DashboardProps {
   onNewBoard: () => void;
   onLogout: () => void;
 }
+
+const RECENT_LIMIT = 8;
 
 type Tab = "recent" | "all" | "shared" | "users";
 type RecentItem =
@@ -696,7 +700,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         })),
       ]
         .sort((a, b) => b.updatedAt - a.updatedAt)
-        .slice(0, 6);
+        .slice(0, RECENT_LIMIT);
       const visibleSharedBoards =
         activeTab === "shared"
           ? sharedBoards
@@ -1115,6 +1119,36 @@ export const Dashboard: React.FC<DashboardProps> = ({
           : "app.sharedBoardLeftSuccessfully",
       ),
     });
+  };
+
+  const handleDeleteSharedBoard = async (board: SharedBoard) => {
+    const confirmed = await appDialog.confirm({
+      title: t("app.deleteBoard"),
+      text: t("app.deleteBoardConfirm"),
+      confirmButtonText: t("app.delete"),
+      danger: true,
+    });
+    if (!confirmed) {
+      return;
+    }
+    const isLinked = (ownBoard: DrawingRecord) =>
+      getRoomIdFromCollabLink(ownBoard.collabLink) === board.roomId;
+    try {
+      await appDialog.withLoading(t("app.deletingBoard"), async () => {
+        await SharedBoardsStore.closeByRoom(board.roomId, board.roomKey);
+        await Promise.all(
+          boards
+            .filter(isLinked)
+            .map((ownBoard) => DrawingsStore.delete(ownBoard.id)),
+        );
+      });
+    } catch (error) {
+      await appDialog.error(t("app.userActionFailed"), getErrorMessage(error));
+      return;
+    }
+    setBoards((prev) => prev.filter((ownBoard) => !isLinked(ownBoard)));
+    setSharedBoards((prev) => prev.filter((item) => item.id !== board.id));
+    void appDialog.toast({ title: t("app.boardDeletedSuccessfully") });
   };
 
   const handleOpenBoard = async (board: DrawingRecord) => {
@@ -1915,6 +1949,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     }
                     onJoin={handleOpenSharedBoard}
                     onLeave={handleLeaveSharedBoard}
+                    onDelete={handleDeleteSharedBoard}
                     onRename={handleRenameSharedBoard}
                   />
                 ))}
@@ -1943,6 +1978,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         : `(${ownBoards.length})`}
                     </span>
                   )}
+                {activeTab === "recent" && (
+                  <span
+                    style={{
+                      fontSize: "0.75rem",
+                      fontWeight: 400,
+                      color: mutedColor,
+                      marginLeft: "0.5rem",
+                    }}
+                  >
+                    {t("app.recentLimitHint", { count: RECENT_LIMIT })}
+                  </span>
+                )}
               </h2>
               <button className="dashboard__new-btn" onClick={onNewBoard}>
                 {t("app.newBoard")}
@@ -1993,6 +2040,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       }
                       onJoin={handleOpenSharedBoard}
                       onLeave={handleLeaveSharedBoard}
+                      onDelete={handleDeleteSharedBoard}
                       onRename={handleRenameSharedBoard}
                     />
                   ),
