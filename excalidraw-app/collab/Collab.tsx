@@ -156,6 +156,12 @@ type CollabInstance = InstanceType<typeof Collab>;
 export interface CollabAPI {
   /** function so that we can access the latest value from stale callbacks */
   isCollaborating: () => boolean;
+  /**
+   * true only while a room socket is actually open. `isCollaborating` is also
+   * true as soon as the editor mounts on a `#room=` URL (App.tsx seeds the
+   * atom from the URL), before any socket exists.
+   */
+  hasActiveRoomSession: () => boolean;
   isOwner: () => boolean;
   onPointerUpdate: CollabInstance["onPointerUpdate"];
   startCollaboration: CollabInstance["startCollaboration"];
@@ -282,6 +288,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
 
     const collabAPI: CollabAPI = {
       isCollaborating: this.isCollaborating,
+      hasActiveRoomSession: this.hasActiveRoomSession,
       isOwner: this.getIsOwner,
       onPointerUpdate: this.onPointerUpdate,
       startCollaboration: this.startCollaboration,
@@ -334,6 +341,8 @@ class Collab extends PureComponent<CollabProps, CollabState> {
   }
 
   isCollaborating = () => appJotaiStore.get(isCollaboratingAtom)!;
+
+  hasActiveRoomSession = () => !!this.portal.socket;
 
   private setIsCollaborating = (isCollaborating: boolean) => {
     appJotaiStore.set(isCollaboratingAtom, isCollaborating);

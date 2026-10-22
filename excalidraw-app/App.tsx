@@ -411,8 +411,13 @@ const initializeScene = async (opts: {
 
     // already in a room (hash change, effect re-run): a second
     // startCollaboration bails out on the open socket, which was reported as
-    // a closed room and wiped the canvas while the session was still live
-    if (opts.collabAPI.isCollaborating()) {
+    // a closed room and wiped the canvas while the session was still live.
+    // Check the real socket, not isCollaborating(): that atom is seeded to
+    // true from the #room URL on mount (useAtomWithInitialValue), so on a
+    // fresh load or when opening a shared board from the dashboard it is
+    // already true and the room was never joined (blank board in prod; in
+    // dev StrictMode's extra unmount reset the atom and hid the bug).
+    if (opts.collabAPI.hasActiveRoomSession()) {
       return {
         scene: null,
         isExternalScene: true,
