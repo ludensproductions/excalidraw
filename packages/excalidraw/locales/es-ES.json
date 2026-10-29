@@ -98,8 +98,8 @@
     "removeFromLibrary": "Eliminar de la biblioteca",
     "libraryLoadingMessage": "Cargando biblioteca…",
     "libraries": "Explorar bibliotecas",
-    "loadingScene": "Cargando escena…",
-    "loadScene": "Cargar escena desde archivo",
+    "loadingScene": "Cargando tablero…",
+    "loadScene": "Cargar tablero desde archivo",
     "align": "Alinear",
     "alignTop": "Alineación superior",
     "alignBottom": "Alineación inferior",
@@ -238,7 +238,7 @@
     "undo": "Deshacer",
     "redo": "Rehacer",
     "resetLibrary": "Reiniciar biblioteca",
-    "createNewRoom": "Crear nueva sala",
+    "createNewRoom": "Crear nueva colaboración en directo",
     "fullScreen": "Pantalla completa",
     "darkMode": "Modo oscuro",
     "lightMode": "Modo claro",
@@ -260,25 +260,25 @@
   "alerts": {
     "clearReset": "Esto limpiará todo el lienzo. ¿Estás seguro?",
     "couldNotCreateShareableLink": "No se pudo crear la copia.",
-    "couldNotCreateShareableLinkTooBig": "No se pudo crear la copia: la escena es demasiado grande",
+    "couldNotCreateShareableLinkTooBig": "No se pudo crear la copia: el tablero es demasiado grande",
     "couldNotLoadInvalidFile": "No se pudo cargar el archivo no válido",
     "importBackendFailed": "La importación falló.",
     "cannotExportEmptyCanvas": "No se puede exportar un lienzo vacío",
     "couldNotCopyToClipboard": "No se pudo copiar al portapapeles.",
     "decryptFailed": "No se pudieron descifrar los datos.",
     "uploadedSecurly": "La carga ha sido asegurada con cifrado de principio a fin.",
-    "loadSceneOverridePrompt": "Si carga este dibujo externo, reemplazará el que tiene. ¿Desea continuar?",
-    "collabStopOverridePrompt": "Detener la sesión sobrescribirá su dibujo anterior almacenado localmente. ¿Está seguro?",
-    "collabStopChoicePrompt": "La sala se cerrará para todos los participantes. Se guardará una copia del tablero en tus tableros.",
+    "loadSceneOverridePrompt": "Si carga este tablero externo, reemplazará el que tiene. ¿Desea continuar?",
+    "collabStopOverridePrompt": "Detener la colaboración en directo sobrescribirá su tablero anterior almacenado localmente. ¿Está seguro?",
+    "collabStopChoicePrompt": "La colaboración en directo se cerrará para todos los participantes. Se guardará una copia del tablero en tus tableros.",
     "errorAddingToLibrary": "No se pudo agregar el elemento a la biblioteca",
     "errorRemovingFromLibrary": "No se pudo quitar el elemento de la biblioteca",
     "confirmAddLibrary": "Esto añadirá {{numShapes}} forma(s) a tu biblioteca. ¿Estás seguro?",
-    "imageDoesNotContainScene": "Esta imagen no parece contener datos de escena. ¿Ha habilitado la inserción de la escena durante la exportación?",
-    "cannotRestoreFromImage": "No se pudo restaurar la escena desde este archivo de imagen",
-    "invalidSceneUrl": "No se ha podido importar la escena desde la URL proporcionada. Está mal formada, o no contiene datos de Excalidraw JSON válidos.",
+    "imageDoesNotContainScene": "Esta imagen no parece contener datos de tablero. ¿Ha habilitado la inserción del tablero durante la exportación?",
+    "cannotRestoreFromImage": "No se pudo restaurar el tablero desde este archivo de imagen",
+    "invalidSceneUrl": "No se ha podido importar el tablero desde la URL proporcionada. Está mal formada, o no contiene datos de Excalidraw JSON válidos.",
     "resetLibrary": "Esto borrará tu biblioteca. ¿Estás seguro?",
     "removeItemsFromsLibrary": "¿Eliminar {{count}} elemento(s) de la biblioteca?",
-    "invalidEncryptionKey": "La clave de cifrado debe tener 22 caracteres. La colaboración en vivo está deshabilitada.",
+    "invalidEncryptionKey": "La clave de cifrado debe tener 22 caracteres. La colaboración en directo está deshabilitada.",
     "collabOfflineWarning": "No hay conexión a internet disponible.\n¡No se guardarán los cambios!",
     "localStorageQuotaExceeded": "No se pudo guardar porque el almacenamiento del navegador está lleno."
   },
@@ -296,7 +296,7 @@
     "imageToolNotSupported": "Las imágenes están desactivadas.",
     "brave_measure_text_error": {
       "line1": "Parece que estás usando el navegador Brave con el ajuste <bold>Forzar el bloqueo de huellas digitales</bold> habilitado.",
-      "line2": "Esto podría resultar en errores en los <bold>Elementos de Texto</bold> en tus dibujos.",
+      "line2": "Esto podría resultar en errores en los <bold>Elementos de Texto</bold> en tus tableros.",
       "line3": "Recomendamos deshabilitar esta configuración desde las opciones de privacidad de Brave.",
       "line4": "Si deshabilitar esta opción no corrige la visualización de los elementos de texto, contacta al soporte interno."
     },
@@ -393,8 +393,8 @@
     "clearCanvasMessage": "Si la recarga no funciona, intente <button>limpiando el lienzo.</button>",
     "clearCanvasCaveat": " Esto provocará la pérdida de su trabajo ",
     "trackedToSentry": "El error con el identificador {{eventId}} fue rastreado en nuestro sistema.",
-    "openIssueMessage": "Fuimos cuidadosos de no incluir la información de tu escena en el error. Copia la información siguiente y compártela por el canal de soporte interno.",
-    "sceneContent": "Contenido de la escena:"
+    "openIssueMessage": "Fuimos cuidadosos de no incluir la información de tu tablero en el error. Copia la información siguiente y compártela por el canal de soporte interno.",
+    "sceneContent": "Contenido del tablero:"
   },
   "shareDialog": {
     "or": "O",
@@ -403,23 +403,23 @@
     "qrCodeLabel": "Código QR del enlace de colaboración"
   },
   "roomDialog": {
-    "desc_intro": "Invita a gente a colaborar en tu dibujo.",
-    "desc_privacy": "Esta sesión es privada y está cifrada de extremo a extremo.",
-    "button_startSession": "Iniciar sesión",
-    "button_stopSession": "Detener sesión",
-    "desc_inProgressIntro": "La sesión de colaboración en vivo está ahora en progreso.",
+    "desc_intro": "Invita a gente a colaborar en tu tablero.",
+    "desc_privacy": "Esta colaboración en directo es privada y está cifrada de extremo a extremo.",
+    "button_startSession": "Iniciar colaboración",
+    "button_stopSession": "Detener colaboración",
+    "desc_inProgressIntro": "La colaboración en directo está en progreso.",
     "desc_shareLink": "Comparte este enlace con cualquier persona con quien quieras colaborar:",
-    "desc_stopSession": "Al detener la sesión, se cerrará la sala de colaboración para todos los participantes. Podrás continuar trabajando localmente en este tablero.",
-    "desc_exitSession": "Al salir de la sesión, se finalizará tu conexión con la sala. Podrás continuar trabajando localmente; los demás participantes podrán seguir colaborando.",
-    "shareTitle": "Únase a una sesión colaborativa en vivo en Excalidraw",
-    "button_leaveSession": "Salir de la sesión"
+    "desc_stopSession": "Al detener la colaboración en directo, se cerrará para todos los participantes. Podrás continuar trabajando localmente en este tablero.",
+    "desc_exitSession": "Al salir de la colaboración en directo, se finalizará tu conexión con el tablero. Podrás continuar trabajando localmente; los demás participantes podrán seguir colaborando.",
+    "shareTitle": "Únete a una colaboración en directo en Excalidraw",
+    "button_leaveSession": "Salir de la colaboración"
   },
   "errorDialog": {
     "title": "Error"
   },
   "exportDialog": {
     "disk_title": "Guardar en disco",
-    "disk_details": "Exportar los datos de la escena a un archivo desde el cual pueda importar más tarde.",
+    "disk_details": "Exportar los datos del tablero a un archivo desde el cual pueda importar más tarde.",
     "disk_button": "Guardar en archivo",
     "link_title": "Compartir enlace",
     "send_copy_title": "Enviar copia",
@@ -485,7 +485,7 @@
       "required": "Requerido",
       "website": "Introduce una URL válida"
     },
-    "noteDescription": "Envía tu biblioteca para revisión interna antes de que otras personas puedan usarla en sus dibujos.",
+    "noteDescription": "Envía tu biblioteca para revisión interna antes de que otras personas puedan usarla en sus tableros.",
     "noteGuidelines": "La biblioteca debe aprobarse manualmente. Consulta las pautas internas antes de enviarla.",
     "noteLicense": "Al enviarla, aceptas que la biblioteca pueda compartirse internamente según las políticas de la organización.",
     "noteItems": "Cada elemento de la biblioteca debe tener su propio nombre para que sea filtrable. Los siguientes elementos de la biblioteca serán incluidos:",
@@ -506,12 +506,12 @@
       "withBackground": "Fondo",
       "onlySelected": "Sólo seleccionados",
       "darkMode": "Modo oscuro",
-      "embedScene": "Incrustar escena",
+      "embedScene": "Incrustar tablero",
       "scale": "Escalar",
       "padding": "Espaciado"
     },
     "tooltip": {
-      "embedScene": "Los datos de la escena se guardarán en el archivo PNG/SVG exportado, así la escena puede ser restaurada desde la misma. Esta acción aumentará el tamaño del archivo exportado."
+      "embedScene": "Los datos del tablero se guardarán en el archivo PNG/SVG exportado, así el tablero puede ser restaurado desde el mismo. Esta acción aumentará el tamaño del archivo exportado."
     },
     "title": {
       "exportToPng": "Exportar a PNG",
@@ -525,14 +525,14 @@
     }
   },
   "encrypted": {
-    "tooltip": "Tus dibujos están cifrados de punto a punto.",
+    "tooltip": "Tus tableros están cifrados de punto a punto.",
     "link": "Indicador de cifrado"
   },
   "stats": {
     "angle": "Ángulo",
     "shapes": "Formas",
     "height": "Alto",
-    "scene": "Escena",
+    "scene": "Tablero",
     "selected": "Seleccionado",
     "storage": "Almacenamiento",
     "fullTitle": "Propiedades del Lienzo y Forma",
@@ -607,12 +607,12 @@
       "exportToImage": {
         "title": "Exportar como imagen",
         "button": "Exportar como imagen",
-        "description": "Exporta los datos de la escena como una imagen desde la cual podrás importarla más tarde."
+        "description": "Exporta los datos del tablero como una imagen desde la cual podrás importarla más tarde."
       },
       "saveToDisk": {
         "title": "Guardar en el disco",
         "button": "Guardar en el disco",
-        "description": "Exporta los datos de la escena a un archivo desde el cual podrás importar más tarde."
+        "description": "Exporta los datos del tablero a un archivo desde el cual podrás importar más tarde."
       }
     },
     "modal": {
@@ -624,7 +624,7 @@
       "shareableLink": {
         "title": "Cargar desde un enlace",
         "button": "Reemplazar mi contenido",
-        "description": "Cargar un dibujo externo <bold>reemplazará tu contenido existente</bold>.<br></br>Puedes primero hacer una copia de seguridad de tu dibujo usando una de las opciones de abajo."
+        "description": "Cargar un tablero externo <bold>reemplazará tu contenido existente</bold>.<br></br>Puedes primero hacer una copia de seguridad de tu tablero usando una de las opciones de abajo."
       }
     }
   },
@@ -635,7 +635,7 @@
     "badge": {
       "old": "viejo"
     },
-    "sceneFonts": "En esta escena",
+    "sceneFonts": "En este tablero",
     "availableFonts": "Fuentes disponibles",
     "empty": "No se han encontrado fuentes"
   },
@@ -705,16 +705,16 @@
     "copyLink": "Copiar enlace",
     "copied": "Listo",
     "deleteCollabLink": "Eliminar enlace de colaboración",
-    "deleteCollabLinkText": "Este tablero dejará de mostrar el enlace colaborativo guardado.",
+    "deleteCollabLinkText": "Este tablero dejará de mostrar el enlace de colaboración guardado.",
     "copyCollabLinkTitle": "Copiar enlace de colaboración",
     "deleteCollabLinkTitle": "Eliminar enlace de colaboración",
-    "endCollaboration": "Detener sesión",
+    "endCollaboration": "Detener colaboración",
     "sharedBoards": "Tableros compartidos",
     "refreshSharedBoards": "Actualizar tableros compartidos",
     "loadingSharedBoards": "Cargando tableros compartidos...",
     "errorLoadingSharedBoards": "Error al cargar tableros compartidos:",
     "noSharedBoards": "Aún no participas en ningún tablero compartido.",
-    "sharedBoardsHint": "Inicia o únete a una sesión de colaboración en vivo para que aparezca aquí.",
+    "sharedBoardsHint": "Inicia o únete a una colaboración en directo para que aparezca aquí.",
     "leaveSharedBoard": "Salir del tablero compartido",
     "deleteSharedBoard": "Eliminar tablero compartido",
     "finalizeSession": "Detener sesión",
@@ -744,7 +744,7 @@
     "createFirstBoard": "Crear tu primer tablero",
     "deleteBoard": "Eliminar tablero",
     "deleteBoardConfirm": "Esta acción no se puede deshacer.",
-    "deleteSharedBoardConfirm": "La sala se cerrará para todos los participantes y el tablero se eliminará. Esta acción no se puede deshacer.",
+    "deleteSharedBoardConfirm": "La colaboración en directo se cerrará para todos los participantes y el tablero se eliminará. Esta acción no se puede deshacer.",
     "boardDeletedSuccessfully": "Tablero eliminado",
     "delete": "Eliminar",
     "comments": "Comentarios",
@@ -788,9 +788,9 @@
     "leaveWithoutSaving": "Salir sin guardar",
     "draft": "borrador",
     "sharedBoardLeftSuccessfully": "Saliste del tablero compartido",
-    "sharedSessionFinalizedSuccessfully": "Sesión compartida detenida",
-    "startingSession": "Iniciando sesión colaborativa…",
-    "stoppingSession": "Deteniendo sesión…",
+    "sharedSessionFinalizedSuccessfully": "Colaboración detenida",
+    "startingSession": "Iniciando colaboración en directo…",
+    "stoppingSession": "Deteniendo colaboración…",
     "leavingSession": "Saliendo del tablero…",
     "savingBoard": "Guardando tablero…",
     "deletingBoard": "Eliminando tablero…",
@@ -845,12 +845,12 @@
     "onlyOwnerCanRename": "Solo el dueño puede renombrar",
     "onlyOwnerCanRenameText": "Este tablero compartido pertenece a otro usuario. Solo el dueño puede renombrar el tablero guardado.",
     "onlyOwnerCanSave": "Solo el dueño puede guardar",
-    "onlyOwnerCanSaveText": "Este tablero compartido pertenece a otro usuario. Tus cambios se sincronizan en la colaboración; para guardarlo en tus tableros, exporta una copia o pide al dueño que finalice la sesión.",
+    "onlyOwnerCanSaveText": "Este tablero compartido pertenece a otro usuario. Tus cambios se sincronizan en la colaboración; para guardarlo en tus tableros, exporta una copia o pide al dueño que detenga la colaboración.",
     "enterBoardNameToSave": "Escribe un nombre para guardar el tablero.",
     "couldNotCreateBoard": "No se pudo crear el tablero",
     "couldNotCreateBoardText": "No se pudo crear el tablero. Intenta otra vez.",
     "couldNotSaveBoard": "No se pudo guardar el tablero.",
-    "documentTitle": "Excalidraw | Pizarra colaborativa"
+    "documentTitle": "Excalidraw | Tablero colaborativo"
   },
   "auth": {
     "title": {
@@ -974,7 +974,7 @@
     "invalidOrigin": "El origen de la solicitud no es válido.",
     "missingToken": "Falta el token de autorización.",
     "tokenVerifyFailed": "No se pudo validar la autorización.",
-    "exportFailed": "No se pudo exportar la escena.",
+    "exportFailed": "No se pudo exportar el tablero.",
     "createAccountFailed": "No se pudo crear la cuenta. Si este correo ya está registrado, inicia sesión o recupera tu contraseña."
   }
 }

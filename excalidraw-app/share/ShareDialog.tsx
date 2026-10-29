@@ -4,14 +4,12 @@ import { Dialog } from "@excalidraw/excalidraw/components/Dialog";
 import { FilledButton } from "@excalidraw/excalidraw/components/FilledButton";
 import { TextField } from "@excalidraw/excalidraw/components/TextField";
 import {
-  copyIcon,
   LinkIcon,
   pencilIcon,
   playerPlayIcon,
   playerStopFilledIcon,
 } from "@excalidraw/excalidraw/components/icons";
 import { useUIAppState } from "@excalidraw/excalidraw/context/ui-appState";
-import { useCopyStatus } from "@excalidraw/excalidraw/hooks/useCopiedIndicator";
 import { useI18n } from "@excalidraw/excalidraw/i18n";
 import { getFrame } from "@excalidraw/common";
 import { useEffect, useRef, useState } from "react";
@@ -61,13 +59,8 @@ const ActiveRoomDialog = ({
   handleClose: () => void;
 }) => {
   const { t } = useI18n();
-  const [, setJustCopied] = useState(false);
-  const timerRef = useRef<number>(0);
   const ref = useRef<HTMLInputElement>(null);
   const readOnlyRef = useRef<HTMLInputElement>(null);
-  const { onCopy, copyStatus } = useCopyStatus();
-  const { onCopy: onCopyReadOnly, copyStatus: copyStatusReadOnly } =
-    useCopyStatus();
   const isOwner = useAtomValue(isOwnerAtom);
   const [displayUsername, setDisplayUsername] = useState(() =>
     collabAPI.getUsername(),
@@ -88,17 +81,6 @@ const ActiveRoomDialog = ({
     } catch (e) {
       collabAPI.setCollabError(t("errors.copyToSystemClipboardFailed"));
     }
-
-    setJustCopied(true);
-
-    if (timerRef.current) {
-      window.clearTimeout(timerRef.current);
-    }
-
-    timerRef.current = window.setTimeout(() => {
-      setJustCopied(false);
-    }, 3000);
-
     ref.current?.select();
   };
 
@@ -173,44 +155,22 @@ const ActiveRoomDialog = ({
       </div>
       {isOwner && (
         <>
-          <div className="ShareDialog__active__linkRow">
-            <TextField
-              ref={ref}
-              label={t("shareDialog.editLink")}
-              readonly
-              fullWidth
-              value={activeRoomLink}
-            />
-            <FilledButton
-              size="large"
-              label={t("buttons.copyLink")}
-              icon={copyIcon}
-              status={copyStatus}
-              onClick={() => {
-                copyRoomLink();
-                onCopy();
-              }}
-            />
-          </div>
-          <div className="ShareDialog__active__linkRow">
-            <TextField
-              ref={readOnlyRef}
-              label={t("shareDialog.viewOnlyLink")}
-              readonly
-              fullWidth
-              value={readOnlyLink}
-            />
-            <FilledButton
-              size="large"
-              label={t("buttons.copyLink")}
-              icon={copyIcon}
-              status={copyStatusReadOnly}
-              onClick={() => {
-                copyReadOnlyLink();
-                onCopyReadOnly();
-              }}
-            />
-          </div>
+          <TextField
+            ref={ref}
+            label={t("shareDialog.editLink")}
+            readonly
+            fullWidth
+            value={activeRoomLink}
+            onCopy={copyRoomLink}
+          />
+          <TextField
+            ref={readOnlyRef}
+            label={t("shareDialog.viewOnlyLink")}
+            readonly
+            fullWidth
+            value={readOnlyLink}
+            onCopy={copyReadOnlyLink}
+          />
           <QRCode value={activeRoomLink} />
         </>
       )}

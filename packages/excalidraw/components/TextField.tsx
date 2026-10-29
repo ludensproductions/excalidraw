@@ -7,8 +7,11 @@ import {
   useState,
 } from "react";
 
+import { useCopyStatus } from "../hooks/useCopiedIndicator";
+import { t } from "../i18n";
+
 import { Button } from "./Button";
-import { eyeIcon, eyeClosedIcon } from "./icons";
+import { checkIcon, copyIcon, eyeIcon, eyeClosedIcon } from "./icons";
 
 import "./TextField.scss";
 
@@ -28,6 +31,8 @@ type TextFieldProps = {
   className?: string;
   placeholder?: string;
   isRedacted?: boolean;
+  /** shows a copy icon inside the field; it turns into a check once clicked */
+  onCopy?: () => void;
   type?: "text" | "search";
 } & ({ value: string } | { defaultValue: string });
 
@@ -44,6 +49,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
       isRedacted = false,
       icon,
       className,
+      onCopy,
       type,
       ...rest
     },
@@ -63,6 +69,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
 
     const [isTemporarilyUnredacted, setIsTemporarilyUnredacted] =
       useState<boolean>(false);
+    const { onCopy: showCopied, copyStatus } = useCopyStatus();
 
     return (
       <div
@@ -109,6 +116,22 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
             >
               {isTemporarilyUnredacted ? eyeClosedIcon : eyeIcon}
             </Button>
+          )}
+          {onCopy && (
+            <button
+              type="button"
+              className={clsx("ExcTextField__copy", {
+                "ExcTextField__copy--copied": copyStatus === "success",
+              })}
+              title={t("buttons.copyLink")}
+              aria-label={t("buttons.copyLink")}
+              onClick={() => {
+                onCopy();
+                showCopied();
+              }}
+            >
+              {copyStatus === "success" ? checkIcon : copyIcon}
+            </button>
           )}
         </div>
       </div>

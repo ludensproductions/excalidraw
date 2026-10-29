@@ -114,13 +114,6 @@
         flex: 0 0 auto;
       }
 
-      &__linkRow {
-        display: flex;
-        flex-direction: row;
-        align-items: flex-end;
-        gap: 0.75rem;
-      }
-
       &__qrcode {
         display: flex;
         justify-content: center;
@@ -175,31 +168,6 @@
 
         &__editName {
           align-self: flex-end;
-        }
-
-        // label, full-width "Copiar enlace", then the full link below it
-        // (display: contents lets the label and input be ordered separately)
-        &__linkRow {
-          flex-direction: column;
-          align-items: stretch;
-          gap: 0.5rem;
-
-          .ExcTextField {
-            display: contents;
-          }
-
-          .ExcTextField__label {
-            order: 0;
-          }
-
-          .ExcButton {
-            order: 1;
-            width: 100%;
-          }
-
-          .ExcTextField__input {
-            order: 2;
-          }
         }
       }
     }
