@@ -1566,6 +1566,12 @@ class Collab extends PureComponent<CollabProps, CollabState> {
   }
 
   updateCollaborator = (socketId: SocketId, updates: Partial<Collaborator>) => {
+    // room-user-change is the source of truth for who has the board open; a
+    // late pointer/idle message from someone who already left must not re-add
+    // them (the share button's counter kept counting them)
+    if (!this.collaborators.has(socketId)) {
+      return;
+    }
     const collaborators = new Map(this.collaborators);
     const user: Mutable<Collaborator> = Object.assign(
       {},

@@ -9,13 +9,9 @@ import "./appDialog.scss";
 
 type DialogIcon = "success" | "error" | "warning" | "info" | "question";
 
+// colors live in appDialog.scss (html.dark), so an open dialog follows a
+// theme change instead of keeping the one it was opened with
 const baseOptions = () => ({
-  background: document.documentElement.classList.contains("dark")
-    ? "#232329"
-    : "#ffffff",
-  color: document.documentElement.classList.contains("dark")
-    ? "#f4f4f5"
-    : "#1f1f24",
   buttonsStyling: false,
   reverseButtons: true,
   // SweetAlert's default sets html/body to height:auto while a dialog is open;

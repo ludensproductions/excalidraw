@@ -276,7 +276,15 @@ const ActiveRoomDialog = ({
 
 const ShareDialogPicker = (props: ShareDialogProps) => {
   const { t } = useI18n();
-  const [isStartingSession, setIsStartingSession] = useState(false);
+  // the blocking spinner also prevents a second click. The picker unmounts
+  // once the room link arrives; close the spinner then, not when
+  // startCollaboration resolves (that waits for the scene sync)
+  const closeLoadingRef = useRef<(() => void) | null>(null);
+  const closeLoading = () => {
+    closeLoadingRef.current?.();
+    closeLoadingRef.current = null;
+  };
+  useEffect(() => closeLoading, []);
 
   const { collabAPI } = props;
 
@@ -299,15 +307,20 @@ const ShareDialogPicker = (props: ShareDialogProps) => {
             size="large"
             label={t("roomDialog.button_startSession")}
             icon={playerPlayIcon}
-            // spinner + disabled until the room link arrives and the dialog
-            // switches to the active-room view
-            status={isStartingSession ? "loading" : null}
             onClick={() => {
               trackEvent("share", "room creation", `ui (${getFrame()})`);
-              setIsStartingSession(true);
-              void collabAPI.startCollaboration(null).catch(() => {
-                setIsStartingSession(false);
-              });
+              closeLoadingRef.current = appDialog.loading(
+                t("app.startingSession"),
+              );
+              void collabAPI
+                .startCollaboration(null)
+                .then((scene) => {
+                  // null = bailed out before opening the room
+                  if (scene === null) {
+                    closeLoading();
+                  }
+                })
+                .catch(closeLoading);
             }}
           />
         </div>

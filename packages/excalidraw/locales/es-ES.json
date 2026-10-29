@@ -789,6 +789,7 @@
     "draft": "borrador",
     "sharedBoardLeftSuccessfully": "Saliste del tablero compartido",
     "sharedSessionFinalizedSuccessfully": "Sesión compartida detenida",
+    "startingSession": "Iniciando sesión colaborativa…",
     "stoppingSession": "Deteniendo sesión…",
     "leavingSession": "Saliendo del tablero…",
     "savingBoard": "Guardando tablero…",

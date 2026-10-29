@@ -1,5 +1,7 @@
 // matches the editor's own dialogs (Modal/Dialog in packages/excalidraw)
 .app-swal {
+  background: #ffffff;
+  color: #1f1f24;
   border: 1px solid rgba(120, 120, 140, 0.25);
   border-radius: 0.75rem;
   padding: 2rem 2rem 1.75rem;
@@ -22,8 +24,22 @@
   line-height: 130%;
 }
 
+html.dark .app-swal {
+  background: #232329;
+  color: #f4f4f5;
+}
+
 html.dark .app-swal__title {
   color: #a8a5ff;
+}
+
+// SweetAlert's loader is blue; use the theme's accent like the title
+.app-swal .swal2-loader {
+  border-color: #6965db transparent;
+}
+
+html.dark .app-swal .swal2-loader {
+  border-color: #a8a5ff transparent;
 }
 
 .app-swal__content {

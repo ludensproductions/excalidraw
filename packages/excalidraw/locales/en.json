@@ -789,6 +789,7 @@
     "draft": "draft",
     "sharedBoardLeftSuccessfully": "You left the shared board",
     "sharedSessionFinalizedSuccessfully": "Shared session stopped",
+    "startingSession": "Starting collaborative session…",
     "stoppingSession": "Stopping session…",
     "leavingSession": "Leaving board…",
     "savingBoard": "Saving board…",

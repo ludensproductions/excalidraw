@@ -564,14 +564,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const isAdmin = user.role === "admin";
 
   useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [isDark]);
-
-  useEffect(() => {
     if (!isAdmin && activeTab === "users") {
       setActiveTab("all");
     }
@@ -583,13 +575,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
         setLoading(true);
       }
       setSharedError(null);
-      const [all, shared] = await Promise.all([
-        DrawingsStore.getAllForUser(user.id),
-        SharedBoardsStore.getAll().catch((err: unknown) => {
-          setSharedError(getErrorMessage(err));
-          return [] as SharedBoard[];
-        }),
-      ]);
+      const load = () =>
+        Promise.all([
+          DrawingsStore.getAllForUser(user.id),
+          SharedBoardsStore.getAll().catch((err: unknown) => {
+            setSharedError(getErrorMessage(err));
+            return [] as SharedBoard[];
+          }),
+        ]);
+      const [all, shared] = silent
+        ? await load()
+        : await appDialog.withLoading(t("app.loadingBoards"), load);
       previewGenerationRef.current += 1;
       setBoards(all);
       setSharedBoards(shared);

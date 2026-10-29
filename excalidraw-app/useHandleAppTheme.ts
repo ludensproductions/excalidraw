@@ -9,6 +9,13 @@ import { STORAGE_KEYS } from "./app_constants";
 const getDarkThemeMediaQuery = (): MediaQueryList | undefined =>
   window.matchMedia?.("(prefers-color-scheme: dark)");
 
+const resolveTheme = (appTheme: Theme | "system"): Theme =>
+  appTheme === "system"
+    ? getDarkThemeMediaQuery()?.matches
+      ? THEME.DARK
+      : THEME.LIGHT
+    : appTheme;
+
 export const useHandleAppTheme = () => {
   const [appTheme, setAppTheme] = useState<Theme | "system">(() => {
     return (
@@ -18,7 +25,19 @@ export const useHandleAppTheme = () => {
         | null) || THEME.LIGHT
     );
   });
-  const [editorTheme, setEditorTheme] = useState<Theme>(THEME.LIGHT);
+  // resolved on the first render: dialogs opened on mount (e.g. the
+  // dashboard's loading spinner) used to read a light theme for one frame
+  const [editorTheme, setEditorTheme] = useState<Theme>(() =>
+    resolveTheme(appTheme),
+  );
+
+  // html.dark themes everything outside the editor, SweetAlert dialogs included
+  useLayoutEffect(() => {
+    document.documentElement.classList.toggle(
+      "dark",
+      editorTheme === THEME.DARK,
+    );
+  }, [editorTheme]);
 
   useEffect(() => {
     const mediaQuery = getDarkThemeMediaQuery();
@@ -56,14 +75,7 @@ export const useHandleAppTheme = () => {
 
   useLayoutEffect(() => {
     localStorage.setItem(STORAGE_KEYS.LOCAL_STORAGE_THEME, appTheme);
-
-    if (appTheme === "system") {
-      setEditorTheme(
-        getDarkThemeMediaQuery()?.matches ? THEME.DARK : THEME.LIGHT,
-      );
-    } else {
-      setEditorTheme(appTheme);
-    }
+    setEditorTheme(resolveTheme(appTheme));
   }, [appTheme]);
 
   return { editorTheme, appTheme, setAppTheme };
