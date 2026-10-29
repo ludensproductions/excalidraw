@@ -17,7 +17,10 @@ import {
   faArrowsRotate,
   faCheck,
   faMagnifyingGlass,
+  faMoon,
   faPenToSquare,
+  faRightFromBracket,
+  faSun,
   faTrashCan,
   faUser,
   faUserShield,
@@ -562,6 +565,30 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const { editorTheme, setAppTheme } = useHandleAppTheme();
   const isDark = editorTheme === THEME.DARK;
   const isAdmin = user.role === "admin";
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!userMenuOpen) {
+      return;
+    }
+    const onPointerDown = (event: PointerEvent) => {
+      if (!userMenuRef.current?.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [userMenuOpen]);
 
   useEffect(() => {
     if (!isAdmin && activeTab === "users") {
@@ -688,7 +715,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   const handleEditCurrentUsername = async () => {
     const nextUsername = await appDialog.promptText({
-      title: t("app.editUsername"),
+      title: t("app.changeName"),
       label: t("app.newUsername"),
       initialValue: user.username,
       confirmButtonText: t("app.save"),
@@ -1433,56 +1460,49 @@ export const Dashboard: React.FC<DashboardProps> = ({
           )}
         </nav>
 
-        <div className="dashboard__user">
-          <span className="dashboard__username">{user.username}</span>
+        <div className="dashboard__user" ref={userMenuRef}>
+          <span className="dashboard__username" title={user.username}>
+            {user.username}
+          </span>
           <button
-            className="dashboard__username-edit"
-            onClick={handleEditCurrentUsername}
-            title={t("app.editUsername")}
-            aria-label={t("app.editUsername")}
+            className="dashboard__avatar"
+            onClick={() => setUserMenuOpen((open) => !open)}
+            title={user.username}
+            aria-label={user.username}
+            aria-haspopup="menu"
+            aria-expanded={userMenuOpen}
           >
-            <FontAwesomeIcon icon={faPenToSquare} />
+            <FontAwesomeIcon icon={faUser} />
           </button>
-          <button
-            className="dashboard__theme-toggle"
-            onClick={() => setAppTheme(isDark ? THEME.LIGHT : THEME.DARK)}
-            title={isDark ? t("app.switchToLight") : t("app.switchToDark")}
-          >
-            {isDark ? (
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
+          {userMenuOpen && (
+            <div className="dashboard__user-menu" role="menu">
+              <button
+                role="menuitem"
+                onClick={() => {
+                  setUserMenuOpen(false);
+                  void handleEditCurrentUsername();
+                }}
               >
-                <circle cx="12" cy="12" r="5" />
-                <line x1="12" y1="1" x2="12" y2="3" />
-                <line x1="12" y1="21" x2="12" y2="23" />
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                <line x1="1" y1="12" x2="3" y2="12" />
-                <line x1="21" y1="12" x2="23" y2="12" />
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-              </svg>
-            ) : (
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                <FontAwesomeIcon icon={faPenToSquare} />
+                {t("app.changeName")}
+              </button>
+              <button
+                role="menuitem"
+                onClick={() => setAppTheme(isDark ? THEME.LIGHT : THEME.DARK)}
               >
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              </svg>
-            )}
-          </button>
-          <button className="dashboard__logout-btn" onClick={onLogout}>
-            {t("app.logOut")}
-          </button>
+                <FontAwesomeIcon icon={isDark ? faSun : faMoon} />
+                {isDark ? t("app.switchToLight") : t("app.switchToDark")}
+              </button>
+              <button
+                role="menuitem"
+                className="dashboard__user-menu-logout"
+                onClick={onLogout}
+              >
+                <FontAwesomeIcon icon={faRightFromBracket} />
+                {t("app.logOut")}
+              </button>
+            </div>
+          )}
         </div>
       </header>
 

@@ -24,11 +24,18 @@
     flex-shrink: 0;
   }
 
+  // one row at every width; when space runs out the username ellipsizes
+  // first, then the tabs scroll
   &__logo {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    flex-shrink: 0;
+    flex: none;
+    // starts the tabs at the left edge of the content below (__main: 1200px
+    // centered, 2.5rem padding), minus header padding (2rem) and gap (1rem).
+    // Header and main share the scroll container, so 50% is half its width
+    width: calc(50% + 1.5rem - 600px);
+    min-width: max-content;
 
     svg {
       width: 1.75rem;
@@ -47,7 +54,9 @@
     display: flex;
     align-items: center;
     gap: 0.25rem;
-    margin: 0 auto;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
   }
 
   &__tab {
@@ -78,11 +87,13 @@
   &__user {
     display: flex;
     align-items: center;
+    position: relative;
     gap: 0.75rem;
-    flex-shrink: 0;
-    margin-left: auto;
-    max-width: min(28rem, 45vw);
-    min-width: 0;
+    flex: 1 1 0;
+    justify-content: flex-end;
+    // avatar + gap: the avatar never shrinks away (auto would be the
+    // username's longest word)
+    min-width: 3rem;
   }
 
   &__username {
@@ -94,49 +105,79 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    max-width: 28rem;
   }
 
-  &__username-edit {
+  &__avatar {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 1.8rem;
-    height: 1.8rem;
+    width: 2.25rem;
+    height: 2.25rem;
     padding: 0;
-    border: 1.5px solid transparent;
-    border-radius: 6px;
-    background: transparent;
-    color: #6b7280;
+    border: none;
+    border-radius: 999px;
+    background: #ede9fe;
+    color: #6965db;
     cursor: pointer;
-    transition: border-color 0.15s, color 0.15s, background 0.15s;
     flex-shrink: 0;
+    transition: box-shadow 0.15s;
 
     svg {
-      width: 0.9rem;
-      height: 0.9rem;
+      width: 1rem;
+      height: 1rem;
     }
 
-    &:hover {
-      border-color: #d1d5db;
-      color: #6965db;
-      background: #f3f4f6;
+    &:hover,
+    &[aria-expanded="true"] {
+      box-shadow: 0 0 0 3px rgba(105, 101, 219, 0.3);
     }
   }
 
-  &__logout-btn {
-    padding: 0.35rem 0.875rem;
-    border: 1.5px solid #e5e7eb;
-    border-radius: 6px;
-    background: transparent;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: #6b7280;
-    cursor: pointer;
-    transition: border-color 0.15s, color 0.15s;
+  &__user-menu {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    min-width: 13rem;
+    padding: 0.35rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
 
-    &:hover {
-      border-color: #d1d5db;
+    button {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.55rem 0.75rem;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
       color: #374151;
+      font: inherit;
+      font-size: 0.875rem;
+      text-align: left;
+      white-space: nowrap;
+      cursor: pointer;
+
+      svg {
+        width: 0.9rem;
+        color: #6b7280;
+      }
+
+      &:hover {
+        background: #f3f4f6;
+      }
+    }
+
+    // separated from the rest, like the editor's main menu
+    button.dashboard__user-menu-logout {
+      margin-top: 0.35rem;
+      border-top: 1px solid #e5e7eb;
+      border-radius: 0 0 6px 6px;
     }
   }
 
@@ -259,24 +300,18 @@
   }
 
   // tabs don't fit next to logo + user controls: move them to their own row
+  // narrower: drop the "Excalidraw" text
   @media (max-width: 1024px) {
     &__header {
-      flex-wrap: wrap;
-      height: auto;
-      row-gap: 0.5rem;
-      padding: 0.75rem 1.25rem 0.5rem;
+      padding: 0 1.25rem;
     }
 
-    &__tabs {
-      order: 3;
-      width: 100%;
-      margin: 0;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
+    &__logo {
+      width: auto;
 
-    &__user {
-      max-width: none;
+      span {
+        display: none;
+      }
     }
 
     &__main {
@@ -286,17 +321,12 @@
 
   @media (max-width: 600px) {
     &__header {
-      padding: 0.6rem 0.75rem 0.4rem;
-    }
-
-    &__logo span {
-      display: none;
+      gap: 0.5rem;
+      padding: 0 0.75rem;
     }
 
     &__user {
       gap: 0.4rem;
-      flex: 1;
-      justify-content: flex-end;
     }
 
     &__tab {
@@ -770,34 +800,6 @@
     margin-bottom: 1rem;
     padding: 0.75rem 1rem;
   }
-
-  // Theme toggle
-  &__theme-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    padding: 0;
-    border: 1.5px solid #e5e7eb;
-    border-radius: 6px;
-    background: transparent;
-    color: #6b7280;
-    cursor: pointer;
-    transition: border-color 0.15s, color 0.15s, background 0.15s;
-    flex-shrink: 0;
-
-    svg {
-      width: 1rem;
-      height: 1rem;
-    }
-
-    &:hover {
-      border-color: #6965db;
-      color: #6965db;
-      background: #ede9fe;
-    }
-  }
 }
 
 // Dark mode
@@ -835,34 +837,30 @@
     color: #e1e1f0;
   }
 
-  .dashboard__username-edit {
-    color: #9ca3af;
-
-    &:hover {
-      border-color: #4b5563;
-      color: #a5b4fc;
-      background: #2e2e4a;
-    }
+  .dashboard__avatar {
+    background: #312e81;
+    color: #a5b4fc;
   }
 
-  .dashboard__logout-btn {
+  .dashboard__user-menu {
     border-color: #2e2e4a;
-    color: #9ca3af;
+    background: #1e1e2e;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
 
-    &:hover {
-      border-color: #4b5563;
+    button {
       color: #e1e1f0;
+
+      svg {
+        color: #9ca3af;
+      }
+
+      &:hover {
+        background: #2e2e4a;
+      }
     }
-  }
 
-  .dashboard__theme-toggle {
-    border-color: #2e2e4a;
-    color: #9ca3af;
-
-    &:hover {
-      border-color: #6965db;
-      color: #a5b4fc;
-      background: #1e1e4a;
+    button.dashboard__user-menu-logout {
+      border-top-color: #2e2e4a;
     }
   }
 

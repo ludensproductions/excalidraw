@@ -809,6 +809,7 @@
     "errorLoadingUsers": "Error loading users:",
     "noUsers": "No users available.",
     "editUsername": "Edit username",
+    "changeName": "Change name",
     "newUsername": "New username",
     "editBoardUsername": "Edit name on this board",
     "newBoardUsername": "Name on this board",

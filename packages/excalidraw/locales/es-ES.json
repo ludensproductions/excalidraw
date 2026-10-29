@@ -809,6 +809,7 @@
     "errorLoadingUsers": "Error al cargar usuarios:",
     "noUsers": "No hay usuarios disponibles.",
     "editUsername": "Editar usuario",
+    "changeName": "Cambiar nombre",
     "newUsername": "Nuevo nombre de usuario",
     "editBoardUsername": "Editar nombre en este tablero",
     "newBoardUsername": "Nombre en este tablero",
