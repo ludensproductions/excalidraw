@@ -29,6 +29,15 @@ html.dark .app-swal {
   color: #f4f4f5;
 }
 
+// SweetAlert's own light defaults (validation message, toast timer bar);
+// scoped to html.dark so they flip with the theme toggle
+html.dark {
+  --swal2-backdrop: rgba(0, 0, 0, 0.6);
+  --swal2-validation-message-background: #2e2e36;
+  --swal2-validation-message-color: #d4d4d8;
+  --swal2-timer-progress-bar-background: rgba(255, 255, 255, 0.3);
+}
+
 html.dark .app-swal__title {
   color: #a8a5ff;
 }
