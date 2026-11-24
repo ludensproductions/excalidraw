@@ -4,6 +4,7 @@ let _onBack: (() => void) | null = null;
 let _pendingBoard: DrawingRecord | null = null;
 let _flushAutoSave: (() => Promise<void>) | null = null;
 let _autoSaveSuppressed = false;
+const _pendingSaves = new Set<Promise<unknown>>();
 
 export const dashboardState = {
   setOnBack(cb: (() => void) | null): void {
@@ -32,6 +33,16 @@ export const dashboardState = {
   },
   isAutoSaveSuppressed(): boolean {
     return _autoSaveSuppressed;
+  },
+  trackPendingSave(save: Promise<unknown>): void {
+    _pendingSaves.add(save);
+    const done = () => _pendingSaves.delete(save);
+    save.then(done, done);
+  },
+  async waitForPendingSaves(): Promise<void> {
+    while (_pendingSaves.size) {
+      await Promise.allSettled([..._pendingSaves]);
+    }
   },
   setPendingBoard(r: DrawingRecord | null): void {
     _pendingBoard = r;

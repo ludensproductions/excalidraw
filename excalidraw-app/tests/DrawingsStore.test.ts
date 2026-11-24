@@ -19,6 +19,8 @@ const storeMocks = vi.hoisted(() => ({
   insertPayloads: [] as Array<Record<string, unknown>>,
   updatePayloads: [] as Array<Record<string, unknown>>,
   getUser: vi.fn(),
+  // row another device inserts right before ours, so the insert conflicts
+  concurrentRow: null as BoardRow | null,
 }));
 
 const nowIso = () => new Date("2026-09-18T12:00:00.000Z").toISOString();
@@ -40,6 +42,12 @@ const createBoardBuilder = () => {
     if (state.action === "insert") {
       const payload = state.payload as Record<string, unknown>;
       storeMocks.insertPayloads.push(payload);
+      if (storeMocks.concurrentRow) {
+        const { concurrentRow } = storeMocks;
+        storeMocks.concurrentRow = null;
+        storeMocks.rows.set(concurrentRow.id, concurrentRow);
+        return { data: null, error: { code: "23505", message: "duplicate" } };
+      }
       const row = {
         created_at: nowIso(),
         updated_at: nowIso(),
@@ -201,6 +209,93 @@ describe("DrawingsStore", () => {
 
     expect(storeMocks.updatePayloads[0]).not.toHaveProperty("files");
     expect(record.files).toEqual({ [fileId]: existingFile });
+  });
+
+  it("keeps stored files of images whose file is not in memory yet (RD-512)", async () => {
+    const { DrawingsStore } = await import("../data/DrawingsStore");
+    const loadedId = "file-a" as FileId;
+    const pendingId = "file-b" as FileId;
+    const removedId = "file-c" as FileId;
+    const storedPending = createFile(pendingId);
+    storeMocks.rows.set("board-1", {
+      id: "board-1",
+      owner_id: "user-1",
+      name: "Original",
+      elements: [
+        createImageElement(loadedId),
+        createImageElement(pendingId),
+        createImageElement(removedId),
+      ],
+      files: {
+        [loadedId]: createFile(loadedId),
+        [pendingId]: storedPending,
+        [removedId]: createFile(removedId),
+      },
+      app_state: { viewBackgroundColor: "#ffffff" },
+      thumbnail: null,
+      collab_link: null,
+      created_at: nowIso(),
+      updated_at: nowIso(),
+    });
+    const loadedNow = createFile(loadedId);
+
+    const record = await DrawingsStore.save(
+      {
+        name: "Original",
+        // the image with file-c was deleted from the board
+        elements: [createImageElement(loadedId), createImageElement(pendingId)],
+        // file-b hasn't finished downloading on this device
+        files: { [loadedId]: loadedNow },
+        appState: { viewBackgroundColor: "#ffffff" },
+        thumbnail: null,
+        collabLink: null,
+        userId: "user-1",
+      },
+      "board-1",
+    );
+
+    expect(storeMocks.updatePayloads[0].files).toEqual({
+      [loadedId]: loadedNow,
+      [pendingId]: storedPending,
+    });
+    expect(record.files).toEqual({
+      [loadedId]: loadedNow,
+      [pendingId]: storedPending,
+    });
+  });
+
+  it("keeps the files another device stored when the insert conflicts", async () => {
+    const { DrawingsStore } = await import("../data/DrawingsStore");
+    const fileId = "file-a" as FileId;
+    const storedFile = createFile(fileId);
+    storeMocks.concurrentRow = {
+      id: "board-1",
+      owner_id: "user-1",
+      name: "Original",
+      elements: [createImageElement(fileId)],
+      files: { [fileId]: storedFile },
+      app_state: {},
+      thumbnail: null,
+      collab_link: "#room=abc,key",
+      created_at: nowIso(),
+      updated_at: nowIso(),
+    };
+
+    const record = await DrawingsStore.save(
+      {
+        name: "Original",
+        elements: [createImageElement(fileId)],
+        files: {},
+        appState: {},
+        thumbnail: null,
+        collabLink: null,
+        userId: "user-1",
+      },
+      "board-1",
+    );
+
+    expect(record.files).toEqual({ [fileId]: storedFile });
+    expect(record.collabLink).toBe("#room=abc,key");
   });
 
   it("keeps only the saved draft when stopping a room with stale linked boards", async () => {

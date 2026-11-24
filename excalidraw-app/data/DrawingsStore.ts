@@ -163,14 +163,29 @@ export const DrawingsStore = {
       ...(hasFiles ? { files: referencedFiles } : {}),
     };
 
-    const upsertById = async (id: string): Promise<DrawingRecord> => {
+    const upsertById = async (
+      id: string,
+      isRetry = false,
+    ): Promise<DrawingRecord> => {
       const existing = await this.get(id);
       const collabLink = data.collabLink ?? existing?.collabLink ?? null;
+
+      // an image still on the board whose file isn't in memory yet (still
+      // downloading, slow network on mobile) keeps the stored file instead
+      // of being dropped from the record (RD-512)
+      const mergedFiles =
+        referencedFiles && existing
+          ? {
+              ...getReferencedFiles(data.elements, existing.files ?? {}),
+              ...referencedFiles,
+            }
+          : referencedFiles;
 
       const { data: updatedRow, error: updateError } = await supabase
         .from("boards")
         .update({
           ...payload,
+          ...(mergedFiles ? { files: mergedFiles } : {}),
           collab_link: collabLink,
         })
         .eq("id", id)
@@ -197,20 +212,8 @@ export const DrawingsStore = {
 
       if (insertError) {
         // Another concurrent writer may have inserted the same id.
-        if (insertError.code === "23505") {
-          const { data: retryRow, error: retryError } = await supabase
-            .from("boards")
-            .update({
-              ...payload,
-              collab_link: collabLink,
-            })
-            .eq("id", id)
-            .select()
-            .single();
-          if (retryError) {
-            throwStoreError(retryError.message);
-          }
-          return rowToRecord(retryRow);
+        if (insertError.code === "23505" && !isRetry) {
+          return upsertById(id, true);
         }
         throwStoreError(insertError.message);
       }

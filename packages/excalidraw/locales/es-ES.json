@@ -850,6 +850,8 @@
     "couldNotCreateBoard": "No se pudo crear el tablero",
     "couldNotCreateBoardText": "No se pudo crear el tablero. Intenta otra vez.",
     "couldNotSaveBoard": "No se pudo guardar el tablero.",
+    "couldNotOpenBoard": "No se pudo abrir el tablero",
+    "boardUnavailable": "El tablero ya no existe o no tienes acceso a él.",
     "documentTitle": "Excalidraw | Tablero colaborativo"
   },
   "auth": {

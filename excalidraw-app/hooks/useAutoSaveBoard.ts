@@ -1,6 +1,10 @@
-import { exportToBlob, useExcalidrawAPI } from "@excalidraw/excalidraw";
+import { exportToBlob } from "@excalidraw/excalidraw";
 import { t } from "@excalidraw/excalidraw/i18n";
 import { useCallback, useEffect, useRef } from "react";
+
+import type { OrderedExcalidrawElement } from "@excalidraw/element/types";
+
+import type { AppState, BinaryFiles } from "@excalidraw/excalidraw/types";
 
 import {
   activeBoardAtom,
@@ -18,6 +22,34 @@ import { dashboardState } from "../dashboardState";
 import { DrawingsStore } from "../data/DrawingsStore";
 
 const AUTO_SAVE_DELAY = 3000; // ms after last change
+
+export type AutoSaveSnapshot = {
+  elements: readonly OrderedExcalidrawElement[];
+  appState: AppState;
+  files: BinaryFiles;
+};
+
+// What the autosave persists: the last scene the editor reported through
+// onChange. It's never read back from the editor at save time because a save
+// that runs late (queued behind a slow one, or flushed on unmount) would find
+// the editor already unmounted, with an empty scene and no files, and wipe the
+// board (RD-512, mostly on mobile where saves are slower).
+export const getAutoSaveSceneData = (
+  snapshot: AutoSaveSnapshot | null,
+): {
+  elements: OrderedExcalidrawElement[];
+  appState: AppState;
+  files: BinaryFiles;
+} | null => {
+  if (!snapshot || snapshot.appState.isLoading) {
+    return null;
+  }
+  return {
+    elements: snapshot.elements.filter((element) => !element.isDeleted),
+    appState: snapshot.appState,
+    files: snapshot.files,
+  };
+};
 
 export const resolveAutoSaveTargetBoardId = (params: {
   activeBoardId: string | null;
@@ -48,7 +80,6 @@ export const resolveAutoSaveTargetBoardId = (params: {
 };
 
 export const useAutoSaveBoard = () => {
-  const excalidrawAPI = useExcalidrawAPI();
   const activeBoard = useAtomValue(activeBoardAtom);
   const isCollaborating = useAtomValue(isCollaboratingAtom);
   const isCollaborationOwner = useAtomValue(isOwnerAtom);
@@ -62,7 +93,7 @@ export const useAutoSaveBoard = () => {
   const isCollaborationOwnerRef = useRef(isCollaborationOwner);
   const isReadOnlySessionRef = useRef(isReadOnlySession);
   const activeRoomLinkRef = useRef(activeRoomLink);
-  const excalidrawAPIRef = useRef(excalidrawAPI);
+  const snapshotRef = useRef<AutoSaveSnapshot | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inFlightSaveRef = useRef<Promise<void> | null>(null);
   const queuedSaveRef = useRef(false);
@@ -87,9 +118,6 @@ export const useAutoSaveBoard = () => {
   useEffect(() => {
     activeRoomLinkRef.current = activeRoomLink;
   }, [activeRoomLink]);
-  useEffect(() => {
-    excalidrawAPIRef.current = excalidrawAPI;
-  }, [excalidrawAPI]);
 
   const runSave = useCallback(async () => {
     if (dashboardState.isAutoSaveSuppressed()) {
@@ -98,14 +126,12 @@ export const useAutoSaveBoard = () => {
 
     const board = activeBoardRef.current;
     const storeBoard = appJotaiStore.get(activeBoardAtom);
-    const api = excalidrawAPIRef.current;
-    if (!api) {
+    const scene = getAutoSaveSceneData(snapshotRef.current);
+    if (!scene) {
       return;
     }
 
-    const elements = api.getSceneElements();
-    const appState = api.getAppState();
-    const files = api.getFiles();
+    const { elements, appState, files } = scene;
 
     // Don't auto-create an empty new board
     if (!board.id && elements.length === 0) {
@@ -191,30 +217,43 @@ export const useAutoSaveBoard = () => {
 
   const doSave = useCallback(async () => {
     if (inFlightSaveRef.current) {
+      // whoever asked waits for this save too, not only for the running one
       queuedSaveRef.current = true;
-      await inFlightSaveRef.current;
-      return;
+      return inFlightSaveRef.current;
     }
 
-    do {
-      queuedSaveRef.current = false;
-      const savePromise = runSave().finally(() => {
+    const saves = (async () => {
+      try {
+        do {
+          queuedSaveRef.current = false;
+          await runSave();
+        } while (queuedSaveRef.current);
+      } finally {
         inFlightSaveRef.current = null;
-      });
-      inFlightSaveRef.current = savePromise;
-      await savePromise;
-    } while (queuedSaveRef.current);
+      }
+    })();
+    inFlightSaveRef.current = saves;
+    // opening a board from the dashboard waits for this, so it never loads a
+    // version older than the one still being saved
+    dashboardState.trackPendingSave(saves);
+    return saves;
   }, [runSave]);
 
-  const scheduleAutoSave = useCallback(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-    }
-    timerRef.current = setTimeout(() => {
-      timerRef.current = null;
-      void doSave();
-    }, AUTO_SAVE_DELAY);
-  }, [doSave]);
+  const scheduleAutoSave = useCallback(
+    (snapshot?: AutoSaveSnapshot) => {
+      if (snapshot) {
+        snapshotRef.current = snapshot;
+      }
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+      timerRef.current = setTimeout(() => {
+        timerRef.current = null;
+        void doSave();
+      }, AUTO_SAVE_DELAY);
+    },
+    [doSave],
+  );
 
   // Flush any pending debounced save immediately and await completion.
   const flushAutoSave = useCallback(async () => {

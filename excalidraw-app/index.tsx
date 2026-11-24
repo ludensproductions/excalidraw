@@ -21,6 +21,11 @@ import {
 import { Dashboard } from "./components/Dashboard";
 import { dashboardState } from "./dashboardState";
 import { DrawingsStore } from "./data/DrawingsStore";
+import { getErrorMessage } from "./errorMessages";
+import {
+  hasExternalLinkInUrl,
+  useExternalLinkNavigation,
+} from "./hooks/useExternalLinkNavigation";
 import { getPreferredLanguage } from "./app-language/language-detector";
 import { shouldInitializeSentry } from "./sentryConfig";
 
@@ -32,14 +37,6 @@ type AppView =
   | { type: "auth" }
   | { type: "dashboard" }
   | { type: "editor"; boardId: string | null; key: number };
-
-const hasExternalLinkInUrl = (): boolean => {
-  const hash = window.location.hash;
-  return (
-    /^#room=[a-zA-Z0-9_-]+,[a-zA-Z0-9_-]+(,ro)?$/.test(hash) ||
-    /^#json=[a-zA-Z0-9_-]+,[a-zA-Z0-9_-]+$/.test(hash)
-  );
-};
 
 // Where a signed-in user lands: a shared/copy link, the board in the URL
 // (a reload while editing it), or the dashboard. Used after logging in and
@@ -121,6 +118,17 @@ const AppRoot: React.FC = () => {
     };
   }, []);
 
+  // open it the same way a fresh load with that link does
+  useExternalLinkNavigation(view.type === "dashboard", () => {
+    dashboardState.setAutoSaveSuppressed(false);
+    dashboardState.setPendingBoard(null);
+    // the link isn't one of the user's boards: don't let the autosave
+    // write it into the last board opened from the dashboard
+    appJotaiStore.set(activeBoardAtom, { id: null, name: null });
+    appJotaiStore.set(hasDashboardBackAtom, true);
+    setView({ type: "editor", boardId: null, key: Date.now() });
+  });
+
   // Register back-to-dashboard callback whenever we're in the editor
   useEffect(() => {
     if (view.type === "editor") {
@@ -152,10 +160,33 @@ const AppRoot: React.FC = () => {
 
   const openBoard = async (record: DrawingRecord) => {
     dashboardState.setAutoSaveSuppressed(false);
-    const latestRecord =
-      (await appDialog
-        .withLoading(t("app.openingBoard"), () => DrawingsStore.get(record.id))
-        .catch(() => null)) ?? record;
+    let latestRecord: DrawingRecord | undefined;
+    try {
+      latestRecord = await appDialog.withLoading(
+        t("app.openingBoard"),
+        async () => {
+          // a save of the board just closed may still be running; reading
+          // before it finishes would reopen an older version
+          await dashboardState.waitForPendingSaves();
+          return DrawingsStore.get(record.id);
+        },
+      );
+    } catch (error) {
+      // don't open the dashboard's copy instead: it has no files and may be
+      // outdated, and the autosave would write it over the stored board
+      await appDialog.error(
+        t("app.couldNotOpenBoard"),
+        getErrorMessage(error, t("serverErrors.network")),
+      );
+      return;
+    }
+    if (!latestRecord) {
+      await appDialog.error(
+        t("app.couldNotOpenBoard"),
+        t("app.boardUnavailable"),
+      );
+      return;
+    }
 
     appJotaiStore.set(hasDashboardBackAtom, true);
     appJotaiStore.set(activeBoardAtom, {

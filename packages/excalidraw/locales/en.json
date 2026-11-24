@@ -850,6 +850,8 @@
     "couldNotCreateBoard": "Could not create the board",
     "couldNotCreateBoardText": "Could not create the board. Please try again.",
     "couldNotSaveBoard": "Could not save the board.",
+    "couldNotOpenBoard": "Could not open the board",
+    "boardUnavailable": "The board no longer exists or you don't have access to it.",
     "documentTitle": "Excalidraw | Collaborative whiteboard"
   },
   "auth": {
