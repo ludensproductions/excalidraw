@@ -35,6 +35,29 @@ services:
         "log_min_messages=fatal",
       ]
 
+  # --- App migrations ---
+  # One-shot: on every `docker compose up` applies the supabase/migrations files
+  # that have not run yet and exits.
+  migrate:
+    image: ${POSTGRES_IMAGE:-supabase/postgres:15.8.1.085}
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./scripts/migrate.sh:/migrate.sh:ro
+      - ./supabase/migrations:/migrations:ro
+    environment:
+      PGHOST: ${POSTGRES_HOST:-db}
+      PGPORT: ${POSTGRES_PORT:-5432}
+      PGUSER: postgres
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB:-postgres}
+    entrypoint: ["bash", "/migrate.sh"]
+    # the image's own healthcheck expects a running server
+    healthcheck:
+      disable: true
+
   # --- Supavisor (connection pooler) ---
   supavisor:
     image: ${SUPAVISOR_IMAGE:-supabase/supavisor:2.9.5}
@@ -383,6 +406,9 @@ services:
         condition: service_healthy
       excalidraw-room:
         condition: service_healthy
+      # never publish a frontend newer than its database
+      migrate:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost"]
       interval: 30s

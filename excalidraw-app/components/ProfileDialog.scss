@@ -1,0 +1,166 @@
+// colors, title and buttons come from .app-swal (appDialog.scss), so it looks
+// like the rest of the app's dialogs in both themes
+.profile-dialog {
+  width: min(28rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  box-sizing: border-box;
+  overflow-y: auto;
+
+  &::backdrop {
+    background: rgba(0, 0, 0, 0.4);
+  }
+
+  .app-swal__title {
+    margin-bottom: 1.25rem;
+    text-align: center;
+  }
+
+  &__photo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  &__avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 5rem;
+    height: 5rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #ede9fe;
+    color: #6965db;
+    font-size: 2rem;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__photo-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+  }
+
+  &__field {
+    margin-bottom: 0.9rem;
+
+    label {
+      display: block;
+      margin-bottom: 0.35rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.6rem 0.75rem;
+      border: 1px solid #b7b2ff;
+      border-radius: 8px;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+
+      &:focus {
+        outline: none;
+        border-color: #6965db;
+        box-shadow: 0 0 0 3px rgba(105, 101, 219, 0.18);
+      }
+
+      &:read-only {
+        border-color: rgba(120, 120, 140, 0.3);
+        opacity: 0.7;
+      }
+    }
+  }
+
+  &__hint {
+    flex-basis: 100%;
+    margin: 0 0 0.75rem;
+    color: #6b7280;
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+
+  &__photo-actions &__hint {
+    margin: 0;
+  }
+
+  &__link {
+    padding: 0;
+    border: none;
+    background: none;
+    color: #6965db;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.6;
+    }
+
+    &--danger {
+      color: #d43f3a;
+    }
+  }
+
+  & > form > &__link {
+    margin-bottom: 0.9rem;
+  }
+
+  &__error {
+    margin: 0.5rem 0 0;
+    padding: 0.6rem 0.75rem;
+    border-radius: 8px;
+    background: rgba(212, 63, 58, 0.12);
+    color: #c0322d;
+    font-size: 0.85rem;
+  }
+
+  &__actions {
+    display: flex;
+  }
+
+  .app-swal__button:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+}
+
+html.dark .profile-dialog {
+  &::backdrop {
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  .profile-dialog__avatar {
+    background: #312e81;
+    color: #a5b4fc;
+  }
+
+  .profile-dialog__hint {
+    color: #a1a1aa;
+  }
+
+  .profile-dialog__link {
+    color: #a8a5ff;
+  }
+
+  .profile-dialog__link--danger,
+  .profile-dialog__error {
+    color: #ff8f8a;
+  }
+}

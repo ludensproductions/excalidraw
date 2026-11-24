@@ -27,6 +27,9 @@ export interface AuthUser {
   updatedAt: number;
   role: UserRole;
   status: UserStatus;
+  avatar: string | null;
+  // false for accounts that only sign in with Discord / Microsoft
+  hasPassword: boolean;
 }
 
 export type RegisterUserResult =
@@ -183,10 +186,13 @@ async function loadProfile(
   fallbackEmail: string | null,
   fallbackUsername: string | null,
   createdAtIso: string | null,
+  hasPassword: boolean,
 ): Promise<AuthUser> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, username, email, created_at, updated_at, role, status")
+    // not a column list: naming one the database doesn't have yet (avatar,
+    // before its migration runs) would fail and lose role and status
+    .select("*")
     .eq("id", userId)
     .maybeSingle();
 
@@ -205,6 +211,8 @@ async function loadProfile(
     updatedAt: new Date(updated).getTime(),
     role: data?.role ?? "user",
     status: data?.status ?? "active",
+    avatar: data?.avatar ?? null,
+    hasPassword,
   };
 }
 
@@ -216,11 +224,13 @@ async function applySession(session: Session | null): Promise<void> {
   }
 
   const u = session.user;
+  const providers = u.app_metadata?.providers as string[] | undefined;
   const profile = await loadProfile(
     u.id,
     u.email ?? null,
     (u.user_metadata?.username as string | undefined) ?? null,
     u.created_at ?? null,
+    providers?.includes("email") ?? true,
   );
 
   if (profile.status !== "active") {
@@ -310,30 +320,38 @@ export function subscribeToAuth(listener: Listener): () => void {
   };
 }
 
-export async function updateCurrentUsername(
-  username: string,
-): Promise<AuthUser> {
+export async function updateCurrentProfile({
+  username,
+  avatar,
+}: Pick<AuthUser, "username" | "avatar">): Promise<AuthUser> {
   await ensureHydrated();
 
   if (!currentUser) {
     throw new Error(t("auth.errors.loginFailed"));
   }
 
-  const validationError = validateUsername(username);
-  if (validationError) {
-    throw new Error(t(validationError));
-  }
+  const changes: Partial<Pick<AuthUser, "username" | "avatar">> = {};
 
   const normalizedUsername = normalizeUsername(username);
-  if (normalizedUsername === currentUser.username) {
+  if (normalizedUsername !== currentUser.username) {
+    const validationError = validateUsername(normalizedUsername);
+    if (validationError) {
+      throw new Error(t(validationError));
+    }
+    changes.username = normalizedUsername;
+  }
+  if (avatar !== currentUser.avatar) {
+    changes.avatar = avatar;
+  }
+  if (Object.keys(changes).length === 0) {
     return currentUser;
   }
 
   const { data, error } = await supabase
     .from("profiles")
-    .update({ username: normalizedUsername })
+    .update(changes)
     .eq("id", currentUser.id)
-    .select("id, username, email, created_at, updated_at, role, status")
+    .select("*")
     .single();
 
   if (error) {
@@ -345,21 +363,20 @@ export async function updateCurrentUsername(
   }
 
   currentUser = {
-    id: data.id,
+    ...currentUser,
     username: data.username,
-    email: data.email,
-    createdAt: new Date(data.created_at).getTime(),
+    avatar: data.avatar ?? null,
     updatedAt: new Date(data.updated_at).getTime(),
-    role: data.role,
-    status: data.status,
   };
   emit();
 
-  void supabase.auth
-    .updateUser({ data: { username: normalizedUsername } })
-    .catch((error) => {
-      console.warn("Failed to sync auth metadata username:", error.message);
-    });
+  if (changes.username) {
+    void supabase.auth
+      .updateUser({ data: { username: changes.username } })
+      .catch((error) => {
+        console.warn("Failed to sync auth metadata username:", error.message);
+      });
+  }
 
   return currentUser;
 }
@@ -685,6 +702,37 @@ export async function updatePassword(password: string): Promise<AuthUser> {
   }
 
   return currentUser;
+}
+
+// from the profile: an open session alone isn't enough to change the password
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+): Promise<AuthUser> {
+  const validationError = validatePassword(newPassword);
+  if (validationError) {
+    throw new Error(t(validationError));
+  }
+
+  const { data } = await supabase.auth.getSession();
+  const email = data.session?.user.email;
+  if (!email) {
+    throw new Error(t("serverErrors.noSession"));
+  }
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password: currentPassword,
+  });
+  if (error) {
+    throw new Error(
+      /invalid login|invalid credentials/i.test(error.message)
+        ? t("profile.errors.currentPasswordWrong")
+        : translateErrorMessage(error.message),
+    );
+  }
+
+  return updatePassword(newPassword);
 }
 
 export type OAuthProvider = "discord" | "azure";

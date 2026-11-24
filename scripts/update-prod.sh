@@ -9,9 +9,9 @@
 # Optional:                ADMIN_EMAIL=persona@empresa.com bash scripts/update-prod.sh
 #                          (also gives that account the admin role)
 #
-# docker-entrypoint only runs 9999-app.sql when the database is created, so
-# migrations added later must be applied with this script. Applied files are
-# recorded in public.schema_migrations; running it again only applies new ones.
+# docker-entrypoint only runs 9999-app.sql when the database is created;
+# migrations added later are applied by the `migrate` service (scripts/migrate.sh),
+# which also runs on every `docker compose up`. This script adds the backup.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -30,45 +30,7 @@ docker compose exec -T db pg_dump -U postgres -d "$DB_NAME" -Fc >"$backup"
 echo "    $backup"
 
 echo "==> 2/5 Migraciones"
-# Databases created before this script existed have no record of what ran.
-# 0001-0006 are in every deployed database, later files are safe to re-run.
-psql_db <<'SQL'
-do $$
-begin
-  if to_regclass('public.schema_migrations') is null then
-    create table public.schema_migrations (
-      version    text primary key,
-      applied_at timestamptz not null default now()
-    );
-    insert into public.schema_migrations (version)
-    select v from unnest(array[
-      '0001_init.sql',
-      '0002_shared_boards.sql',
-      '0003_join_existing_shared_board.sql',
-      '0004_collab_storage.sql',
-      '0005_readonly_member.sql',
-      '0006_board_comments.sql'
-    ]) as v;
-  end if;
-end $$;
-SQL
-
-applied="$(psql_db -At -c "select version from public.schema_migrations")"
-pending=0
-for file in supabase/migrations/*.sql; do
-  name="$(basename "$file")"
-  if grep -qxF "$name" <<<"$applied"; then
-    continue
-  fi
-  echo "    aplicando $name"
-  {
-    cat "$file"
-    echo
-    echo "insert into public.schema_migrations (version) values ('$name');"
-  } | psql_db --single-transaction >/dev/null
-  pending=$((pending + 1))
-done
-echo "    $pending migracion(es) aplicada(s)"
+docker compose run --rm -T --no-deps -e PGDATABASE="$DB_NAME" migrate
 
 if [[ -n "${ADMIN_EMAIL:-}" ]]; then
   echo "    rol admin para $ADMIN_EMAIL"

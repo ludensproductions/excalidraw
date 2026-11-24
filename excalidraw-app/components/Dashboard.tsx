@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useReducer,
   useRef,
   useState,
 } from "react";
@@ -23,6 +24,7 @@ import {
   faSun,
   faTrashCan,
   faUser,
+  faUserPen,
   faUserShield,
   faUserSlash,
 } from "@fortawesome/free-solid-svg-icons";
@@ -44,9 +46,9 @@ import {
   normalizeUsername,
   validateUsername,
 } from "../auth/authValidation";
-import { updateCurrentUsername, type AuthUser } from "../auth/authStore";
 import { getCollaborationLinkData } from "../data";
 import { DrawingsStore } from "../data/DrawingsStore";
+import { MemberAvatarsStore } from "../data/MemberAvatarsStore";
 import { SharedBoardsStore } from "../data/SharedBoardsStore";
 import {
   UserManagementStore,
@@ -58,8 +60,11 @@ import { loadFilesFromFirebase, loadFromFirebase } from "../data/firebase";
 import { getErrorMessage } from "../errorMessages";
 import { useHandleAppTheme } from "../useHandleAppTheme";
 
+import { ProfileDialog } from "./ProfileDialog";
+
 import "./Dashboard.scss";
 
+import type { AuthUser } from "../auth/authStore";
 import type { DrawingRecord } from "../data/DrawingsStore";
 import type { SharedBoard } from "../data/SharedBoardsStore";
 
@@ -360,6 +365,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
 interface SharedBoardCardProps {
   board: SharedBoard;
   currentUserId: string;
+  currentUserAvatar: string | null;
   thumbnail: string | null;
   onJoin: (board: SharedBoard) => void;
   onLeave: (board: SharedBoard) => void;
@@ -370,6 +376,7 @@ interface SharedBoardCardProps {
 const SharedBoardCard: React.FC<SharedBoardCardProps> = ({
   board,
   currentUserId,
+  currentUserAvatar,
   thumbnail,
   onJoin,
   onLeave,
@@ -381,9 +388,13 @@ const SharedBoardCard: React.FC<SharedBoardCardProps> = ({
   const otherMembers = board.members.filter(
     (member) => member.userId !== currentUserId,
   );
-  const visibleMembers = otherMembers.slice(0, maxAvatars);
-  const hiddenMembers = otherMembers.slice(maxAvatars);
-  const overflow = hiddenMembers.length;
+  // the current user goes first, like in the names next to the avatars
+  const sortedMembers = [
+    ...board.members.filter((member) => member.userId === currentUserId),
+    ...otherMembers,
+  ];
+  const visibleMembers = sortedMembers.slice(0, maxAvatars);
+  const overflow = sortedMembers.length - visibleMembers.length;
   const memberNames = [
     t("app.you"),
     ...otherMembers.map((member) => member.username),
@@ -443,15 +454,25 @@ const SharedBoardCard: React.FC<SharedBoardCardProps> = ({
           className="dashboard__shared-card-members"
           aria-label={membersLabel}
         >
-          {visibleMembers.map((member) => (
-            <span
-              key={member.userId}
-              className="dashboard__shared-card-avatar"
-              title={member.username}
-            >
-              {member.username.trim().charAt(0).toUpperCase() || "?"}
-            </span>
-          ))}
+          {visibleMembers.map((member) => {
+            const avatar =
+              member.userId === currentUserId
+                ? currentUserAvatar
+                : MemberAvatarsStore.get(member.userId);
+            return (
+              <span
+                key={member.userId}
+                className="dashboard__shared-card-avatar"
+                title={member.username}
+              >
+                {avatar ? (
+                  <img src={avatar} alt="" />
+                ) : (
+                  member.username.trim().charAt(0).toUpperCase() || "?"
+                )}
+              </span>
+            );
+          })}
           {overflow > 0 && (
             <span className="dashboard__shared-card-avatar overflow">
               +{overflow}
@@ -566,6 +587,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const isDark = editorTheme === THEME.DARK;
   const isAdmin = user.role === "admin";
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  // the cards read the photos from the store; render again when they arrive
+  const [, rerenderAvatars] = useReducer((count: number) => count + 1, 0);
+
+  useEffect(() => MemberAvatarsStore.subscribe(rerenderAvatars), []);
+
+  useEffect(() => {
+    void MemberAvatarsStore.load(
+      sharedBoards
+        .flatMap((board) => board.members.map((member) => member.userId))
+        .filter((userId) => userId !== user.id),
+    );
+  }, [sharedBoards, user.id]);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -713,47 +747,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
     return { recentItems, myBoardItems, visibleSharedBoards };
   }, [activeTab, boards, loading, sharedBoards, sharedError]);
 
-  const handleEditCurrentUsername = async () => {
-    const nextUsername = await appDialog.promptText({
-      title: t("app.changeName"),
-      label: t("app.newUsername"),
-      initialValue: user.username,
-      confirmButtonText: t("app.save"),
-      requiredMessage: t("app.fieldRequired"),
-      maxLength: AUTH_FIELD_LIMITS.username.max,
-    });
-
-    if (!nextUsername) {
-      return;
-    }
-
-    const normalizedUsername = normalizeUsername(nextUsername);
-    if (normalizedUsername === user.username) {
-      return;
-    }
-
-    const validationError = validateUsername(normalizedUsername);
-    if (validationError) {
-      await appDialog.alert({
-        title: t(validationError),
-        icon: "warning",
-      });
-      return;
-    }
-
-    try {
-      const updatedUser = await updateCurrentUsername(normalizedUsername);
-      setManagedUsers((prev) =>
-        prev.map((profile) =>
-          profile.id === updatedUser.id
-            ? { ...profile, username: updatedUser.username }
-            : profile,
-        ),
-      );
-      void appDialog.toast({ title: t("app.userUpdatedSuccessfully") });
-    } catch (error) {
-      await appDialog.error(t("app.userActionFailed"), getErrorMessage(error));
-    }
+  const handleProfileSaved = (updatedUser: AuthUser) => {
+    setProfileOpen(false);
+    setManagedUsers((prev) =>
+      prev.map((profile) =>
+        profile.id === updatedUser.id
+          ? { ...profile, username: updatedUser.username }
+          : profile,
+      ),
+    );
+    void appDialog.toast({ title: t("profile.updated") });
   };
 
   useEffect(() => {
@@ -1372,6 +1375,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             key={`shared:${item.board.id}`}
             board={item.board}
             currentUserId={user.id}
+            currentUserAvatar={user.avatar}
             thumbnail={
               sharedBoardPreviews[getSharedBoardPreviewKey(item.board)] ?? null
             }
@@ -1472,7 +1476,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
             aria-haspopup="menu"
             aria-expanded={userMenuOpen}
           >
-            <FontAwesomeIcon icon={faUser} />
+            {user.avatar ? (
+              <img src={user.avatar} alt="" />
+            ) : (
+              <FontAwesomeIcon icon={faUser} />
+            )}
           </button>
           {userMenuOpen && (
             <div className="dashboard__user-menu" role="menu">
@@ -1480,11 +1488,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 role="menuitem"
                 onClick={() => {
                   setUserMenuOpen(false);
-                  void handleEditCurrentUsername();
+                  setProfileOpen(true);
                 }}
               >
-                <FontAwesomeIcon icon={faPenToSquare} />
-                {t("app.changeName")}
+                <FontAwesomeIcon icon={faUserPen} />
+                {t("profile.title")}
               </button>
               <button
                 role="menuitem"
@@ -1505,6 +1513,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
           )}
         </div>
       </header>
+
+      {profileOpen && (
+        <ProfileDialog
+          user={user}
+          onClose={() => setProfileOpen(false)}
+          onSaved={handleProfileSaved}
+        />
+      )}
 
       <main className="dashboard__main">
         {activeTab !== "users" && (
@@ -2006,6 +2022,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     key={board.id}
                     board={board}
                     currentUserId={user.id}
+                    currentUserAvatar={user.avatar}
                     thumbnail={
                       sharedBoardPreviews[getSharedBoardPreviewKey(board)] ??
                       null

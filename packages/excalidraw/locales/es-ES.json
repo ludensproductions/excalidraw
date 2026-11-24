@@ -809,7 +809,6 @@
     "errorLoadingUsers": "Error al cargar usuarios:",
     "noUsers": "No hay usuarios disponibles.",
     "editUsername": "Editar usuario",
-    "changeName": "Cambiar nombre",
     "newUsername": "Nuevo nombre de usuario",
     "editBoardUsername": "Editar nombre en este tablero",
     "newBoardUsername": "Nombre en este tablero",
@@ -941,6 +940,26 @@
       "passwordUpdatedButLoginFailed": "Contraseña actualizada, pero no se pudo iniciar sesión.",
       "accountDisabled": "Esta cuenta está deshabilitada.",
       "accountBanned": "Esta cuenta fue baneada."
+    }
+  },
+  "profile": {
+    "title": "Mi perfil",
+    "photo": "Foto de perfil",
+    "changePhoto": "Cambiar foto",
+    "removePhoto": "Quitar foto",
+    "photoHint": "JPG, PNG o WebP, máximo 10 MB.",
+    "changePassword": "Cambiar contraseña",
+    "keepPassword": "No cambiar contraseña",
+    "currentPassword": "Contraseña actual",
+    "passwordSessionsHint": "Al cambiar tu contraseña se cerrará tu sesión en los demás dispositivos.",
+    "passwordManagedExternally": "Inicias sesión con una cuenta externa, así que tu contraseña se administra ahí.",
+    "updated": "Perfil actualizado",
+    "errors": {
+      "photoInvalid": "Elige una imagen JPG, PNG o WebP válida.",
+      "photoTooLarge": "La imagen debe pesar 10 MB o menos.",
+      "currentPasswordRequired": "Escribe tu contraseña actual.",
+      "currentPasswordWrong": "La contraseña actual es incorrecta.",
+      "samePassword": "La nueva contraseña debe ser distinta de la actual."
     }
   },
   "serverErrors": {

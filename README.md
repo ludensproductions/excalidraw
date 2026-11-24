@@ -71,6 +71,8 @@ EMAIL_APP_KEY=clave-de-app-de-gmail
 | 5 | `supabase/migrations/0005_readonly_member.sql` | Columna `read_only` en miembros + actualiza la función RPC |
 | 6 | `supabase/migrations/0006_board_comments.sql` | Tabla `board_comments` + políticas |
 
+Las migraciones nuevas de `supabase/migrations/` también se aplican solas: el servicio `migrate` corre en cada `docker compose up -d`, ejecuta las que falten y las registra en `public.schema_migrations`. Si una falla, se revierte y el frontend no se actualiza (ver `docker compose logs migrate`). Para respaldar la base antes, usa `bash scripts/update-prod.sh`.
+
 > Las variables `VITE_APP_*` se hornean dentro del bundle en tiempo de **build**.  
 > Si cambias alguna después de construir, debes reconstruir: `docker compose up -d --build`.
 

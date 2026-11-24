@@ -96,6 +96,7 @@ import {
 import { resetBrowserStateVersions } from "../data/tabSync";
 import { SharedBoardsStore } from "../data/SharedBoardsStore";
 import { getCurrentUser } from "../auth/authStore";
+import { MemberAvatarsStore } from "../data/MemberAvatarsStore";
 import { DrawingsStore } from "../data/DrawingsStore";
 import { dashboardState } from "../dashboardState";
 import { getErrorMessage } from "../errorMessages";
@@ -283,7 +284,9 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     const unsubOnScrollChange = this.excalidrawAPI.onScrollChange(() =>
       throttledRelayUserViewportBounds(),
     );
+    const unsubFromAvatars = MemberAvatarsStore.subscribe(this.refreshAvatars);
     this.onUmmount = () => {
+      unsubFromAvatars();
       unsubOnUserFollow();
       unsubOnScrollChange();
     };
@@ -1557,6 +1560,9 @@ class Collab extends PureComponent<CollabProps, CollabState> {
             (isCurrentUser
               ? this.getUsername() || currentUser?.username
               : undefined),
+          avatarUrl: isCurrentUser
+            ? currentUser?.avatar ?? undefined
+            : this.collaborators.get(socketId)?.avatarUrl,
           isCurrentUser,
         }),
       );
@@ -1564,6 +1570,24 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     this.collaborators = collaborators;
     this.excalidrawAPI.updateScene({ collaborators });
   }
+
+  // photos arrive after the collaborators do
+  private refreshAvatars = () => {
+    if (!this.collaborators.size) {
+      return;
+    }
+    const collaborators = new Map(this.collaborators);
+    for (const [socketId, collaborator] of collaborators) {
+      if (collaborator.id && !collaborator.isCurrentUser) {
+        collaborators.set(socketId, {
+          ...collaborator,
+          avatarUrl: MemberAvatarsStore.get(collaborator.id) ?? undefined,
+        });
+      }
+    }
+    this.collaborators = collaborators;
+    this.excalidrawAPI.updateScene({ collaborators });
+  };
 
   updateCollaborator = (socketId: SocketId, updates: Partial<Collaborator>) => {
     // room-user-change is the source of truth for who has the board open; a
@@ -1585,6 +1609,11 @@ class Collab extends PureComponent<CollabProps, CollabState> {
         isCurrentUser: socketId === this.portal.socket?.id,
       },
     );
+    // guests without an account have no profile, and can't read anyone's
+    if (user.id && !user.isCurrentUser && getCurrentUser()) {
+      user.avatarUrl = MemberAvatarsStore.get(user.id) ?? undefined;
+      void MemberAvatarsStore.load([user.id]);
+    }
     collaborators.set(socketId, user);
     this.collaborators = collaborators;
 
