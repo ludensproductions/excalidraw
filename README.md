@@ -38,16 +38,13 @@ node docker/generate-keys.js
 Copia la salida del script en tu `.env` (sección de secrets de Supabase).  
 También copia `ANON_KEY` como `VITE_APP_SUPABASE_ANON_KEY` en `.env`.
 
-### Puertos
+### URLs
 
-| Servicio                | URL                                   |
-| ----------------------- | ------------------------------------- |
-| App                     | `http://localhost:3000`               |
-| WebSocket collab        | `http://localhost:3002`               |
-| Supabase API (Kong)     | `http://localhost:54321`              |
-| Supabase Studio         | `http://localhost:54321` (auth basic) |
-| Supavisor (session)     | `localhost:5432`                      |
-| Supavisor (transaction) | `localhost:6543`                      |
+| Servicio         | URL                                                     |
+| ---------------- | ------------------------------------------------------- |
+| App              | `https://excalidraw.issirmax.mx`                        |
+| WebSocket collab | `https://excalidraw-room.issirmax.mx`                   |
+| Supabase API     | `https://excalidraw.issirmax.mx/{auth,rest,storage}/v1` |
 
 ### Emails de autenticación
 
@@ -65,9 +62,7 @@ EMAIL_APP_KEY=clave-de-app-de-gmail
 El botón **Discord** del inicio de sesión funciona una vez activado:
 
 1. En <https://discord.com/developers/applications> crea una aplicación y abre **OAuth2**.
-2. En **Redirects** agrega la URL exacta `<API_EXTERNAL_URL>/auth/v1/callback`:
-   - Local: `http://localhost:3000/auth/v1/callback`
-   - Producción: `https://excalidraw.issirmax.mx/auth/v1/callback`
+2. En **Redirects** agrega la URL exacta `<API_EXTERNAL_URL>/auth/v1/callback`. En producción: `https://excalidraw.issirmax.mx/auth/v1/callback`
 3. Copia el **Client ID** y el **Client Secret** al `.env`:
 
    ```env
@@ -78,7 +73,7 @@ El botón **Discord** del inicio de sesión funciona una vez activado:
 
 4. Aplica el cambio con `docker compose up -d auth`.
 
-`API_EXTERNAL_URL` y `SITE_URL` deben ser la URL pública en producción (no `localhost`). Conviene usar una aplicación de Discord distinta para local y para producción. Si el correo de Discord está verificado y ya existe una cuenta con ese correo, se entra a esa misma cuenta.
+`API_EXTERNAL_URL` y `SITE_URL` deben ser la URL pública en producción (no la de tu máquina). Conviene usar una aplicación de Discord distinta para local y para producción. Si el correo de Discord está verificado y ya existe una cuenta con ese correo, se entra a esa misma cuenta.
 
 ### Inicio de sesión con Microsoft
 
@@ -188,7 +183,6 @@ yarn collab:up
 
 # 3. Dev server con hot-reload
 yarn start
-#  → http://localhost:3000
 ```
 
 Scripts útiles:
@@ -206,7 +200,7 @@ yarn fix              # Auto-fix de formato y linting
 | Servicio | Imagen | Rol | ¿Usado por la app? |
 | --- | --- | --- | --- |
 | `db` | `supabase/postgres:15` | PostgreSQL con schemas de auth, storage, API y migraciones de la app. | **Crítico** — toda la persistencia |
-| `kong` | `kong:3.9` | API Gateway. Enruta `/auth/v1`, `/rest/v1`, `/storage/v1`. Escucha en `:54321`. | **Crítico** — punto de entrada de la API |
+| `kong` | `kong:3.9` | API Gateway. Enruta `/auth/v1`, `/rest/v1`, `/storage/v1`. | **Crítico** — punto de entrada de la API |
 | `auth` | `supabase/gotrue` | GoTrue: registro, login, sesiones JWT, password reset y envío de emails por Gmail SMTP. | **Crítico** — autenticación de usuarios |
 | `auth-email-templates` | `caddy:2-alpine` | Sirve la plantilla HTML interna para recuperación de contraseña sin código OTP visible. | Sí — email de recuperación |
 | `rest` | `postgrest/postgrest` | PostgREST: API REST automática sobre las tablas de Postgres. | **Crítico** — acceso a datos |

@@ -59,7 +59,13 @@ else
   fi
   # the links in the auth emails are built from SITE_URL
   PROD_URL="${PROD_URL:-https://excalidraw.issirmax.mx}"
-  if [[ -f .env ]] && ! grep -qxF "SITE_URL=$PROD_URL" .env; then
+  # a local .env keeps its localhost URLs
+  local_env=0
+  if [[ -f .env ]] && grep -q '^COMPOSE_PROFILES=dev' .env; then
+    local_env=1
+    echo "    .env local (COMPOSE_PROFILES=dev): se conservan sus URLs"
+  fi
+  if [[ "$local_env" == 0 && -f .env ]] && ! grep -qxF "SITE_URL=$PROD_URL" .env; then
     if grep -q '^SITE_URL=' .env; then
       sed -i "s|^SITE_URL=.*|SITE_URL=$PROD_URL|" .env
     else
@@ -68,7 +74,7 @@ else
     echo "    enlaces de correo apuntando a $PROD_URL (SITE_URL)"
   fi
   # OAuth callbacks and token issuer; only a leftover local URL is replaced
-  if [[ -f .env ]] && grep -qE '^API_EXTERNAL_URL=https?://(localhost|127\.0\.0\.1)' .env; then
+  if [[ "$local_env" == 0 && -f .env ]] && grep -qE '^API_EXTERNAL_URL=https?://(localhost|127\.0\.0\.1)' .env; then
     sed -i "s|^API_EXTERNAL_URL=.*|API_EXTERNAL_URL=$PROD_URL|" .env
     echo "    callbacks de OAuth apuntando a $PROD_URL (API_EXTERNAL_URL)"
   fi

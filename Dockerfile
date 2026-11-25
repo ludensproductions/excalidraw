@@ -8,7 +8,7 @@ COPY . .
 ARG VITE_APP_PORT=3000
 ARG VITE_APP_LIBRARY_URL=https://libraries.excalidraw.com
 ARG VITE_APP_LIBRARY_BACKEND=https://us-central1-excalidraw-room-persistence.cloudfunctions.net/libraries
-ARG VITE_APP_WS_SERVER_URL=https://room.excalidraw.issirmax.mx
+ARG VITE_APP_WS_SERVER_URL=https://excalidraw-room.issirmax.mx
 ARG VITE_APP_SUPABASE_URL=
 ARG VITE_APP_SUPABASE_ANON_KEY=
 ARG VITE_APP_DISABLE_SENTRY=true
@@ -38,4 +38,4 @@ FROM nginx:1.27-alpine
 COPY --from=build /opt/node_app/excalidraw-app/build /usr/share/nginx/html
 COPY docker/nginx/excalidraw.conf /etc/nginx/conf.d/default.conf
 
-HEALTHCHECK CMD wget -q -O /dev/null http://localhost || exit 1
+HEALTHCHECK CMD wget -q -O /dev/null http://127.0.0.1 || exit 1

@@ -8,6 +8,7 @@ import { getErrorMessage } from "../errorMessages";
 import {
   beginAuthEmailFlowFromUrl,
   getPasswordResetResendWaitSeconds,
+  hasAuthFlowInUrl,
   loginUser,
   registerUser,
   requestPasswordReset,
@@ -130,6 +131,9 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // no form while the session in the URL is validated; once signed in it stays
+  // hidden until the app replaces this page
+  const [isResolvingUrl, setIsResolvingUrl] = useState(hasAuthFlowInUrl);
   const [passwordResetWaitSeconds, setPasswordResetWaitSeconds] = useState(0);
   useEffect(() => {
     // pressing Back at the provider restores this page as it was: loading
@@ -159,12 +163,6 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
           return;
         }
 
-        if (result.type === "passwordRecovery") {
-          setMode("reset");
-          setMessage(t("auth.messages.enterNewPassword"));
-          return;
-        }
-
         if (result.type === "emailVerified") {
           setMessage(t("auth.messages.emailVerified"));
           onAuthenticated(result.user);
@@ -173,6 +171,14 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
 
         if (result.type === "oauthSignedIn") {
           onAuthenticated(result.user);
+          return;
+        }
+
+        setIsResolvingUrl(false);
+
+        if (result.type === "passwordRecovery") {
+          setMode("reset");
+          setMessage(t("auth.messages.enterNewPassword"));
           return;
         }
 
@@ -200,6 +206,7 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
       })
       .catch((err: unknown) => {
         if (!cancelled) {
+          setIsResolvingUrl(false);
           setMode("forgot");
           setError(
             getErrorMessage(err, t("auth.errors.openRecoveryLinkFailed")),
@@ -363,6 +370,17 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
   const shouldConstrainPassword = mode !== "login";
   const isSubmitDisabled =
     loading || (mode === "forgot" && passwordResetWaitSeconds > 0);
+  if (isResolvingUrl) {
+    return (
+      <div
+        className={`auth-page${isDark ? " auth-page--dark" : ""}`}
+        role="status"
+        aria-label={t("auth.actions.loading")}
+      >
+        <div className="auth-page__loader" />
+      </div>
+    );
+  }
   return (
     <div className={`auth-page${isDark ? " auth-page--dark" : ""}`}>
       <div className="auth-page__card">

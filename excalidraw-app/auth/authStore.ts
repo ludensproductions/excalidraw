@@ -573,6 +573,17 @@ const getOAuthErrorMessage = (
   return t("auth.errors.loginFailed");
 };
 
+// the page was opened by an email link or by Discord / Microsoft coming back
+export const hasAuthFlowInUrl = (): boolean =>
+  [window.location.hash.replace(/^#/, ""), window.location.search].some(
+    (params) => {
+      const urlParams = new URLSearchParams(params);
+      return ["access_token", "code", "token_hash", "token"].some((name) =>
+        urlParams.has(name),
+      );
+    },
+  );
+
 const clearAuthUrlParams = (): void => {
   window.history.replaceState({}, "", window.location.pathname);
 };

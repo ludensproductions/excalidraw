@@ -1,4 +1,4 @@
-import { StrictMode, useEffect, useState } from "react";
+import { StrictMode, useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { registerSW } from "virtual:pwa-register";
 import { t, setLanguage } from "@excalidraw/excalidraw/i18n";
@@ -146,10 +146,11 @@ const AppRoot: React.FC = () => {
     return undefined;
   }, [view.type]);
 
-  const handleAuthenticated = (u: AuthUser) => {
+  // stable: the auth page reads the URL again when it changes
+  const handleAuthenticated = useCallback((u: AuthUser) => {
     setUser(u);
     void resolveSignedInView().then(setView);
-  };
+  }, []);
 
   const handleLogout = () => {
     logoutUser();
