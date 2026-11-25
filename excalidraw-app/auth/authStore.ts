@@ -1,7 +1,7 @@
 import { t } from "@excalidraw/excalidraw/i18n";
 
 import { anonKey, supabase, supabaseUrl } from "../data/supabase";
-import { translateErrorMessage } from "../errorMessages";
+import { getErrorMessage, translateErrorMessage } from "../errorMessages";
 
 import {
   normalizeEmail,
@@ -41,6 +41,7 @@ export type AuthEmailFlowResult =
   | { type: "passwordRecovery" }
   | { type: "emailVerified"; user: AuthUser }
   | { type: "oauthSignedIn"; user: AuthUser }
+  | { type: "oauthFailed"; message: string }
   | { type: "verificationExpired" }
   | { type: "verificationInvalid" }
   | { type: "emailAlreadyVerified" };
@@ -537,6 +538,41 @@ const otpErrorMessage = (type: string | null, message: string): string =>
     ? t("auth.errors.invalidRecoveryLink")
     : translateErrorMessage(message);
 
+// Set while the browser is at Discord / Microsoft. Holds where the user was: a
+// shared board link is in the hash, which the trip back replaces.
+const OAUTH_RETURN_KEY = "excalidraw-oauth-return";
+
+const takeOAuthReturn = (): string | null => {
+  try {
+    const returnTo = sessionStorage.getItem(OAUTH_RETURN_KEY);
+    sessionStorage.removeItem(OAUTH_RETURN_KEY);
+    return returnTo;
+  } catch {
+    return null;
+  }
+};
+
+const getOAuthErrorMessage = (
+  authError: string,
+  errorCode: string | null,
+): string => {
+  console.warn("OAuth sign-in failed:", authError);
+  if (/provider_email_needs_verification|unverified email/i.test(authError)) {
+    return t("auth.messages.verificationEmailSent");
+  }
+  if (/error getting user email/i.test(authError)) {
+    return t("auth.errors.oauthEmailRequired");
+  }
+  if (/user_banned/i.test(authError)) {
+    return t("auth.errors.accountBanned");
+  }
+  // pressing Cancel at the provider; GoTrue's own rejections carry a code
+  if (/^access_denied/i.test(authError) && !errorCode) {
+    return t("auth.errors.oauthCancelled");
+  }
+  return t("auth.errors.loginFailed");
+};
+
 const clearAuthUrlParams = (): void => {
   window.history.replaceState({}, "", window.location.pathname);
 };
@@ -572,9 +608,20 @@ async function runAuthEmailFlowFromUrl(): Promise<AuthEmailFlowResult> {
   const accessToken = hashParams.get("access_token");
   const refreshToken = hashParams.get("refresh_token");
 
+  const oauthReturn = takeOAuthReturn();
+
   if (error || errorCode || errorDescription) {
     const authError = [error, errorCode, errorDescription].join(" ");
     clearAuthUrlParams();
+
+    if (oauthReturn || errorCode === "bad_oauth_state") {
+      // keep the shared link for the next attempt
+      window.history.replaceState({}, "", oauthReturn ?? "/");
+      return {
+        type: "oauthFailed",
+        message: getOAuthErrorMessage(authError, errorCode),
+      };
+    }
 
     if (
       /already.*(verified|confirmed)|user.*already.*confirmed/i.test(authError)
@@ -593,20 +640,31 @@ async function runAuthEmailFlowFromUrl(): Promise<AuthEmailFlowResult> {
 
   // Discord / Microsoft come back with the session tokens and no `type`
   if (!type && accessToken && refreshToken) {
-    const { error } = await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
+    // the tokens leave the URL first, also when signing in fails
     clearAuthUrlParams();
-    if (error) {
-      throw new Error(translateErrorMessage(error.message));
+    if (oauthReturn) {
+      window.history.replaceState({}, "", oauthReturn);
     }
-    const { data } = await supabase.auth.getSession();
-    await applySession(data.session);
-    if (!currentUser) {
-      throw new Error(t("auth.errors.loginFailed"));
+    try {
+      const { data, error } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+      if (error) {
+        throw new Error(translateErrorMessage(error.message));
+      }
+      // throws for disabled or banned accounts
+      await applySession(data.session);
+      if (!currentUser) {
+        throw new Error(t("auth.errors.loginFailed"));
+      }
+      return { type: "oauthSignedIn", user: currentUser };
+    } catch (error: unknown) {
+      return {
+        type: "oauthFailed",
+        message: getErrorMessage(error, t("auth.errors.loginFailed")),
+      };
     }
-    return { type: "oauthSignedIn", user: currentUser };
   }
 
   if (type !== "recovery" && type !== "signup" && !code) {
@@ -737,8 +795,7 @@ export async function changePassword(
 
 export type OAuthProvider = "discord" | "azure";
 
-// providers turned on in GoTrue (needs their client id/secret in .env);
-// the login only shows buttons for these
+// providers turned on in GoTrue (needs their client id/secret in .env)
 export async function getEnabledOAuthProviders(): Promise<OAuthProvider[]> {
   try {
     const response = await fetch(
@@ -760,6 +817,19 @@ export async function getEnabledOAuthProviders(): Promise<OAuthProvider[]> {
 export async function signInWithProvider(
   provider: OAuthProvider,
 ): Promise<void> {
+  // otherwise the browser ends up on GoTrue's JSON error page
+  if (!(await getEnabledOAuthProviders()).includes(provider)) {
+    throw new Error(t("auth.errors.oauthUnavailable"));
+  }
+
+  try {
+    sessionStorage.setItem(
+      OAUTH_RETURN_KEY,
+      window.location.pathname + window.location.hash,
+    );
+  } catch {
+    // storage unavailable: it comes back without the shared link
+  }
   const { error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {

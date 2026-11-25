@@ -33,7 +33,7 @@ import type { AuthUser, OAuthProvider } from "./authStore";
 import type { ReactNode } from "react";
 
 const discordIcon = (
-  <svg viewBox="0 0 24 24" aria-hidden="true" fill="#5865F2">
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
     <path d="M20.3 4.4A19.6 19.6 0 0 0 15.4 3l-.6 1.3a18.2 18.2 0 0 0-5.5 0L8.6 3a19.5 19.5 0 0 0-4.9 1.5C.6 9.1-.3 13.6.1 18.1a19.8 19.8 0 0 0 6 3l1.3-2.1a12.8 12.8 0 0 1-2-1l.5-.4a14.1 14.1 0 0 0 12.2 0l.5.4a12.8 12.8 0 0 1-2 1l1.3 2.1a19.7 19.7 0 0 0 6-3c.5-5.2-.9-9.7-3.6-13.7ZM8.3 15.4c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4Zm7.4 0c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4Z" />
   </svg>
 );
@@ -49,11 +49,16 @@ const microsoftIcon = (
 
 const OAUTH_BUTTONS: Record<
   OAuthProvider,
-  { icon: ReactNode; labelKey: Parameters<typeof t>[0] }
+  { icon: ReactNode; name: string; labelKey: Parameters<typeof t>[0] }
 > = {
-  discord: { icon: discordIcon, labelKey: "auth.actions.continueWithDiscord" },
+  discord: {
+    icon: discordIcon,
+    name: "Discord",
+    labelKey: "auth.actions.continueWithDiscord",
+  },
   azure: {
     icon: microsoftIcon,
+    name: "Microsoft",
     labelKey: "auth.actions.continueWithMicrosoft",
   },
 };
@@ -127,9 +132,25 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [passwordResetWaitSeconds, setPasswordResetWaitSeconds] = useState(0);
-  const [oauthProviders, setOAuthProviders] = useState<OAuthProvider[]>([]);
+  // Discord is always offered; Microsoft only where it's turned on
+  const [oauthProviders, setOAuthProviders] = useState<OAuthProvider[]>([
+    "discord",
+  ]);
   useEffect(() => {
-    void getEnabledOAuthProviders().then(setOAuthProviders);
+    void getEnabledOAuthProviders().then((enabled) => {
+      setOAuthProviders(
+        enabled.includes("azure") ? ["discord", "azure"] : ["discord"],
+      );
+    });
+
+    // pressing Back at the provider restores this page as it was: loading
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setLoading(false);
+      }
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
   }, []);
   const continueWithProvider = async (provider: OAuthProvider) => {
     resetFeedback();
@@ -163,6 +184,11 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
 
         if (result.type === "oauthSignedIn") {
           onAuthenticated(result.user);
+          return;
+        }
+
+        if (result.type === "oauthFailed") {
+          setError(result.message);
           return;
         }
 
@@ -563,26 +589,26 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
             {submitLabel}
           </button>
         </form>
-        {(mode === "login" || mode === "register") &&
-          oauthProviders.length > 0 && (
-            <div className="auth-page__oauth">
-              <div className="auth-page__oauth-separator">
-                <span>{t("auth.actions.orContinueWith")}</span>
-              </div>
-              {oauthProviders.map((provider) => (
-                <button
-                  key={provider}
-                  type="button"
-                  className="auth-page__oauth-button"
-                  disabled={loading}
-                  onClick={() => void continueWithProvider(provider)}
-                >
-                  {OAUTH_BUTTONS[provider].icon}
-                  <span>{t(OAUTH_BUTTONS[provider].labelKey)}</span>
-                </button>
-              ))}
+        {(mode === "login" || mode === "register") && (
+          <div className="auth-page__oauth">
+            <div className="auth-page__oauth-separator">
+              <span>{t("auth.actions.orContinueWith")}</span>
             </div>
-          )}
+            {oauthProviders.map((provider) => (
+              <button
+                key={provider}
+                type="button"
+                className={`auth-page__oauth-button auth-page__oauth-button--${provider}`}
+                aria-label={t(OAUTH_BUTTONS[provider].labelKey)}
+                disabled={loading}
+                onClick={() => void continueWithProvider(provider)}
+              >
+                {OAUTH_BUTTONS[provider].icon}
+                <span>{OAUTH_BUTTONS[provider].name}</span>
+              </button>
+            ))}
+          </div>
+        )}
         <div className="auth-page__toggle">
           {mode === "login" ? (
             <>

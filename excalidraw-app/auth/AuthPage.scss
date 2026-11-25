@@ -379,3 +379,15 @@
     }
   }
 }
+
+// Discord's brand color, the same in both themes
+.auth-page .auth-page__oauth .auth-page__oauth-button--discord {
+  border-color: transparent;
+  background: #4752c4;
+  color: #ffffff;
+
+  &:hover:not(:disabled) {
+    border-color: transparent;
+    background: #3c45a5;
+  }
+}

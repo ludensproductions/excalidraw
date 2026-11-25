@@ -60,6 +60,26 @@ EMAIL_APP_KEY=clave-de-app-de-gmail
 
 `SYSTEM_EMAIL` se usa como remitente y usuario SMTP. `EMAIL_APP_KEY` debe ser una clave de app de Gmail, no la contraseña normal de la cuenta. La plantilla del correo de recuperación vive en `docker/volumes/auth/templates/recovery.html` y solo muestra el enlace de restablecimiento, sin código OTP alternativo.
 
+### Inicio de sesión con Discord
+
+El botón **Discord** del inicio de sesión funciona una vez activado:
+
+1. En <https://discord.com/developers/applications> crea una aplicación y abre **OAuth2**.
+2. En **Redirects** agrega la URL exacta `<API_EXTERNAL_URL>/auth/v1/callback`:
+   - Local: `http://localhost:3000/auth/v1/callback`
+   - Producción: `https://excalidraw.issirmax.mx/auth/v1/callback`
+3. Copia el **Client ID** y el **Client Secret** al `.env`:
+
+   ```env
+   DISCORD_ENABLED=true
+   DISCORD_CLIENT_ID=...
+   DISCORD_SECRET=...
+   ```
+
+4. Aplica el cambio con `docker compose up -d auth`.
+
+`API_EXTERNAL_URL` y `SITE_URL` deben ser la URL pública en producción (no `localhost`). Conviene usar una aplicación de Discord distinta para local y para producción. Si el correo de Discord está verificado y ya existe una cuenta con ese correo, se entra a esa misma cuenta.
+
 ### Migraciones (aplicadas automáticamente al iniciar la BD)
 
 | Orden | Archivo | Qué crea |

@@ -155,6 +155,9 @@ export default defineConfig(({ mode }) => {
         },
 
         workbox: {
+          // the login with Discord / Microsoft navigates to these: they must
+          // reach the server instead of getting the cached index.html
+          navigateFallbackDenylist: [/^\/(auth|rest|storage)\/v1\//],
           // don't precache fonts, locales and separate chunks
           globIgnores: [
             "fonts.css",
