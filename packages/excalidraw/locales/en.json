@@ -954,6 +954,8 @@
     "changePassword": "Change password",
     "keepPassword": "Don't change password",
     "currentPassword": "Current password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "passwordSessionsHint": "Changing your password signs you out on your other devices.",
     "passwordManagedExternally": "You sign in with an external account, so your password is managed there.",
     "updated": "Profile updated",

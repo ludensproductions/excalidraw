@@ -3,6 +3,10 @@ import type * as AuthStore from "../auth/authStore";
 const mocks = vi.hoisted(() => ({
   status: "active",
   enabled: true,
+  // profiles.avatar in the database, and what the app reads of it
+  storedAvatar: null as string | null,
+  profileLoads: true,
+  updateUser: vi.fn(() => Promise.resolve({ error: null })),
   setSession: vi.fn(),
   signInWithOAuth: vi.fn(),
   signOut: vi.fn(() => Promise.resolve({ error: null })),
@@ -25,15 +29,37 @@ vi.mock("../data/supabase", () => ({
       setSession: mocks.setSession,
       signInWithOAuth: mocks.signInWithOAuth,
       signOut: mocks.signOut,
+      updateUser: mocks.updateUser,
     },
     from: () => {
+      let changes: { avatar: string } | null = null;
       const builder = {
         select: () => builder,
         eq: () => builder,
-        maybeSingle: async () => ({
-          data: { username: "sara", status: mocks.status },
-          error: null,
-        }),
+        is: () => builder,
+        update: (values: { avatar: string }) => {
+          changes = values;
+          return builder;
+        },
+        maybeSingle: async () => {
+          if (changes) {
+            if (mocks.storedAvatar) {
+              return { data: null, error: null };
+            }
+            mocks.storedAvatar = changes.avatar;
+            return { data: { id: "user-1" }, error: null };
+          }
+          return mocks.profileLoads
+            ? {
+                data: {
+                  username: "sara",
+                  status: mocks.status,
+                  avatar: mocks.storedAvatar,
+                },
+                error: null,
+              }
+            : { data: null, error: { message: "timeout" } };
+        },
       };
       return builder;
     },
@@ -196,6 +222,118 @@ describe("sign in with Discord / Microsoft", () => {
     expect(mocks.signOut).toHaveBeenCalled();
     expect(store.getCurrentUser()).toBeNull();
     expect(currentPath()).toBe("/");
+  });
+
+  describe("Discord photo", () => {
+    const PHOTO_URL = "https://cdn.discordapp.com/avatars/1/a_hash.gif";
+    const IMPORTED = "data:image/jpeg;base64,DISCORD";
+    const OWN = "data:image/jpeg;base64,OWN";
+    const fetchPhoto = vi.fn();
+
+    beforeEach(() => {
+      mocks.storedAvatar = null;
+      mocks.profileLoads = true;
+      mocks.updateUser.mockClear();
+      fetchPhoto.mockReset();
+      fetchPhoto.mockResolvedValue({
+        ok: true,
+        blob: async () => new Blob(["x"], { type: "image/png" }),
+      });
+      vi.stubGlobal("fetch", fetchPhoto);
+      vi.stubGlobal("createImageBitmap", async () => ({
+        width: 256,
+        height: 256,
+        close: () => {},
+      }));
+      vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+        fillRect: () => {},
+        drawImage: () => {},
+      } as any);
+      vi.spyOn(HTMLCanvasElement.prototype, "toDataURL").mockReturnValue(
+        IMPORTED,
+      );
+    });
+
+    const signIn = async ({
+      provider = "discord",
+      url = PHOTO_URL as string | undefined,
+      metadata = {},
+    } = {}) => {
+      mocks.setSession.mockResolvedValue({
+        data: {
+          session: {
+            user: {
+              id: "user-1",
+              email: "sara@example.com",
+              app_metadata: { providers: [provider] },
+              user_metadata: metadata,
+              identities: [{ provider, identity_data: { avatar_url: url } }],
+            },
+          },
+        },
+        error: null,
+      });
+      await expect(comeBackTo(`/${TOKENS}`)).resolves.toMatchObject({
+        type: "oauthSignedIn",
+      });
+      // the import runs after signing in, without delaying it
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    };
+
+    it("becomes the profile photo, as a still image", async () => {
+      await signIn();
+      expect(fetchPhoto).toHaveBeenCalledWith(
+        "https://cdn.discordapp.com/avatars/1/a_hash.png?size=256",
+      );
+      expect(mocks.storedAvatar).toBe(IMPORTED);
+      expect(store.getCurrentUser()?.avatar).toBe(IMPORTED);
+      expect(mocks.updateUser).toHaveBeenCalledWith({
+        data: { avatar_imported: true },
+      });
+    });
+
+    it("doesn't replace the user's own photo", async () => {
+      mocks.storedAvatar = OWN;
+      await signIn();
+      expect(fetchPhoto).not.toHaveBeenCalled();
+      expect(store.getCurrentUser()?.avatar).toBe(OWN);
+    });
+
+    it("doesn't replace it when the profile failed to load", async () => {
+      mocks.storedAvatar = OWN;
+      mocks.profileLoads = false;
+      await signIn();
+      expect(fetchPhoto).toHaveBeenCalled();
+      expect(mocks.storedAvatar).toBe(OWN);
+      expect(mocks.updateUser).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ["it was imported before", { metadata: { avatar_imported: true } }],
+      [
+        "it is Discord's default picture",
+        { url: "https://cdn.discordapp.com/embed/avatars/0.png" },
+      ],
+      ["it is on another host", { url: "https://example.com/a.png" }],
+      ["there is none", { url: undefined, provider: "azure" }],
+      ["it belongs to another provider", { provider: "azure" }],
+    ])("is skipped when %s", async (_reason, options) => {
+      await signIn(options);
+      expect(fetchPhoto).not.toHaveBeenCalled();
+      expect(mocks.storedAvatar).toBeNull();
+    });
+
+    it.each([
+      ["HTTP error", () => fetchPhoto.mockResolvedValue({ ok: false })],
+      ["offline", () => fetchPhoto.mockRejectedValue(new TypeError("offline"))],
+    ])("doesn't block signing in (%s)", async (_reason, fail) => {
+      fail();
+      await signIn();
+      expect(store.getCurrentUser()).toMatchObject({
+        id: "user-1",
+        avatar: null,
+      });
+    });
   });
 
   it("still reports expired email links as such", async () => {

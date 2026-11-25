@@ -3,6 +3,7 @@ import { t } from "@excalidraw/excalidraw/i18n";
 import { anonKey, supabase, supabaseUrl } from "../data/supabase";
 import { getErrorMessage, translateErrorMessage } from "../errorMessages";
 
+import { discordPhotoToAvatar } from "./avatar";
 import {
   normalizeEmail,
   normalizeUsername,
@@ -382,6 +383,50 @@ export async function updateCurrentProfile({
   return currentUser;
 }
 
+// Only once and only when there is no photo: one the user uploaded, or removing
+// the imported one, is respected on the next sign-ins.
+async function importDiscordPhoto(user: Session["user"]): Promise<void> {
+  // identity_data comes from Discord; the user can't edit it, unlike metadata
+  const url = user.identities?.find(({ provider }) => provider === "discord")
+    ?.identity_data?.avatar_url;
+
+  if (!url || user.user_metadata?.avatar_imported || currentUser?.avatar) {
+    return;
+  }
+
+  try {
+    const avatar = await discordPhotoToAvatar(url);
+    if (!avatar) {
+      return;
+    }
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({ avatar })
+      .eq("id", user.id)
+      // currentUser.avatar is also null when the profile failed to load
+      .is("avatar", null)
+      .select("id")
+      .maybeSingle();
+    if (error) {
+      throw error;
+    }
+    if (!data || currentUser?.id !== user.id) {
+      return;
+    }
+    currentUser = { ...currentUser, avatar };
+    emit();
+    const { error: metadataError } = await supabase.auth.updateUser({
+      data: { avatar_imported: true },
+    });
+    if (metadataError) {
+      throw metadataError;
+    }
+  } catch (error) {
+    // a missing photo must not get in the way of signing in
+    console.warn("Failed to import the Discord photo:", error);
+  }
+}
+
 export async function registerUser(
   username: string,
   email: string,
@@ -668,6 +713,9 @@ async function runAuthEmailFlowFromUrl(): Promise<AuthEmailFlowResult> {
       await applySession(data.session);
       if (!currentUser) {
         throw new Error(t("auth.errors.loginFailed"));
+      }
+      if (data.session) {
+        void importDiscordPhoto(data.session.user);
       }
       return { type: "oauthSignedIn", user: currentUser };
     } catch (error: unknown) {

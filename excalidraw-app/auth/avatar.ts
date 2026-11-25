@@ -42,3 +42,19 @@ export const fileToAvatar = async (file: File): Promise<string> => {
   bitmap.close();
   return canvas.toDataURL("image/jpeg", 0.85);
 };
+
+// null when the account has Discord's default picture
+export const discordPhotoToAvatar = async (
+  url: string,
+): Promise<string | null> => {
+  if (!url.startsWith("https://cdn.discordapp.com/avatars/")) {
+    return null;
+  }
+  // animated photos come as .gif; Discord also serves them still
+  const response = await fetch(`${url.replace(/\.gif$/, ".png")}?size=256`);
+  if (!response.ok) {
+    throw new Error(`Discord photo: HTTP ${response.status}`);
+  }
+  const blob = await response.blob();
+  return fileToAvatar(new File([blob], "avatar", { type: blob.type }));
+};

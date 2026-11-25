@@ -954,6 +954,8 @@
     "changePassword": "Cambiar contraseña",
     "keepPassword": "No cambiar contraseña",
     "currentPassword": "Contraseña actual",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
     "passwordSessionsHint": "Al cambiar tu contraseña se cerrará tu sesión en los demás dispositivos.",
     "passwordManagedExternally": "Inicias sesión con una cuenta externa, así que tu contraseña se administra ahí.",
     "updated": "Perfil actualizado",

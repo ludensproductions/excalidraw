@@ -97,6 +97,33 @@ describe("ProfileDialog", () => {
     expect(mocks.changePassword).toHaveBeenCalledWith("Actual1!", "Nueva123!");
   });
 
+  it("shows one password at a time without saving or losing it", () => {
+    setup();
+    fillPasswords("Actual1!", "Nueva123!");
+    const input = (label: string) =>
+      screen.getByLabelText(label) as HTMLInputElement;
+    expect(input("New password").type).toBe("password");
+
+    click("Show password: New password");
+    expect(input("New password").type).toBe("text");
+    expect(input("New password").value).toBe("Nueva123!");
+    expect(input("Current password").type).toBe("password");
+
+    click("Show password: Current password");
+    expect(input("Current password").type).toBe("text");
+    expect(input("New password").type).toBe("password");
+
+    click("Hide password: Current password");
+    expect(input("Current password").type).toBe("password");
+    expect(mocks.updateCurrentProfile).not.toHaveBeenCalled();
+
+    // closing the section hides it again
+    click("Show password: New password");
+    click("Don't change password");
+    click("Change password");
+    expect(input("New password").type).toBe("password");
+  });
+
   it.each([
     ["", "Nueva123!", "Nueva123!", "Enter your current password."],
     ["Actual1!", "corta", "corta", "at least 8 characters"],

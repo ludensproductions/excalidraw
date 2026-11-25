@@ -1,6 +1,6 @@
 import { t } from "@excalidraw/excalidraw/i18n";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUser } from "@fortawesome/free-solid-svg-icons";
+import { faEye, faEyeSlash, faUser } from "@fortawesome/free-solid-svg-icons";
 import { useEffect, useRef, useState } from "react";
 
 import {
@@ -42,6 +42,8 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  // id of the password field shown as plain text
+  const [visibleField, setVisibleField] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -72,6 +74,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
     setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
+    setVisibleField(null);
     setError(null);
   };
 
@@ -144,27 +147,49 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
     value: string,
     setValue: (value: string) => void,
     isCurrent = false,
-  ) => (
-    <div className="profile-dialog__field">
-      <label htmlFor={id}>{label}</label>
-      <input
-        id={id}
-        type="password"
-        value={value}
-        // the current password may predate today's rules: don't alter it
-        onChange={(event) =>
-          setValue(
-            isCurrent
-              ? event.target.value
-              : sanitizePasswordInput(event.target.value),
-          )
-        }
-        maxLength={isCurrent ? undefined : AUTH_FIELD_LIMITS.password.max}
-        autoComplete={isCurrent ? "current-password" : "new-password"}
-        disabled={saving}
-      />
-    </div>
-  );
+  ) => {
+    const isVisible = visibleField === id;
+    const toggleLabel = isVisible
+      ? t("profile.hidePassword")
+      : t("profile.showPassword");
+    return (
+      <div className="profile-dialog__field">
+        <label htmlFor={id}>{label}</label>
+        <div className="profile-dialog__password">
+          <input
+            id={id}
+            type={isVisible ? "text" : "password"}
+            value={value}
+            // the current password may predate today's rules: don't alter it
+            onChange={(event) =>
+              setValue(
+                isCurrent
+                  ? event.target.value
+                  : sanitizePasswordInput(event.target.value),
+              )
+            }
+            maxLength={isCurrent ? undefined : AUTH_FIELD_LIMITS.password.max}
+            autoComplete={isCurrent ? "current-password" : "new-password"}
+            // while visible, browsers would spell check it as regular text
+            autoCapitalize="none"
+            spellCheck={false}
+            disabled={saving}
+          />
+          <button
+            type="button"
+            className="profile-dialog__password-toggle"
+            onClick={() => setVisibleField(isVisible ? null : id)}
+            aria-label={`${toggleLabel}: ${label}`}
+            aria-controls={id}
+            title={toggleLabel}
+            disabled={saving}
+          >
+            <FontAwesomeIcon icon={isVisible ? faEyeSlash : faEye} />
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <dialog
