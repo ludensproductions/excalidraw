@@ -49,7 +49,7 @@ wait_for_auth_runtime_schema() {
      FROM information_schema.columns
      WHERE table_schema='auth'
        AND table_name='users'
-       AND column_name='email_change_token_current'" \
+       AND column_name='reauthentication_token'" \
     2>/dev/null | grep -q 1; do
     retries=$((retries - 1))
     if [ "$retries" -le 0 ]; then
@@ -60,10 +60,23 @@ wait_for_auth_runtime_schema() {
   done
 }
 
-seed_dev_auth_users() {
-  echo "excalidraw-db: Seeding development auth users..."
-  psql -v ON_ERROR_STOP=1 -q -U postgres -h /var/run/postgresql -d postgres -c "
-  INSERT INTO auth.users (
+# Creates the first admin from ADMIN_EMAIL / ADMIN_PASSWORD, only while there are
+# no accounts at all: later boots never recreate it or change its password.
+seed_first_admin() {
+  if [ -z "${ADMIN_EMAIL:-}" ] || [ "${#ADMIN_PASSWORD}" -lt 12 ]; then
+    echo "excalidraw-db: No first admin: set ADMIN_EMAIL and ADMIN_PASSWORD (12+ characters)." >&2
+    return 0
+  fi
+
+  psql -X -v ON_ERROR_STOP=1 -q --single-transaction -U postgres -h /var/run/postgresql -d postgres <<'SQL'
+\getenv admin_email ADMIN_EMAIL
+\getenv admin_password ADMIN_PASSWORD
+-- same lock as scripts/migrate.sh: both touch auth.users and profiles and
+-- would deadlock on a first boot
+do 'begin perform pg_advisory_xact_lock(8421); end';
+alter table public.profiles disable trigger profiles_guard_admin_fields;
+with new_admin as (
+  insert into auth.users (
     id, instance_id, aud, role,
     email, encrypted_password,
     confirmation_token, recovery_token,
@@ -71,56 +84,34 @@ seed_dev_auth_users() {
     email_change_token_current, reauthentication_token,
     phone_change_token, phone_change,
     email_confirmed_at,
-    raw_user_meta_data,
+    raw_app_meta_data, raw_user_meta_data,
     created_at, updated_at,
     is_super_admin
   )
-  SELECT
-    'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+  select
+    gen_random_uuid(),
     '00000000-0000-0000-0000-000000000000',
     'authenticated', 'authenticated',
-    'admin@admin.com',
-    crypt('12345', gen_salt('bf')),
+    lower(:'admin_email'),
+    crypt(:'admin_password', gen_salt('bf')),
     '', '', '', '', '', '', '', '',
     now(),
+    '{"provider": "email", "providers": ["email"]}',
     jsonb_build_object('username', 'admin'),
     now(), now(),
     false
-  WHERE NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'admin@admin.com');
-
-  INSERT INTO public.profiles (id, username, email)
-  SELECT 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'admin', 'admin@admin.com'
-  WHERE NOT EXISTS (SELECT 1 FROM public.profiles WHERE email = 'admin@admin.com');
-
-  INSERT INTO auth.users (
-    id, instance_id, aud, role,
-    email, encrypted_password,
-    confirmation_token, recovery_token,
-    email_change_token_new, email_change,
-    email_change_token_current, reauthentication_token,
-    phone_change_token, phone_change,
-    email_confirmed_at,
-    raw_user_meta_data,
-    created_at, updated_at,
-    is_super_admin
-  )
-  SELECT
-    'b2c3d4e5-f6a7-8901-bcde-f12345678901',
-    '00000000-0000-0000-0000-000000000000',
-    'authenticated', 'authenticated',
-    'test@test.com',
-    crypt('12345', gen_salt('bf')),
-    '', '', '', '', '', '', '', '',
-    now(),
-    jsonb_build_object('username', 'test'),
-    now(), now(),
-    false
-  WHERE NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'test@test.com');
-
-  INSERT INTO public.profiles (id, username, email)
-  SELECT 'b2c3d4e5-f6a7-8901-bcde-f12345678901', 'test', 'test@test.com'
-  WHERE NOT EXISTS (SELECT 1 FROM public.profiles WHERE email = 'test@test.com');
-  " >/dev/null
+  where not exists (select 1 from auth.users)
+  returning id
+)
+-- the profile itself is created by the on_auth_user_created trigger;
+-- max() always returns a row, gset fails without one
+select max(id::text) as new_admin_id from new_admin \gset
+\if :{?new_admin_id}
+update public.profiles set role = 'admin' where id = :'new_admin_id';
+\echo excalidraw-db: First admin created.
+\endif
+alter table public.profiles enable trigger profiles_guard_admin_fields;
+SQL
 }
 
 reconcile_auth_runtime_state() {
@@ -177,7 +168,8 @@ reconcile_auth_runtime_state() {
   \$\$;
   " >/dev/null
 
-  seed_dev_auth_users
+  seed_first_admin ||
+    echo "excalidraw-db: WARNING: Failed to create the first admin." >&2
 
   if psql -qAt -U postgres -h /var/run/postgresql -c "SELECT 1 FROM pg_roles WHERE rolname='supabase_auth_admin'" 2>/dev/null | grep -q 1; then
     if ! auth_admin_psql "

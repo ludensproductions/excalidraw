@@ -60,6 +60,8 @@ for file in "$MIGRATIONS_DIR"/*.sql; do
   fi
   echo "migrate: aplicando $name"
   {
+    # same lock as seed_first_admin in excalidraw-db-entrypoint.sh
+    echo "select pg_advisory_xact_lock(8421);"
     cat "$file"
     echo
     echo "insert into public.schema_migrations (version) values ('$name');"

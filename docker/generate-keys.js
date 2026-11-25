@@ -56,6 +56,7 @@ const output = {
   JWT_SECRET,
   ANON_KEY,
   SERVICE_ROLE_KEY,
+  ADMIN_PASSWORD: hex(16),
   DASHBOARD_USERNAME: "admin",
   DASHBOARD_PASSWORD: hex(8),
   SECRET_KEY_BASE: base64(48),

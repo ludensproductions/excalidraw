@@ -15,10 +15,12 @@ services:
       - db-data:/var/lib/postgresql/data
       - db-config:/etc/postgresql-custom
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "/var/run/postgresql"]
+      # over TCP: the unix socket already answers while the init scripts run
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "127.0.0.1"]
       interval: 5s
       timeout: 5s
       retries: 10
+      start_period: 60s
     environment:
       POSTGRES_HOST: /var/run/postgresql
       POSTGRES_PORT: ${POSTGRES_PORT:-5432}
@@ -26,6 +28,9 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-postgres}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXP: ${JWT_EXPIRY:-3600}
+      # first admin, only created while there are no accounts
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
     command:
       [
         "postgres",
@@ -43,6 +48,9 @@ services:
     restart: "no"
     depends_on:
       db:
+        condition: service_healthy
+      # GoTrue's own migrations lock the same tables and would deadlock
+      auth:
         condition: service_healthy
     volumes:
       - ./scripts/migrate.sh:/migrate.sh:ro
@@ -125,6 +133,7 @@ services:
       timeout: 5s
       interval: 5s
       retries: 3
+      start_period: 30s
     depends_on:
       db:
         condition: service_healthy
@@ -157,16 +166,16 @@ services:
       GOTRUE_EXTERNAL_DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
       GOTRUE_EXTERNAL_DISCORD_SECRET: ${DISCORD_SECRET:-}
       GOTRUE_EXTERNAL_DISCORD_REDIRECT_URI: ${API_EXTERNAL_URL:-${EXCALIDRAW_PUBLIC_URL:-https://excalidraw.issirmax.mx}}/auth/v1/callback
-      GOTRUE_EXTERNAL_AZURE_ENABLED: ${AZURE_ENABLED:-false}
-      GOTRUE_EXTERNAL_AZURE_CLIENT_ID: ${AZURE_CLIENT_ID:-}
-      GOTRUE_EXTERNAL_AZURE_SECRET: ${AZURE_SECRET:-}
+      GOTRUE_EXTERNAL_AZURE_ENABLED: ${MICROSOFT_ENABLED:-false}
+      GOTRUE_EXTERNAL_AZURE_CLIENT_ID: ${MICROSOFT_CLIENT_ID:-}
+      GOTRUE_EXTERNAL_AZURE_SECRET: ${MICROSOFT_SECRET:-}
       GOTRUE_EXTERNAL_AZURE_REDIRECT_URI: ${API_EXTERNAL_URL:-${EXCALIDRAW_PUBLIC_URL:-https://excalidraw.issirmax.mx}}/auth/v1/callback
-      GOTRUE_EXTERNAL_AZURE_URL: ${AZURE_URL:-https://login.microsoftonline.com/common}
+      GOTRUE_EXTERNAL_AZURE_URL: ${MICROSOFT_URL:-https://login.microsoftonline.com/common}
       GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: ${ENABLE_ANONYMOUS_USERS:-false}
       GOTRUE_MAILER_AUTOCONFIRM: ${ENABLE_EMAIL_AUTOCONFIRM:-false}
       GOTRUE_MAILER_OTP_EXP: ${EMAIL_VERIFICATION_TOKEN_EXPIRY_SECONDS:-86400}
       GOTRUE_SMTP_MAX_FREQUENCY: ${EMAIL_VERIFICATION_RESEND_INTERVAL:-60s}
-      GOTRUE_RATE_LIMIT_EMAIL_SENT: ${EMAIL_RATE_LIMIT_PER_MINUTE:-60}
+      GOTRUE_RATE_LIMIT_EMAIL_SENT: ${EMAIL_RATE_LIMIT_PER_HOUR:-60}
 
       GOTRUE_SMTP_ADMIN_EMAIL: ${SYSTEM_EMAIL:?Define SYSTEM_EMAIL in .env}
       GOTRUE_SMTP_HOST: smtp.gmail.com
@@ -383,7 +392,6 @@ services:
       args:
         - NODE_ENV=${NODE_ENV:-production}
         - VITE_APP_PORT=${EXCALIDRAW_PORT:-3000}
-        - FAST_REFRESH=${FAST_REFRESH:-false}
         - VITE_APP_LIBRARY_URL=${VITE_APP_LIBRARY_URL:-https://libraries.excalidraw.com}
         - VITE_APP_LIBRARY_BACKEND=${VITE_APP_LIBRARY_BACKEND:-https://us-central1-excalidraw-room-persistence.cloudfunctions.net/libraries}
         - VITE_APP_WS_SERVER_URL=${VITE_APP_WS_SERVER_URL:-${EXCALIDRAW_ROOM_PUBLIC_URL:-https://room.excalidraw.issirmax.mx}}
@@ -393,7 +401,6 @@ services:
         - VITE_APP_ENABLE_TRACKING=${VITE_APP_ENABLE_TRACKING:-false}
         - VITE_APP_ENABLE_PWA=${VITE_APP_ENABLE_PWA:-true}
         - VITE_APP_ENABLE_ESLINT=${VITE_APP_ENABLE_ESLINT:-false}
-        - VITE_APP_COLLAPSE_OVERLAY=${VITE_APP_COLLAPSE_OVERLAY:-true}
         - VITE_APP_DISABLE_PREVENT_UNLOAD=${VITE_APP_DISABLE_PREVENT_UNLOAD:-false}
         - VITE_APP_DEV_DISABLE_LIVE_RELOAD=${VITE_APP_DEV_DISABLE_LIVE_RELOAD:-false}
         - VITE_APP_DEBUG_ENABLE_TEXT_CONTAINER_BOUNDING_BOX=${VITE_APP_DEBUG_ENABLE_TEXT_CONTAINER_BOUNDING_BOX:-false}

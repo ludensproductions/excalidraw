@@ -83,9 +83,9 @@ El botón **Discord** del inicio de sesión funciona una vez activado:
 ### Inicio de sesión con Microsoft
 
 1. En <https://entra.microsoft.com> abre **App registrations → New registration**.
-2. Elige quién puede entrar. `AZURE_URL` debe coincidir con esa opción:
+2. Elige quién puede entrar. `MICROSOFT_URL` debe coincidir con esa opción:
 
-   | Supported account types | `AZURE_URL` |
+   | Supported account types | `MICROSOFT_URL` |
    | --- | --- |
    | Solo tu organización (recomendado) | `https://login.microsoftonline.com/<Directory (tenant) ID>` |
    | Cualquier organización y cuentas personales | `https://login.microsoftonline.com/common` |
@@ -110,10 +110,10 @@ El botón **Discord** del inicio de sesión funciona una vez activado:
 6. Llena el `.env` y aplica con `docker compose up -d auth`:
 
    ```env
-   AZURE_ENABLED=true
-   AZURE_CLIENT_ID=<Application (client) ID>
-   AZURE_SECRET=<Value del client secret>
-   AZURE_URL=...
+   MICROSOFT_ENABLED=true
+   MICROSOFT_CLIENT_ID=<Application (client) ID>
+   MICROSOFT_SECRET=<Value del client secret>
+   MICROSOFT_URL=...
    ```
 
 ### Migraciones (aplicadas automáticamente al iniciar la BD)
@@ -162,14 +162,11 @@ docker compose up -d --build
 
 ---
 
-## Paso 3 (opcional) — Usuarios de prueba
+## Paso 3 — Primer administrador
 
-Al iniciar por primera vez, se crean automáticamente dos usuarios:
+Define `ADMIN_EMAIL` y `ADMIN_PASSWORD` (12 a 50 caracteres) en el `.env` antes del primer arranque. Esa cuenta se crea con rol admin **solo si la base no tiene ninguna cuenta**: después puedes cambiar su contraseña y no se vuelve a crear.
 
-| Email             | Contraseña | Rol            |
-| ----------------- | ---------- | -------------- |
-| `admin@admin.com` | `12345`    | admin          |
-| `test@test.com`   | `12345`    | usuario normal |
+Si la base ya tiene cuentas, da el rol admin a una existente con `ADMIN_EMAIL=persona@empresa.com bash scripts/update-prod.sh`. Ese script también reemplaza la contraseña `12345` de `admin@admin.com` (por `ADMIN_PASSWORD`) y de `test@test.com` (por una aleatoria), que versiones anteriores creaban.
 
 Para resetear la base de datos:
 
