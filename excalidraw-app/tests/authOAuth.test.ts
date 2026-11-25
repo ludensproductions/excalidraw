@@ -45,7 +45,7 @@ const TOKENS = "#access_token=token&refresh_token=refresh&token_type=bearer";
 const currentPath = () =>
   window.location.pathname + window.location.search + window.location.hash;
 
-describe("sign in with Discord", () => {
+describe("sign in with Discord / Microsoft", () => {
   let store: typeof AuthStore;
 
   beforeEach(async () => {
@@ -69,7 +69,9 @@ describe("sign in with Discord", () => {
       error: null,
     });
     vi.stubGlobal("fetch", async () => ({
-      json: async () => ({ external: { discord: mocks.enabled } }),
+      json: async () => ({
+        external: { discord: mocks.enabled, azure: mocks.enabled },
+      }),
     }));
     mocks.enabled = true;
     vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -114,6 +116,16 @@ describe("sign in with Discord", () => {
     });
   });
 
+  it("asks Microsoft for the email and the name", async () => {
+    await store.signInWithProvider("azure");
+    expect(mocks.signInWithOAuth).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: "azure",
+        options: expect.objectContaining({ scopes: "email profile" }),
+      }),
+    );
+  });
+
   it("signs in and goes back to the shared link", async () => {
     await leaveFrom(SHARED_LINK);
     await expect(comeBackTo(`/${TOKENS}`)).resolves.toMatchObject({
@@ -135,6 +147,10 @@ describe("sign in with Discord", () => {
   });
 
   it.each([
+    [
+      "error=access_denied&error_subcode=cancel&error_description=AADSTS65004%3A+User+declined+to+consent",
+      "auth.errors.oauthCancelled",
+    ],
     [
       "error=server_error&error_code=unexpected_failure&error_description=Error+getting+user+email+from+external+provider",
       "auth.errors.oauthEmailRequired",

@@ -7,7 +7,6 @@ import { getErrorMessage } from "../errorMessages";
 
 import {
   beginAuthEmailFlowFromUrl,
-  getEnabledOAuthProviders,
   getPasswordResetResendWaitSeconds,
   loginUser,
   registerUser,
@@ -132,17 +131,7 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [passwordResetWaitSeconds, setPasswordResetWaitSeconds] = useState(0);
-  // Discord is always offered; Microsoft only where it's turned on
-  const [oauthProviders, setOAuthProviders] = useState<OAuthProvider[]>([
-    "discord",
-  ]);
   useEffect(() => {
-    void getEnabledOAuthProviders().then((enabled) => {
-      setOAuthProviders(
-        enabled.includes("azure") ? ["discord", "azure"] : ["discord"],
-      );
-    });
-
     // pressing Back at the provider restores this page as it was: loading
     const onPageShow = (event: PageTransitionEvent) => {
       if (event.persisted) {
@@ -594,7 +583,7 @@ export const AuthPage: React.FC<Props> = ({ onAuthenticated }) => {
             <div className="auth-page__oauth-separator">
               <span>{t("auth.actions.orContinueWith")}</span>
             </div>
-            {oauthProviders.map((provider) => (
+            {(Object.keys(OAUTH_BUTTONS) as OAuthProvider[]).map((provider) => (
               <button
                 key={provider}
                 type="button"

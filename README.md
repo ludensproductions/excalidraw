@@ -80,6 +80,42 @@ El botón **Discord** del inicio de sesión funciona una vez activado:
 
 `API_EXTERNAL_URL` y `SITE_URL` deben ser la URL pública en producción (no `localhost`). Conviene usar una aplicación de Discord distinta para local y para producción. Si el correo de Discord está verificado y ya existe una cuenta con ese correo, se entra a esa misma cuenta.
 
+### Inicio de sesión con Microsoft
+
+1. En <https://entra.microsoft.com> abre **App registrations → New registration**.
+2. Elige quién puede entrar. `AZURE_URL` debe coincidir con esa opción:
+
+   | Supported account types | `AZURE_URL` |
+   | --- | --- |
+   | Solo tu organización (recomendado) | `https://login.microsoftonline.com/<Directory (tenant) ID>` |
+   | Cualquier organización y cuentas personales | `https://login.microsoftonline.com/common` |
+
+3. En **Redirect URI** elige **Web** y agrega `<API_EXTERNAL_URL>/auth/v1/callback` (las mismas URLs que en Discord).
+4. En **Certificates & secrets → New client secret** copia el **Value** (no el _Secret ID_). Caduca: anota la fecha para renovarlo.
+5. En **Manifest**, pide el correo y el dato que indica si su dominio está verificado:
+
+   ```json
+   "optionalClaims": {
+     "idToken": [
+       { "name": "email", "essential": false },
+       { "name": "xms_edov", "essential": false }
+     ],
+     "accessToken": [],
+     "saml2Token": []
+   }
+   ```
+
+   No omitas `xms_edov`: sin él, GoTrue da por verificado cualquier correo que envíe Microsoft y lo enlaza con la cuenta existente que tenga ese correo.
+
+6. Llena el `.env` y aplica con `docker compose up -d auth`:
+
+   ```env
+   AZURE_ENABLED=true
+   AZURE_CLIENT_ID=<Application (client) ID>
+   AZURE_SECRET=<Value del client secret>
+   AZURE_URL=...
+   ```
+
 ### Migraciones (aplicadas automáticamente al iniciar la BD)
 
 | Orden | Archivo | Qué crea |

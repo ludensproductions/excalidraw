@@ -796,7 +796,7 @@ export async function changePassword(
 export type OAuthProvider = "discord" | "azure";
 
 // providers turned on in GoTrue (needs their client id/secret in .env)
-export async function getEnabledOAuthProviders(): Promise<OAuthProvider[]> {
+async function getEnabledOAuthProviders(): Promise<OAuthProvider[]> {
   try {
     const response = await fetch(
       new URL("auth/v1/settings", supabaseUrl).toString(),
@@ -834,8 +834,8 @@ export async function signInWithProvider(
     provider,
     options: {
       redirectTo: getAuthRedirectTo(),
-      // Microsoft only returns the email with this scope
-      scopes: provider === "azure" ? "email" : undefined,
+      // Microsoft only returns the email and the name with these scopes
+      scopes: provider === "azure" ? "email profile" : undefined,
     },
   });
   if (error) {
